@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>水印贴膜机</title>
+
+    <!-- PWA / 移动端与桌面端安装适配 -->
+    <meta name="theme-color" content="#FFF3F6">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="水印贴膜机">
+    <meta name="application-name" content="水印贴膜机">
+    
+    <!-- 应用图标 (Favicon / Apple Touch Icon) -->
+    <link rel="icon" type="image/jpeg" href="https://image.58sb.cn/file/img/b4Wa7y62.jpg">
+    <link rel="apple-touch-icon" href="https://image.58sb.cn/file/img/b4Wa7y62.jpg">
+
+    <!-- 内联动态 PWA Web Manifest -->
+    <script>
+        const manifestData = {
+            "name": "水印贴膜机",
+            "short_name": "水印贴膜机",
+            "start_url": "./",
+            "display": "standalone",
+            "background_color": "#FFF3F6",
+            "theme_color": "#FFF3F6",
+            "icons": [
+                {
+                    "src": "https://image.58sb.cn/file/img/b4Wa7y62.jpg",
+                    "sizes": "512x512",
+                    "type": "image/jpeg",
+                    "purpose": "any maskable"
+                }
+            ]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/manifest+json' });
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = manifestURL;
+        document.head.appendChild(manifestLink);
+
+        // 注册轻量 Service Worker 满足 Chrome / Edge PWA 安装条件
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swScript = `
+                    self.addEventListener('install', e => self.skipWaiting());
+                    self.addEventListener('activate', e => self.clients.claim());
+                    self.addEventListener('fetch', e => {
+                        // 网络优先策略
+                        e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+                    });
+                `;
+                const swBlob = new Blob([swScript], { type: 'text/javascript' });
+                navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+            });
+        }
+    </script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 依赖库 -->
+    <script src="https://unpkg.com/@tensorflow/tfjs-core@3.21.0/dist/tf-core.min.js"></script>
+    <script src="https://unpkg.com/@tensorflow/tfjs-converter@3.21.0/dist/tf-converter.min.js"></script>
+    <script src="https://unpkg.com/@tensorflow/tfjs-backend-webgl@3.21.0/dist/tf-backend-webgl.min.js"></script>
+    <script src="https://unpkg.com/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <style>
+        /* iOS 液体玻璃质感 (高对比度防花背景) */
+        .liquid-glass {
+            background: rgba(255, 255, 255, 0.68);
+            backdrop-filter: blur(28px) saturate(180%);
+            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            box-shadow: 0 8px 26px 0 rgba(0, 0, 0, 0.06);
+        }
+        .liquid-glass-subtle {
+            background: rgba(255, 255, 255, 0.52);
+            backdrop-filter: blur(20px) saturate(150%);
+            -webkit-backdrop-filter: blur(20px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+        /* 液体玻璃通透主按钮 */
+        .liquid-glass-btn {
+            background: rgba(255, 255, 255, 0.72);
+            backdrop-filter: blur(22px) saturate(160%);
+            -webkit-backdrop-filter: blur(22px) saturate(160%);
+            border: 1.5px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 16px 0 rgba(200, 100, 130, 0.15);
+            color: #9C334E;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .liquid-glass-btn:hover {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(255, 170, 190, 0.9);
+            box-shadow: 0 6px 20px 0 rgba(200, 100, 130, 0.25);
+            transform: translateY(-1px);
+        }
+        .liquid-glass-btn-active {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1.5px solid rgba(255, 120, 150, 0.8);
+            color: #C72A52;
+            box-shadow: 0 4px 18px 0 rgba(255, 120, 150, 0.2);
+        }
+        /* 浅粉透光虚线框 */
+        .liquid-dashed-box {
+            background: rgba(255, 255, 255, 0.58);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1.5px dashed rgba(235, 140, 165, 0.8);
+            transition: all 0.25s ease;
+        }
+        .liquid-dashed-box:hover {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(220, 80, 120, 0.95);
+            transform: translateY(-1px);
+        }
+        .checkerboard-pattern {
+            background-color: #FFF8FA;
+            background-image: linear-gradient(45deg, #FFEBF1 25%, transparent 25%), linear-gradient(-45deg, #FFEBF1 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #FFEBF1 75%), linear-gradient(-45deg, transparent 75%, #FFEBF1 75%);
+            background-size: 14px 14px;
+            background-position: 0 0, 0 7px, 7px -7px, -7px 0px;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(220, 140, 165, 0.5); border-radius: 4px; }
+    </style>
+</head>
+<body id="mainBody" class="bg-gradient-to-br from-[#FFF9FB] via-[#FFF3F6] to-[#FFEBF1] text-[#4F2D35] min-h-screen antialiased selection:bg-pink-100 transition-all duration-300">
+
+    <!-- 隐藏的各模式真实文件输入框 -->
+    <input type="file" id="wmInput" accept="image/png,image/webp" class="hidden" onchange="handleWmFile(event)">
+    <input type="file" id="rawInputByFiles" multiple class="hidden" onchange="handleBulkFiles(event)">
+    <input type="file" id="rawInputByFolder" webkitdirectory directory multiple class="hidden" onchange="handleBulkFiles(event)">
+    <input type="file" id="rawInputByMedia" accept="image/*" multiple class="hidden" onchange="handleBulkFiles(event)">
+
+    <!-- 全局纯净液体玻璃顶栏 -->
+    <header class="sticky top-0 z-40 bg-white/55 backdrop-blur-2xl border-b border-white/60 px-4 sm:px-6 py-2.5">
+        <div class="max-w-3xl mx-auto flex items-center justify-between gap-3">
+            
+            <!-- 左上角：下拉展开按键 -->
+            <div class="relative flex items-center gap-2">
+                <button id="navDropdownBtn" onclick="toggleNavDropdown()" class="flex items-center gap-2 px-3 py-1.5 rounded-2xl liquid-glass text-[#8A2540] text-xs font-bold transition-all">
+                    <svg class="w-4 h-4 text-[#FF4D79]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                    <span id="currentViewTitle">贴膜机</span>
+                    <svg class="w-3.5 h-3.5 text-[#C48795]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+
+                <!-- PWA快捷安装按键（当浏览器触发安装事件时展示） -->
+                <button id="pwaInstallBtn" onclick="promptPWAInstall()" class="hidden px-2.5 py-1.5 rounded-2xl liquid-glass text-[#FF4D79] text-[11px] font-black items-center gap-1 animate-pulse">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <span>安装应用</span>
+                </button>
+
+                <!-- 下拉列表 -->
+                <div id="navDropdownMenu" class="hidden absolute left-0 top-full mt-2 w-44 liquid-glass rounded-2xl shadow-xl shadow-pink-200/50 py-1 z-50 text-xs font-semibold overflow-hidden">
+                    <button onclick="switchView('watermarker')" class="w-full text-left px-4 py-2 hover:bg-white/80 flex items-center gap-2.5 text-[#5C2B35] hover:text-[#C72A52] transition-colors">
+                        <svg class="w-4 h-4 text-[#FF4D79]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <span>1. 贴膜机</span>
+                    </button>
+                    <button onclick="switchView('gallery')" class="w-full text-left px-4 py-2 hover:bg-white/80 flex items-center gap-2.5 text-[#5C2B35] hover:text-[#C72A52] transition-colors">
+                        <svg class="w-4 h-4 text-[#FF4D79]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                        <span>2. 图库</span>
+                    </button>
+                    <button onclick="switchView('raw_repo')" class="w-full text-left px-4 py-2 hover:bg-white/80 flex items-center gap-2.5 text-[#5C2B35] hover:text-[#C72A52] transition-colors">
+                        <svg class="w-4 h-4 text-[#FF4D79]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                        <span>3. 原po原图</span>
+                    </button>
+                    <button onclick="switchView('profile')" class="w-full text-left px-4 py-2 hover:bg-white/80 flex items-center gap-2.5 text-[#5C2B35] hover:text-[#C72A52] transition-colors">
+                        <svg class="w-4 h-4 text-[#FF4D79]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        <span>4. 我的</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 擦脸小助手就绪指示 -->
+            <div id="aiStatusBadge" onclick="initFaceModel()" class="text-[11px] text-[#8A2540] font-bold liquid-glass px-3 py-1 rounded-full flex items-center gap-1.5 cursor-pointer">
+                <span id="aiStatusDot" class="w-1.5 h-1.5 rounded-full bg-[#FF4D79] animate-pulse"></span>
+                <span id="aiStatusText">擦脸小助手启动中...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主工作区 -->
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 pt-3 pb-8 space-y-3.5">
+
+        <!-- ======================= 视图 1: 贴膜机 ======================= -->
+        <section id="view-watermarker" class="space-y-3.5">
+            
+            <!-- 顶部居中主标题与标语 -->
+            <div class="text-center pt-0.5 pb-0.5">
+                <h1 class="text-2xl sm:text-3xl font-black tracking-wider text-[#A62B4A] drop-shadow-xs">
+                    耳机の贴膜机
+                </h1>
+                <p class="text-[11px] text-[#7A424E] font-bold mt-0.5">欢迎宝宝使用水印贴膜机 · 100%零损原画质输出</p>
+            </div>
+
+            <!-- 顶部第一行：导入水印 & 导入原图 -->
+            <div class="grid grid-cols-2 gap-3">
+                
+                <!-- 1. 正方形水印导入框 -->
+                <div class="aspect-square liquid-dashed-box rounded-3xl p-3 flex flex-col items-center justify-center relative cursor-pointer group" onclick="document.getElementById('wmInput').click()">
+                    <div id="wmEmptyBox" class="flex flex-col items-center justify-center text-center space-y-1.5">
+                        <div class="p-2.5 rounded-2xl bg-white/80 text-[#FF4D79] group-hover:scale-105 transition-transform shadow-xs">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
+                        </div>
+                        <div>
+                            <div class="text-xs font-black text-[#4F2D35]">导入浮雕/水印</div>
+                            <div class="text-[10px] text-[#7A424E] font-medium mt-0.5">全屏透明 PNG</div>
+                        </div>
+                    </div>
+
+                    <div id="wmFilledBox" class="hidden w-full h-full flex flex-col items-center justify-center">
+                        <img id="wmLoadedPreview" class="w-full h-full object-contain rounded-2xl checkerboard-pattern">
+                        <span class="absolute bottom-2 text-[10px] font-bold liquid-glass-btn px-2.5 py-0.5 rounded-full">已载入水印膜</span>
+                    </div>
+                </div>
+
+                <!-- 2. 正方形原图导入框 -->
+                <div class="aspect-square liquid-dashed-box rounded-3xl p-3 flex flex-col items-center justify-center relative cursor-pointer" onclick="openImportChannelModal()">
+                    <div id="rawEmptyBox" class="flex flex-col items-center justify-center text-center space-y-1.5 w-full">
+                        <div class="p-2.5 rounded-2xl bg-white/80 text-[#FF4D79] shadow-xs">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <div class="text-xs font-black text-[#4F2D35]">导入待贴原图</div>
+                        <div class="text-[10px] text-[#7A424E] font-medium">点击选择导入方式</div>
+                    </div>
+
+                    <div id="rawFilledBox" class="hidden w-full h-full flex flex-col items-center justify-center text-center space-y-1.5">
+                        <div class="p-2.5 rounded-2xl bg-white/80 text-[#FF4D79]">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <div class="text-xs font-black text-[#4F2D35]" id="rawBoxCountLabel">已选 0 张原图</div>
+                        <div class="flex gap-1.5" onclick="event.stopPropagation()">
+                            <button onclick="openImportChannelModal()" class="px-2 py-0.5 liquid-glass-btn rounded-lg text-[10px] font-bold">加图</button>
+                            <button onclick="resetRawFiles()" class="px-2 py-0.5 bg-white/60 rounded-lg text-[10px] text-[#7A424E] font-medium">清空</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 待处理多图展示区 -->
+            <div id="sourceImagesDrawer" class="hidden liquid-glass p-2.5 rounded-2xl space-y-1.5">
+                <div class="flex items-center justify-between text-xs font-bold px-1">
+                    <span class="text-[#4F2D35]">待贴膜原图列表 (<span id="sourceTotalCount">0</span>)</span>
+                    <button onclick="resetRawFiles()" class="text-[10px] text-[#7A424E] hover:text-[#C72A52]">清空重选</button>
+                </div>
+                <div id="sourceThumbList" class="flex gap-2 overflow-x-auto pb-0.5 custom-scrollbar"></div>
+            </div>
+
+            <!-- 下面：混合效果与贴膜浓度调节卡片 -->
+            <div class="liquid-glass p-3.5 sm:p-4 rounded-3xl space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-[#FF4D79]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                        <span class="text-xs font-black text-[#4F2D35]">混合效果与浓度调节</span>
+                    </div>
+
+                    <div class="flex items-center gap-1 bg-white/70 px-2 py-0.5 rounded-xl border border-white/80 text-[11px]">
+                        <span class="text-[#7A424E] font-bold">图层模式:</span>
+                        <select id="blendModeSelect" class="bg-transparent text-[#9C334E] font-bold outline-none cursor-pointer">
+                            <option value="overlay" selected>覆盖 (Overlay)</option>
+                            <option value="soft-light">软光 (Soft Light)</option>
+                            <option value="source-over">正常覆盖 (Normal)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button type="button" onclick="setPreset('original')" id="btnPreOriginal" class="flex-1 py-1.5 rounded-xl liquid-glass-btn liquid-glass-btn-active text-xs font-bold transition-all">
+                        原创圈 (15%)
+                    </button>
+                    <button type="button" onclick="setPreset('custom')" id="btnPreCustom" class="flex-1 py-1.5 rounded-xl liquid-glass-btn text-xs font-bold transition-all">
+                        定制圈 (20%)
+                    </button>
+                </div>
+
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs font-bold">
+                        <span class="text-[#7A424E]">图层不透明度</span>
+                        <span id="opacityText" class="text-[#9C334E] text-sm font-black">15%</span>
+                    </div>
+                    <input type="range" id="opacityInput" min="5" max="100" value="15" class="w-full accent-[#FF4D79] h-1.5 bg-white/80 rounded-lg cursor-pointer">
+                </div>
+
+                <div class="flex items-center justify-between pt-1.5 border-t border-white/50 text-xs">
+                    <span class="text-[#4F2D35] font-bold">自动擦除脸部水印 (擦脸小助手)</span>
+                    <input type="checkbox" id="faceDetectCheck" checked class="w-4 h-4 accent-[#FF4D79] rounded cursor-pointer">
+                </div>
+            </div>
+
+            <!-- 点击开始贴膜按钮 -->
+            <button id="startProcessBtn" onclick="handleStartProcessClick()" class="w-full py-3.5 liquid-glass-btn font-black rounded-2xl text-sm tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm">
+                <svg class="w-4 h-4 text-[#FF4D79]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span>点击开始贴膜 (无损原画质)</span>
+            </button>
+
+            <!-- 进度条 -->
+            <div id="wmProgressBarBox" class="hidden liquid-glass p-3 rounded-2xl space-y-1.5">
+                <div class="flex justify-between text-xs text-[#4F2D35] font-bold">
+                    <span id="wmProgressText">正在处理...</span>
+                    <span id="wmProgressPct" class="text-[#9C334E]">0%</span>
+                </div>
+                <div class="w-full bg-white/70 h-2 rounded-full overflow-hidden">
+                    <div id="wmProgressBar" class="bg-[#FF668B] h-full w-0 transition-all duration-150 rounded-full"></div>
+                </div>
+            </div>
+
+            <!-- 生成结果图片展示区 -->
+            <div id="resultsWrapper" class="hidden space-y-3">
+                <div class="flex items-center justify-between border-b border-white/50 pb-2">
+                    <div>
+                        <h3 class="text-xs font-black text-[#4F2D35] flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            <span>贴膜完成 · 共 <span id="currentBatchCount" class="text-[#9C334E]">0</span> 张</span>
+                        </h3>
+                        <p class="text-[10px] text-[#7A424E] mt-0.5">100%保持原图画质与MB大小导出 · 点击可手动擦除</p>
+                    </div>
+                    <button onclick="openExportZipModal()" class="px-3 py-1.5 liquid-glass-btn rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>打包导出 ZIP</span>
+                    </button>
+                </div>
+
+                <div id="currentResultGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
+            </div>
+        </section>
+
+
+        <!-- ======================= 视图 2: 图库 ======================= -->
+        <section id="view-gallery" class="hidden space-y-3">
+            <div class="relative w-full">
+                <svg class="w-4 h-4 text-[#7A424E] absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <input type="text" id="gallerySearchInput" oninput="filterGallery()" placeholder="搜索 QQ号 / 署名得到图包..." class="w-full pl-10 pr-4 py-2.5 liquid-glass rounded-2xl text-xs text-[#4F2D35] placeholder-[#7A424E] focus:outline-none shadow-sm">
+            </div>
+
+            <div class="flex items-center justify-between px-1">
+                <h2 class="text-xs font-bold text-[#4F2D35]">全部图包</h2>
+                <span class="text-xs text-[#7A424E] font-bold" id="galleryCountLabel">0 个包</span>
+            </div>
+
+            <div id="galleryPackageGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
+        </section>
+
+
+        <!-- ======================= 视图 2.1: 图包详情界面 ======================= -->
+        <section id="view-gallery-detail" class="hidden space-y-3">
+            <div class="liquid-glass p-3.5 sm:p-4 rounded-3xl space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-white/50 pb-2.5">
+                    <div class="flex items-center gap-2">
+                        <button onclick="switchView('gallery')" class="p-1.5 rounded-xl bg-white/80 text-[#9C334E] hover:bg-white transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <div>
+                            <h3 class="text-sm font-bold text-[#4F2D35]" id="detailPkgTitle">图包署名</h3>
+                            <div class="text-[11px] text-[#7A424E] font-medium" id="detailPkgSub">QQ: 0000000 · 0 张图</div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="text-[#7A424E] font-bold">重调浓度:</span>
+                        <input type="range" id="detailGroupOpacity" min="5" max="100" value="15" class="accent-[#FF4D79] h-1.5 w-20 bg-white/80 rounded cursor-pointer">
+                        <span id="detailGroupOpacityVal" class="text-[#9C334E] font-bold w-8">15%</span>
+                        <button onclick="applyGroupOpacityChange()" class="px-2.5 py-1 liquid-glass-btn rounded-xl font-bold">应用</button>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center pt-0.5">
+                    <span class="text-[11px] text-[#7A424E]">100%原画质保存 · 支持单张精修</span>
+                    <button onclick="downloadActivePackageZip()" class="px-3 py-1.5 liquid-glass-btn rounded-xl text-xs font-bold flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>重新下载整个 ZIP 包</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="detailImageGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
+        </section>
+
+
+        <!-- ======================= 视图 3: 原po原图 ======================= -->
+        <section id="view-raw_repo" class="hidden space-y-3">
+            <div class="liquid-glass p-3 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div class="flex items-center gap-1.5 text-xs overflow-x-auto custom-scrollbar font-bold" id="repoBreadcrumbs"></div>
+
+                <div class="flex items-center gap-2 shrink-0">
+                    <input type="file" id="repoImageUpload" multiple class="hidden" onchange="handleUploadToCurrentFolder(event)">
+                    <button onclick="document.getElementById('repoImageUpload').click()" class="px-3 py-1.5 liquid-glass-btn rounded-xl text-xs font-bold flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        <span>导入原图到此</span>
+                    </button>
+                    <button onclick="promptCreateFolder()" class="px-3 py-1.5 bg-white/80 hover:bg-white text-[#4F2D35] rounded-xl text-xs font-bold flex items-center gap-1 transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+                        <span>新建子文件夹</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="space-y-2.5">
+                <div id="repoSubFolderGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5"></div>
+                <div id="repoImageGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
+            </div>
+        </section>
+
+
+        <!-- ======================= 视图 4: 我的 ======================= -->
+        <section id="view-profile" class="hidden space-y-3.5">
+            <div class="liquid-glass p-5 rounded-3xl flex flex-col items-center justify-center text-center space-y-3">
+                <div class="relative group cursor-pointer" onclick="document.getElementById('avatarUploadInput').click()">
+                    <input type="file" id="avatarUploadInput" accept="image/*" class="hidden" onchange="handleAvatarChange(event)">
+                    <div class="w-20 h-20 rounded-full overflow-hidden p-1 bg-white shadow-sm">
+                        <img id="userAvatarImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FFB6C1'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" class="w-full h-full object-cover rounded-full">
+                    </div>
+                    <div class="absolute inset-0 bg-black/20 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </div>
+                </div>
+
+                <div class="w-full flex flex-col items-center justify-center space-y-0.5">
+                    <div class="flex items-center justify-center w-full">
+                        <input type="text" id="userNameInput" value="用户" onchange="saveUserProfileAuto()" class="text-base font-extrabold text-[#4F2D35] bg-transparent text-center focus:bg-white/60 rounded-xl px-2 py-0.5 outline-none w-48 max-w-[220px]" placeholder="输入名字">
+                    </div>
+                    <div class="text-[10px] text-[#7A424E] font-medium">点击名字直接修改 · 默认署名同步</div>
+                </div>
+
+                <div class="pt-0.5 w-full max-w-xs">
+                    <div class="liquid-glass-subtle px-3 py-1.5 rounded-2xl flex items-center justify-between text-xs">
+                        <span class="text-[#7A424E] font-bold">默认 QQ:</span>
+                        <input type="text" id="prefQQInput" placeholder="输入默认QQ号" onchange="saveUserProfileAuto()" class="bg-transparent text-right font-bold text-[#4F2D35] outline-none max-w-[140px]">
+                    </div>
+                </div>
+            </div>
+
+            <div class="liquid-glass p-4 rounded-3xl space-y-3">
+                <h4 class="text-xs font-bold text-[#4F2D35] px-0.5">全局壁纸与数据管理</h4>
+                
+                <div class="grid grid-cols-2 gap-2.5">
+                    <input type="file" id="wallpaperUploadInput" accept="image/*" class="hidden" onchange="handleWallpaperChange(event)">
+                    <button onclick="document.getElementById('wallpaperUploadInput').click()" class="py-2.5 px-3 liquid-glass-btn rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
+                        <svg class="w-4 h-4 text-[#FF4D79]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <span>添加全局壁纸</span>
+                    </button>
+                    
+                    <button onclick="restoreDefaultWallpaper()" class="py-2.5 px-3 bg-white/60 hover:bg-white/90 rounded-2xl text-xs font-bold text-[#7A424E] flex items-center justify-center gap-1.5 transition-all">
+                        <svg class="w-4 h-4 text-[#7A424E]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        <span>恢复原壁纸</span>
+                    </button>
+
+                    <button onclick="exportAllDataBackup()" class="py-2.5 px-3 liquid-glass-btn rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5">
+                        <svg class="w-4 h-4 text-[#FF4D79]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                        <span>保存数据备份</span>
+                    </button>
+
+                    <input type="file" id="dataImportInput" accept=".json" class="hidden" onchange="handleImportDataBackup(event)">
+                    <button onclick="document.getElementById('dataImportInput').click()" class="py-2.5 px-3 bg-white/80 hover:bg-white rounded-2xl text-xs font-bold text-[#4F2D35] flex items-center justify-center gap-1.5 transition-all">
+                        <svg class="w-4 h-4 text-[#FF4D79]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        <span>导入数据恢复</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ======================= 弹窗组件群 ======================= -->
+
+    <!-- 0. 导入通道选择弹窗 -->
+    <div id="importChannelModal" class="hidden fixed inset-0 z-50 bg-black/35 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="liquid-glass w-full max-w-sm rounded-3xl p-5 space-y-3.5 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-white/50 pb-2">
+                <div>
+                    <h3 class="text-sm font-bold text-[#4F2D35]">选择原图导入通道</h3>
+                    <p class="text-[10px] text-[#7A424E]">避开受限弹窗，直接多选相册或文件夹</p>
+                </div>
+                <button onclick="closeImportChannelModal()" class="text-[#7A424E] hover:text-[#4F2D35]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="space-y-2 text-xs">
+                <button onclick="triggerImport('files')" class="w-full p-3 rounded-2xl liquid-glass-btn flex items-center gap-3 text-left">
+                    <div class="p-2 rounded-xl bg-white text-[#FF4D79] shrink-0 shadow-xs">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </div>
+                    <div>
+                        <div class="font-bold text-[#4F2D35] flex items-center gap-1.5">
+                            <span>系统文件多选 (推荐)</span>
+                            <span class="text-[9px] bg-[#FF4D79] text-white px-1.5 py-0.2 rounded-full font-bold">绕开受限</span>
+                        </div>
+                        <div class="text-[10px] text-[#7A424E] mt-0.5">调起完整文件管理，随意进相册目录全选</div>
+                    </div>
+                </button>
+
+                <button onclick="triggerImport('folder')" class="w-full p-3 rounded-2xl liquid-glass-btn flex items-center gap-3 text-left">
+                    <div class="p-2 rounded-xl bg-white text-[#FF4D79] shrink-0 shadow-xs">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                    </div>
+                    <div>
+                        <div class="font-bold text-[#4F2D35]">导入整套相册文件夹</div>
+                        <div class="text-[10px] text-[#7A424E] mt-0.5">直接选择整个目录，一键读取全部图片</div>
+                    </div>
+                </button>
+
+                <button onclick="triggerImport('repo')" class="w-full p-3 rounded-2xl liquid-glass-btn flex items-center gap-3 text-left">
+                    <div class="p-2 rounded-xl bg-white text-[#FF4D79] shrink-0 shadow-xs">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    </div>
+                    <div>
+                        <div class="font-bold text-[#4F2D35]">从原po原图库选择</div>
+                        <div class="text-[10px] text-[#7A424E] mt-0.5">从预先分类的多层子文件夹中全选导入</div>
+                    </div>
+                </button>
+
+                <button onclick="triggerImport('media')" class="w-full p-2.5 rounded-2xl bg-white/50 hover:bg-white/80 flex items-center gap-3 text-left transition-colors">
+                    <div class="p-1.5 rounded-lg bg-white/80 text-[#7A424E] shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <div class="text-[11px] text-[#7A424E] font-bold">常规相册多选 (可能受系统弹窗限制)</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1. 导出 ZIP 信息填写弹窗 -->
+    <div id="exportZipModal" class="hidden fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="liquid-glass w-full max-w-md rounded-3xl p-5 space-y-3.5 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-white/50 pb-2.5">
+                <h3 class="text-sm font-bold text-[#4F2D35]">导出 ZIP 图包</h3>
+                <button onclick="closeExportZipModal()" class="text-[#7A424E] hover:text-[#4F2D35]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="space-y-2.5 text-xs">
+                <div>
+                    <label class="block text-[#7A424E] font-bold mb-1">第一行：署名 (原po / 制作人)</label>
+                    <input type="text" id="zipAuthorInput" placeholder="输入署名..." class="w-full px-3 py-2 liquid-glass-subtle rounded-xl text-[#4F2D35] font-bold outline-none">
+                </div>
+                <div>
+                    <label class="block text-[#7A424E] font-bold mb-1">第二行：QQ 号</label>
+                    <input type="text" id="zipQQInput" placeholder="输入QQ号..." class="w-full px-3 py-2 liquid-glass-subtle rounded-xl text-[#4F2D35] font-bold outline-none">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-1">
+                <button onclick="closeExportZipModal()" class="px-3.5 py-1.5 rounded-xl bg-white/60 text-[#7A424E] font-bold text-xs">取消</button>
+                <button onclick="confirmAndDownloadZip()" class="px-4 py-1.5 rounded-xl liquid-glass-btn font-black text-xs">确认导出并归档</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 原po原图库导入选择弹窗 -->
+    <div id="rawRepoModal" class="hidden fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="liquid-glass w-full max-w-2xl rounded-3xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
+            <div class="p-3.5 border-b border-white/50 flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-[#4F2D35]">从原po原图库选择图片</h3>
+                    <div id="modalRepoBreadcrumbs" class="text-[11px] text-[#A62B4A] font-bold flex items-center gap-1 mt-0.5"></div>
+                </div>
+                <button onclick="closeRawRepoSelectorModal()" class="text-[#7A424E] hover:text-[#4F2D35]">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-3.5 space-y-3 custom-scrollbar">
+                <div id="modalFolderGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5"></div>
+                <div id="modalImageGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-2.5"></div>
+            </div>
+
+            <div class="p-3.5 border-t border-white/50 flex items-center justify-between text-xs">
+                <span class="text-[#7A424E] font-bold" id="modalSelectedSummary">当前文件夹 0 张原图</span>
+                <button onclick="importAllFromCurrentModalFolder()" class="px-4 py-2 liquid-glass-btn rounded-xl font-black">
+                    全选此文件夹并导入贴膜
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 手动擦脸精修工作台 -->
+    <div id="eraseModal" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="liquid-glass w-full max-w-4xl rounded-3xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
+            <div class="p-3.5 border-b border-white/50 flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-[#4F2D35]">手动擦脸精修 (动漫脸/漏识微调)</h3>
+                    <p class="text-[10px] text-[#7A424E]">涂抹区域将带柔和羽化避开水印，保留覆盖底图质感</p>
+                </div>
+                <button onclick="closeEraseModal()" class="text-[#7A424E] hover:text-[#4F2D35]">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="flex-1 bg-white/40 overflow-auto flex items-center justify-center p-3 select-none">
+                <canvas id="paintCanvas" class="shadow-md rounded-2xl max-w-full max-h-[55vh] object-contain cursor-crosshair"></canvas>
+            </div>
+            <div class="p-3.5 border-t border-white/50 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-[#7A424E] font-bold">画笔大小</span>
+                        <input type="range" id="eraserBrushSize" min="10" max="180" value="45" class="accent-[#FF4D79] h-1.5 w-24 bg-white/80 rounded cursor-pointer">
+                        <span id="eraserBrushSizeVal" class="text-[#9C334E] font-black w-8">45px</span>
+                    </div>
+                    <button onclick="resetCurrentPaintMask()" class="px-2.5 py-1 bg-white/70 hover:bg-white rounded-xl text-[#7A424E] font-bold">重置擦除</button>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="closeEraseModal()" class="px-3.5 py-1.5 rounded-xl bg-white/60 text-[#7A424E] font-bold">取消</button>
+                    <button onclick="savePaintResult()" class="px-4 py-1.5 rounded-xl liquid-glass-btn font-black">保存修改</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ======================= 核心 JS 数据与渲染引擎 ======================= -->
+    <script>
+        let faceModel = null;
+        let watermarkImg = null;
+        let selectedRawImages = [];
+        let currentProcessedBatch = [];
+
+        let galleryPackages = [];
+        let activeDetailPkg = null;
+
+        let deferredPwaPrompt = null;
+
+        // 监听浏览器 PWA 安装事件
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPwaPrompt = e;
+            const btn = document.getElementById('pwaInstallBtn');
+            if (btn) {
+                btn.classList.remove('hidden');
+                btn.classList.add('flex');
+            }
+        });
+
+        function promptPWAInstall() {
+            if (deferredPwaPrompt) {
+                deferredPwaPrompt.prompt();
+                deferredPwaPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        document.getElementById('pwaInstallBtn').classList.add('hidden');
+                    }
+                    deferredPwaPrompt = null;
+                });
+            } else {
+                alert('如果未弹出安装窗，请点击手机浏览器右上角/底部菜单：“添加到主屏幕” 或 “安装应用” 即可~');
+            }
+        }
+
+        let rootFolder = {
+            id: 'root',
+            name: '根目录',
+            subFolders: [
+                {
+                    id: 'f_default',
+                    name: '原Po示例相册',
+                    subFolders: [
+                        { id: 'f_sub1', name: '第一期', subFolders: [], images: [] },
+                        { id: 'f_sub2', name: '第二期', subFolders: [], images: [] }
+                    ],
+                    images: []
+                }
+            ],
+            images: []
+        };
+        let currentFolderNode = rootFolder;
+        let modalCurrentFolderNode = rootFolder;
+
+        function getImageMimeType(file, fileName) {
+            if (file && file.type) return file.type;
+            const name = (fileName || '').toLowerCase();
+            if (name.endsWith('.png')) return 'image/png';
+            if (name.endsWith('.webp')) return 'image/webp';
+            return 'image/jpeg';
+        }
+
+        async function initFaceModel() {
+            const dot = document.getElementById('aiStatusDot');
+            const text = document.getElementById('aiStatusText');
+            text.innerText = '正在启动擦脸引擎...';
+            dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse';
+
+            try {
+                if (window.tf) {
+                    await tf.setBackend('webgl').catch(() => tf.setBackend('cpu'));
+                }
+                faceModel = await blazeface.load({ maxFaces: 10, iouThreshold: 0.3, scoreThreshold: 0.65 });
+                text.innerText = '擦脸小助手已准备就绪';
+                dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
+            } catch(e) {
+                try {
+                    faceModel = await blazeface.load();
+                    text.innerText = '擦脸小助手已准备就绪';
+                    dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
+                } catch(err) {
+                    text.innerText = '点击重试载入小助手';
+                    dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-400';
+                }
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            initUserProfile();
+            loadCustomWallpaper();
+            renderRepoView();
+            initFaceModel();
+        });
+
+        function toggleNavDropdown() {
+            document.getElementById('navDropdownMenu').classList.toggle('hidden');
+        }
+
+        function switchView(viewName) {
+            document.getElementById('navDropdownMenu').classList.add('hidden');
+            const titles = { 'watermarker': '贴膜机', 'gallery': '图库', 'raw_repo': '原po原图', 'profile': '我的' };
+            document.getElementById('currentViewTitle').innerText = titles[viewName] || '贴膜机';
+
+            ['view-watermarker', 'view-gallery', 'view-gallery-detail', 'view-raw_repo', 'view-profile'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+
+            if (viewName === 'gallery') renderGallery();
+            if (viewName === 'raw_repo') renderRepoView();
+            document.getElementById(`view-${viewName}`).classList.remove('hidden');
+        }
+
+        // ================= 智能贴膜启动检查 =================
+        function handleStartProcessClick() {
+            if (!watermarkImg) {
+                alert('宝宝，还没有导入水印膜哦！\n已为你自动打开文件窗口，请先选择一张全屏透明底水印 PNG~');
+                document.getElementById('wmInput').click();
+                return;
+            }
+            if (selectedRawImages.length === 0) {
+                alert('宝宝，还没有选择待贴膜的原图哦！\n已为你打开导入通道~');
+                openImportChannelModal();
+                return;
+            }
+            executeBatchWatermark();
+        }
+
+        // 导入通道
+        function openImportChannelModal() {
+            document.getElementById('importChannelModal').classList.remove('hidden');
+        }
+        function closeImportChannelModal() {
+            document.getElementById('importChannelModal').classList.add('hidden');
+        }
+
+        function triggerImport(channel) {
+            closeImportChannelModal();
+            if (channel === 'files') {
+                document.getElementById('rawInputByFiles').click();
+            } else if (channel === 'folder') {
+                document.getElementById('rawInputByFolder').click();
+            } else if (channel === 'repo') {
+                openRawRepoSelectorModal();
+            } else if (channel === 'media') {
+                document.getElementById('rawInputByMedia').click();
+            }
+        }
+
+        function handleBulkFiles(e) {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            const imgFiles = files.filter(f => f.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp|avif)$/i.test(f.name));
+
+            if (imgFiles.length === 0) {
+                alert('未检测到有效图片文件，请重新选择！');
+                return;
+            }
+
+            imgFiles.forEach(f => {
+                selectedRawImages.push({
+                    name: f.name,
+                    file: f,
+                    src: URL.createObjectURL(f)
+                });
+            });
+
+            updateRawThumbDisplay();
+            e.target.value = '';
+        }
+
+        const opacityInput = document.getElementById('opacityInput');
+        const opacityText = document.getElementById('opacityText');
+        const blendModeSelect = document.getElementById('blendModeSelect');
+
+        function setPreset(type) {
+            blendModeSelect.value = 'overlay';
+            if (type === 'original') {
+                opacityInput.value = 15;
+                opacityText.innerText = '15%';
+                document.getElementById('btnPreOriginal').className = 'flex-1 py-1.5 rounded-xl liquid-glass-btn liquid-glass-btn-active text-xs font-bold transition-all';
+                document.getElementById('btnPreCustom').className = 'flex-1 py-1.5 rounded-xl liquid-glass-btn text-xs font-bold transition-all';
+            } else {
+                opacityInput.value = 20;
+                opacityText.innerText = '20%';
+                document.getElementById('btnPreCustom').className = 'flex-1 py-1.5 rounded-xl liquid-glass-btn liquid-glass-btn-active text-xs font-bold transition-all';
+                document.getElementById('btnPreOriginal').className = 'flex-1 py-1.5 rounded-xl liquid-glass-btn text-xs font-bold transition-all';
+            }
+        }
+        opacityInput.addEventListener('input', (e) => opacityText.innerText = `${e.target.value}%`);
+
+        function handleWmFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                watermarkImg = new Image();
+                watermarkImg.onload = () => {
+                    document.getElementById('wmEmptyBox').classList.add('hidden');
+                    const filled = document.getElementById('wmFilledBox');
+                    filled.classList.remove('hidden');
+                    document.getElementById('wmLoadedPreview').src = ev.target.result;
+                };
+                watermarkImg.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateRawThumbDisplay() {
+            const emptyBox = document.getElementById('rawEmptyBox');
+            const filledBox = document.getElementById('rawFilledBox');
+            const drawer = document.getElementById('sourceImagesDrawer');
+            const list = document.getElementById('sourceThumbList');
+
+            if (selectedRawImages.length === 0) {
+                emptyBox.classList.remove('hidden');
+                filledBox.classList.add('hidden');
+                drawer.classList.add('hidden');
+            } else {
+                emptyBox.classList.add('hidden');
+                filledBox.classList.remove('hidden');
+                document.getElementById('rawBoxCountLabel').innerText = `已选 ${selectedRawImages.length} 张原图`;
+                document.getElementById('sourceTotalCount').innerText = selectedRawImages.length;
+
+                drawer.classList.remove('hidden');
+                list.innerHTML = '';
+                
+                selectedRawImages.forEach((item, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'w-14 h-14 shrink-0 relative rounded-xl overflow-hidden border border-white shadow-xs group';
+                    card.innerHTML = `
+                        <img src="${item.src}" class="w-full h-full object-cover">
+                        <button onclick="removeRawImageAt(${idx})" class="absolute top-1 right-1 p-0.5 bg-black/50 text-white rounded-full opacity-80 hover:opacity-100">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    `;
+                    list.appendChild(card);
+                });
+            }
+        }
+
+        function removeRawImageAt(index) {
+            selectedRawImages.splice(index, 1);
+            updateRawThumbDisplay();
+        }
+
+        function resetRawFiles() {
+            selectedRawImages = [];
+            updateRawThumbDisplay();
+        }
+
+        // ================= 100% 零损画质贴膜与 AI 检测 =================
+        async function executeBatchWatermark() {
+            const btn = document.getElementById('startProcessBtn');
+            const progressBox = document.getElementById('wmProgressBarBox');
+            const progressBar = document.getElementById('wmProgressBar');
+            const progressPct = document.getElementById('wmProgressPct');
+            const progressText = document.getElementById('wmProgressText');
+            const resultsWrapper = document.getElementById('resultsWrapper');
+
+            btn.disabled = true;
+            progressBox.classList.remove('hidden');
+            resultsWrapper.classList.add('hidden');
+            currentProcessedBatch = [];
+
+            const opacity = parseFloat(opacityInput.value) / 100;
+            const blendMode = blendModeSelect.value || 'overlay';
+            const enableFace = document.getElementById('faceDetectCheck').checked;
+
+            if (enableFace && !faceModel) {
+                progressText.innerText = '正在启动擦脸引擎...';
+                await initFaceModel();
+            }
+
+            for (let i = 0; i < selectedRawImages.length; i++) {
+                const item = selectedRawImages[i];
+                progressText.innerText = `正在处理 (${i+1}/${selectedRawImages.length}): ${item.name}`;
+                
+                const baseImg = await loadImage(item.src);
+                const naturalW = baseImg.naturalWidth || baseImg.width;
+                const naturalH = baseImg.naturalHeight || baseImg.height;
+
+                const wmCanvas = document.createElement('canvas');
+                wmCanvas.width = naturalW;
+                wmCanvas.height = naturalH;
+                const wmCtx = wmCanvas.getContext('2d');
+                wmCtx.imageSmoothingEnabled = true;
+                wmCtx.imageSmoothingQuality = 'high';
+                wmCtx.drawImage(watermarkImg, 0, 0, naturalW, naturalH);
+
+                let detectedFaces = [];
+                if (enableFace && faceModel) {
+                    try {
+                        const maxDetectDim = 640;
+                        const scale = Math.min(1.0, maxDetectDim / Math.max(naturalW, naturalH));
+                        const dCanvas = document.createElement('canvas');
+                        dCanvas.width = Math.round(naturalW * scale);
+                        dCanvas.height = Math.round(naturalH * scale);
+                        const dCtx = dCanvas.getContext('2d');
+                        dCtx.drawImage(baseImg, 0, 0, dCanvas.width, dCanvas.height);
+
+                        const rawFaces = await faceModel.estimateFaces(dCanvas, false);
+                        
+                        if (rawFaces && rawFaces.length > 0) {
+                            detectedFaces = rawFaces.map(f => {
+                                const start = f.topLeft;
+                                const end = f.bottomRight;
+                                return {
+                                    startX: start[0] / scale,
+                                    startY: start[1] / scale,
+                                    endX: end[0] / scale,
+                                    endY: end[1] / scale
+                                };
+                            });
+                        }
+                    } catch (err) {
+                        console.error("人脸识别异常:", err);
+                    }
+                }
+
+                if (detectedFaces.length > 0) {
+                    progressText.innerText = `已识别并擦除 ${detectedFaces.length} 处脸部 (${i+1}/${selectedRawImages.length})`;
+                    wmCtx.save();
+                    wmCtx.globalCompositeOperation = 'destination-out';
+                    
+                    detectedFaces.forEach(face => {
+                        const fw = face.endX - face.startX;
+                        const fh = face.endY - face.startY;
+                        const cx = face.startX + fw / 2;
+                        const cy = face.startY + fh / 2;
+                        const r = (Math.max(fw, fh) / 2) * 1.45;
+
+                        const g = wmCtx.createRadialGradient(cx, cy, r * 0.25, cx, cy, r);
+                        g.addColorStop(0, 'rgba(0,0,0,1)');
+                        g.addColorStop(0.85, 'rgba(0,0,0,0.85)');
+                        g.addColorStop(1, 'rgba(0,0,0,0)');
+
+                        wmCtx.fillStyle = g;
+                        wmCtx.beginPath();
+                        wmCtx.arc(cx, cy, r, 0, Math.PI * 2);
+                        wmCtx.fill();
+                    });
+                    wmCtx.restore();
+                }
+
+                const finalCanvas = document.createElement('canvas');
+                finalCanvas.width = naturalW;
+                finalCanvas.height = naturalH;
+                const fCtx = finalCanvas.getContext('2d');
+                fCtx.imageSmoothingEnabled = true;
+                fCtx.imageSmoothingQuality = 'high';
+
+                fCtx.drawImage(baseImg, 0, 0);
+
+                fCtx.globalCompositeOperation = blendMode;
+                fCtx.globalAlpha = opacity;
+                fCtx.drawImage(wmCanvas, 0, 0);
+                fCtx.globalCompositeOperation = 'source-over';
+                fCtx.globalAlpha = 1.0;
+
+                const mimeType = getImageMimeType(item.file, item.name);
+                const blob = await new Promise(res => finalCanvas.toBlob(res, mimeType, 1.0));
+                const url = URL.createObjectURL(blob);
+
+                currentProcessedBatch.push({
+                    id: i,
+                    name: `watermarked_${item.name}`,
+                    file: item.file,
+                    baseImg: baseImg,
+                    wmCanvas: wmCanvas,
+                    blendMode: blendMode,
+                    mimeType: mimeType,
+                    resultBlob: blob,
+                    resultUrl: url
+                });
+
+                const pct = Math.round(((i + 1) / selectedRawImages.length) * 100);
+                progressBar.style.width = `${pct}%`;
+                progressPct.innerText = `${pct}%`;
+            }
+
+            progressBox.classList.add('hidden');
+            resultsWrapper.classList.remove('hidden');
+            document.getElementById('currentBatchCount').innerText = currentProcessedBatch.length;
+            renderCurrentBatchResults();
+            btn.disabled = false;
+        }
+
+        function loadImage(src) {
+            return new Promise((res, rej) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => res(img);
+                img.onerror = rej;
+                img.src = src;
+            });
+        }
+
+        function renderCurrentBatchResults() {
+            const grid = document.getElementById('currentResultGrid');
+            grid.innerHTML = '';
+            currentProcessedBatch.forEach((item) => {
+                const card = createSquareImageCard(item, (id) => openEraseModal(id, currentProcessedBatch));
+                grid.appendChild(card);
+            });
+        }
+
+        function createSquareImageCard(item, onEditClick) {
+            const wrap = document.createElement('div');
+            wrap.className = 'group relative rounded-3xl overflow-hidden liquid-glass flex flex-col shadow-xs';
+            wrap.innerHTML = `
+                <div class="aspect-square w-full overflow-hidden bg-white/40 relative">
+                    <img id="thumb-${item.id}" src="${item.resultUrl}" class="w-full h-full object-cover">
+                    <button class="edit-btn absolute bottom-2 right-2 px-2.5 py-1 liquid-glass-btn rounded-xl text-[10px] font-bold flex items-center gap-1 shadow-sm">
+                        <svg class="w-3 h-3 text-[#FF4D79]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        <span>手动擦除</span>
+                    </button>
+                </div>
+                <div class="p-2 bg-white/60 flex items-center justify-between gap-1 border-t border-white/60">
+                    <span class="text-[10px] truncate font-bold text-[#4F2D35]" title="${item.name}">${item.name}</span>
+                    <a id="down-${item.id}" href="${item.resultUrl}" download="${item.name}" class="p-1 text-[#7A424E] hover:text-[#C72A52]">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    </a>
+                </div>
+            `;
+            wrap.querySelector('.edit-btn').onclick = () => onEditClick(item.id);
+            return wrap;
+        }
+
+        function openExportZipModal() {
+            document.getElementById('zipAuthorInput').value = document.getElementById('userNameInput').value || '用户';
+            document.getElementById('zipQQInput').value = document.getElementById('prefQQInput').value || '';
+            document.getElementById('exportZipModal').classList.remove('hidden');
+        }
+        function closeExportZipModal() {
+            document.getElementById('exportZipModal').classList.add('hidden');
+        }
+
+        async function confirmAndDownloadZip() {
+            const author = document.getElementById('zipAuthorInput').value.trim() || '用户';
+            const qq = document.getElementById('zipQQInput').value.trim() || '未知QQ';
+            const opacity = parseFloat(opacityInput.value);
+
+            const pkgId = `pkg_${Date.now()}`;
+            const pkg = {
+                id: pkgId,
+                author: author,
+                qq: qq,
+                date: new Date().toLocaleDateString(),
+                opacity: opacity,
+                blendMode: blendModeSelect.value,
+                coverUrl: currentProcessedBatch[0].resultUrl,
+                items: currentProcessedBatch.map(it => ({ ...it }))
+            };
+            galleryPackages.unshift(pkg);
+
+            const zip = new JSZip();
+            pkg.items.forEach(it => {
+                zip.file(it.name, it.resultBlob);
+            });
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+            saveAs(zipBlob, `[${author}]_[${qq}]_贴膜包.zip`);
+
+            closeExportZipModal();
+            alert(`已成功导出无损 ZIP 并归档至“图库”！`);
+        }
+
+        function renderGallery() {
+            const grid = document.getElementById('galleryPackageGrid');
+            const search = document.getElementById('gallerySearchInput').value.trim().toLowerCase();
+            grid.innerHTML = '';
+
+            const filtered = galleryPackages.filter(p => p.qq.toLowerCase().includes(search) || p.author.toLowerCase().includes(search));
+            document.getElementById('galleryCountLabel').innerText = `${filtered.length} 个包`;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-8 text-center text-xs text-[#7A424E] font-bold">暂无符合条件的图包</div>`;
+                return;
+            }
+
+            filtered.forEach(pkg => {
+                const card = document.createElement('div');
+                card.className = 'group aspect-square rounded-3xl overflow-hidden liquid-glass relative cursor-pointer shadow-xs hover:scale-[1.02] transition-all flex flex-col';
+                card.innerHTML = `
+                    <div class="flex-1 overflow-hidden relative">
+                        <img src="${pkg.coverUrl}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent"></div>
+                        <div class="absolute bottom-2.5 left-2.5 right-2.5 text-white">
+                            <div class="text-xs font-bold truncate">${pkg.author}</div>
+                            <div class="text-[10px] text-pink-100 flex justify-between">
+                                <span>QQ: ${pkg.qq}</span>
+                                <span>${pkg.items.length} 张</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                card.onclick = () => openPackageDetail(pkg);
+                grid.appendChild(card);
+            });
+        }
+
+        function filterGallery() { renderGallery(); }
+
+        function openPackageDetail(pkg) {
+            activeDetailPkg = pkg;
+            document.getElementById('detailPkgTitle').innerText = `署名: ${pkg.author}`;
+            document.getElementById('detailPkgSub').innerText = `QQ: ${pkg.qq} · 共 ${pkg.items.length} 张 · 制作于 ${pkg.date}`;
+            document.getElementById('detailGroupOpacity').value = pkg.opacity;
+            document.getElementById('detailGroupOpacityVal').innerText = `${pkg.opacity}%`;
+
+            renderDetailImages();
+
+            document.getElementById('view-gallery').classList.add('hidden');
+            document.getElementById('view-gallery-detail').classList.remove('hidden');
+        }
+
+        function renderDetailImages() {
+            const grid = document.getElementById('detailImageGrid');
+            grid.innerHTML = '';
+            activeDetailPkg.items.forEach(item => {
+                const card = createSquareImageCard(item, (id) => openEraseModal(id, activeDetailPkg.items));
+                grid.appendChild(card);
+            });
+        }
+
+        document.getElementById('detailGroupOpacity').addEventListener('input', (e) => {
+            document.getElementById('detailGroupOpacityVal').innerText = `${e.target.value}%`;
+        });
+
+        async function applyGroupOpacityChange() {
+            if (!activeDetailPkg) return;
+            const newOpacity = parseFloat(document.getElementById('detailGroupOpacity').value) / 100;
+            activeDetailPkg.opacity = parseFloat(document.getElementById('detailGroupOpacity').value);
+            const blendMode = activeDetailPkg.blendMode || 'overlay';
+
+            for (let item of activeDetailPkg.items) {
+                const naturalW = item.baseImg.naturalWidth || item.baseImg.width;
+                const naturalH = item.baseImg.naturalHeight || item.baseImg.height;
+
+                const canvas = document.createElement('canvas');
+                canvas.width = naturalW;
+                canvas.height = naturalH;
+                const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+
+                ctx.drawImage(item.baseImg, 0, 0);
+                ctx.globalCompositeOperation = blendMode;
+                ctx.globalAlpha = newOpacity;
+                ctx.drawImage(item.wmCanvas, 0, 0);
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.globalAlpha = 1.0;
+
+                const mimeType = getImageMimeType(item.file, item.name);
+                const blob = await new Promise(res => canvas.toBlob(res, mimeType, 1.0));
+                item.resultBlob = blob;
+                item.resultUrl = URL.createObjectURL(blob);
+            }
+
+            activeDetailPkg.coverUrl = activeDetailPkg.items[0].resultUrl;
+            renderDetailImages();
+            alert('整组浓度已更新，依然保持 100% 原始画质！');
+        }
+
+        async function downloadActivePackageZip() {
+            if (!activeDetailPkg) return;
+            const zip = new JSZip();
+            activeDetailPkg.items.forEach(it => {
+                zip.file(it.name, it.resultBlob);
+            });
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+            saveAs(zipBlob, `[${activeDetailPkg.author}]_[${activeDetailPkg.qq}]_贴膜包.zip`);
+        }
+
+        // ================= 原po原图 多层文件夹管理 =================
+        function renderRepoView() {
+            const bc = document.getElementById('repoBreadcrumbs');
+            bc.innerHTML = `
+                <span class="text-[#7A424E] cursor-pointer hover:text-[#A62B4A]" onclick="navigateToFolder(rootFolder)">根目录</span>
+            `;
+            if (currentFolderNode !== rootFolder) {
+                bc.innerHTML += ` <span class="text-[#D19BA8]">/</span> <span class="text-[#A62B4A]">${currentFolderNode.name}</span>`;
+            }
+
+            const fGrid = document.getElementById('repoSubFolderGrid');
+            fGrid.innerHTML = '';
+            currentFolderNode.subFolders.forEach(sub => {
+                const fCard = document.createElement('div');
+                fCard.className = 'p-3 liquid-glass hover:bg-white rounded-3xl cursor-pointer flex items-center gap-2.5 transition-all';
+                fCard.innerHTML = `
+                    <svg class="w-5 h-5 text-[#FF4D79] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                    <div class="truncate">
+                        <div class="text-xs font-bold text-[#4F2D35] truncate">${sub.name}</div>
+                        <div class="text-[10px] text-[#7A424E] font-bold">${sub.images.length} 张原图</div>
+                    </div>
+                `;
+                fCard.onclick = () => navigateToFolder(sub);
+                fGrid.appendChild(fCard);
+            });
+
+            const iGrid = document.getElementById('repoImageGrid');
+            iGrid.innerHTML = '';
+            currentFolderNode.images.forEach((imgItem) => {
+                const iCard = document.createElement('div');
+                iCard.className = 'aspect-square rounded-3xl overflow-hidden liquid-glass relative shadow-xs';
+                iCard.innerHTML = `<img src="${imgItem.src}" class="w-full h-full object-cover">`;
+                iGrid.appendChild(iCard);
+            });
+        }
+
+        function navigateToFolder(node) {
+            currentFolderNode = node;
+            renderRepoView();
+        }
+
+        function promptCreateFolder() {
+            const name = prompt('请输入新子文件夹名称（例如：第一期 / 某某原po）：');
+            if (!name) return;
+            currentFolderNode.subFolders.push({
+                id: `f_${Date.now()}`,
+                name: name,
+                subFolders: [],
+                images: []
+            });
+            renderRepoView();
+        }
+
+        function handleUploadToCurrentFolder(e) {
+            const files = Array.from(e.target.files);
+            const imgFiles = files.filter(f => f.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp)$/i.test(f.name));
+            imgFiles.forEach(f => {
+                currentFolderNode.images.push({
+                    name: f.name,
+                    file: f,
+                    src: URL.createObjectURL(f)
+                });
+            });
+            renderRepoView();
+            e.target.value = '';
+        }
+
+        function openRawRepoSelectorModal() {
+            modalCurrentFolderNode = rootFolder;
+            renderModalRepo();
+            document.getElementById('rawRepoModal').classList.remove('hidden');
+        }
+        function closeRawRepoSelectorModal() {
+            document.getElementById('rawRepoModal').classList.add('hidden');
+        }
+
+        function renderModalRepo() {
+            const bc = document.getElementById('modalRepoBreadcrumbs');
+            bc.innerHTML = `<span class="cursor-pointer hover:underline" onclick="modalNavFolder(rootFolder)">根目录</span>`;
+            if (modalCurrentFolderNode !== rootFolder) {
+                bc.innerHTML += ` / <span class="font-bold text-[#A62B4A]">${modalCurrentFolderNode.name}</span>`;
+            }
+
+            const fGrid = document.getElementById('modalFolderGrid');
+            fGrid.innerHTML = '';
+            modalCurrentFolderNode.subFolders.forEach(sub => {
+                const item = document.createElement('div');
+                item.className = 'p-2.5 liquid-glass-subtle hover:bg-white rounded-2xl cursor-pointer flex items-center gap-2 text-xs font-bold text-[#4F2D35]';
+                item.innerHTML = `
+                    <svg class="w-4 h-4 text-[#FF4D79]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                    <span class="truncate">${sub.name}</span>
+                `;
+                item.onclick = () => modalNavFolder(sub);
+                fGrid.appendChild(item);
+            });
+
+            const iGrid = document.getElementById('modalImageGrid');
+            iGrid.innerHTML = '';
+            modalCurrentFolderNode.images.forEach(img => {
+                const box = document.createElement('div');
+                box.className = 'aspect-square rounded-2xl overflow-hidden liquid-glass-subtle';
+                box.innerHTML = `<img src="${img.src}" class="w-full h-full object-cover">`;
+                iGrid.appendChild(box);
+            });
+
+            document.getElementById('modalSelectedSummary').innerText = `当前文件夹共 ${modalCurrentFolderNode.images.length} 张原图`;
+        }
+
+        function modalNavFolder(node) {
+            modalCurrentFolderNode = node;
+            renderModalRepo();
+        }
+
+        function importAllFromCurrentModalFolder() {
+            if (modalCurrentFolderNode.images.length === 0) {
+                alert('当前文件夹没有图片！请点击进入包含图片的子文件夹。');
+                return;
+            }
+            modalCurrentFolderNode.images.forEach(img => {
+                selectedRawImages.push({
+                    name: img.name,
+                    file: img.file,
+                    src: img.src
+                });
+            });
+            updateRawThumbDisplay();
+            closeRawRepoSelectorModal();
+        }
+
+        // ================= 手动擦脸精修工作台 =================
+        let paintItem = null;
+        let paintSourceList = null;
+        let paintCanvas = document.getElementById('paintCanvas');
+        let paintCtx = paintCanvas.getContext('2d');
+        let tempEditWmCanvas = null;
+        let isPainting = false;
+
+        const eraserBrushSize = document.getElementById('eraserBrushSize');
+        const eraserBrushSizeVal = document.getElementById('eraserBrushSizeVal');
+        eraserBrushSize.addEventListener('input', (e) => eraserBrushSizeVal.innerText = `${e.target.value}px`);
+
+        function openEraseModal(id, sourceList) {
+            paintSourceList = sourceList;
+            paintItem = sourceList.find(i => i.id === id);
+            if (!paintItem) return;
+
+            const naturalW = paintItem.baseImg.naturalWidth || paintItem.baseImg.width;
+            const naturalH = paintItem.baseImg.naturalHeight || paintItem.baseImg.height;
+
+            tempEditWmCanvas = document.createElement('canvas');
+            tempEditWmCanvas.width = naturalW;
+            tempEditWmCanvas.height = naturalH;
+            const tctx = tempEditWmCanvas.getContext('2d');
+            tctx.drawImage(paintItem.wmCanvas, 0, 0);
+
+            paintCanvas.width = naturalW;
+            paintCanvas.height = naturalH;
+
+            renderPaint();
+            document.getElementById('eraseModal').classList.remove('hidden');
+        }
+
+        function closeEraseModal() {
+            document.getElementById('eraseModal').classList.add('hidden');
+            paintItem = null;
+            tempEditWmCanvas = null;
+        }
+
+        function renderPaint() {
+            if (!paintItem || !tempEditWmCanvas) return;
+            const opacity = parseFloat(opacityInput.value) / 100;
+            const blendMode = blendModeSelect.value || 'overlay';
+
+            paintCtx.imageSmoothingEnabled = true;
+            paintCtx.imageSmoothingQuality = 'high';
+            paintCtx.clearRect(0, 0, paintCanvas.width, paintCanvas.height);
+            paintCtx.drawImage(paintItem.baseImg, 0, 0);
+
+            paintCtx.globalCompositeOperation = blendMode;
+            paintCtx.globalAlpha = opacity;
+            paintCtx.drawImage(tempEditWmCanvas, 0, 0);
+
+            paintCtx.globalCompositeOperation = 'source-over';
+            paintCtx.globalAlpha = 1.0;
+        }
+
+        function doEraseStroke(clientX, clientY) {
+            if (!tempEditWmCanvas) return;
+            const rect = paintCanvas.getBoundingClientRect();
+            const sx = paintCanvas.width / rect.width;
+            const sy = paintCanvas.height / rect.height;
+            const x = (clientX - rect.left) * sx;
+            const y = (clientY - rect.top) * sy;
+            const r = parseFloat(eraserBrushSize.value) * sx;
+
+            const wctx = tempEditWmCanvas.getContext('2d');
+            wctx.globalCompositeOperation = 'destination-out';
+            const g = wctx.createRadialGradient(x, y, r * 0.2, x, y, r);
+            g.addColorStop(0, 'rgba(0,0,0,1)');
+            g.addColorStop(0.85, 'rgba(0,0,0,0.85)');
+            g.addColorStop(1, 'rgba(0,0,0,0)');
+
+            wctx.fillStyle = g;
+            wctx.beginPath();
+            wctx.arc(x, y, r, 0, Math.PI * 2);
+            wctx.fill();
+            wctx.globalCompositeOperation = 'source-over';
+
+            renderPaint();
+        }
+
+        paintCanvas.addEventListener('mousedown', (e) => { isPainting = true; doEraseStroke(e.clientX, e.clientY); });
+        window.addEventListener('mousemove', (e) => { if (isPainting) doEraseStroke(e.clientX, e.clientY); });
+        window.addEventListener('mouseup', () => isPainting = false);
+
+        paintCanvas.addEventListener('touchstart', (e) => { 
+            isPainting = true; 
+            if (e.touches[0]) doEraseStroke(e.touches[0].clientX, e.touches[0].clientY);
+            e.preventDefault();
+        }, { passive: false });
+
+        paintCanvas.addEventListener('touchmove', (e) => { 
+            if (isPainting && e.touches[0]) doEraseStroke(e.touches[0].clientX, e.touches[0].clientY);
+            e.preventDefault();
+        }, { passive: false });
+
+        paintCanvas.addEventListener('touchend', () => isPainting = false);
+
+        function resetCurrentPaintMask() {
+            if (!tempEditWmCanvas || !watermarkImg) return;
+            const tctx = tempEditWmCanvas.getContext('2d');
+            tctx.clearRect(0, 0, tempEditWmCanvas.width, tempEditWmCanvas.height);
+            tctx.drawImage(watermarkImg, 0, 0, tempEditWmCanvas.width, tempEditWmCanvas.height);
+            renderPaint();
+        }
+
+        async function savePaintResult() {
+            if (!paintItem || !tempEditWmCanvas) return;
+            const naturalW = paintItem.baseImg.naturalWidth || paintItem.baseImg.width;
+            const naturalH = paintItem.baseImg.naturalHeight || paintItem.baseImg.height;
+
+            const wctx = paintItem.wmCanvas.getContext('2d');
+            wctx.clearRect(0, 0, naturalW, naturalH);
+            wctx.drawImage(tempEditWmCanvas, 0, 0);
+
+            const mimeType = getImageMimeType(paintItem.file, paintItem.name);
+            const blob = await new Promise(res => paintCanvas.toBlob(res, mimeType, 1.0));
+            const url = URL.createObjectURL(blob);
+
+            paintItem.resultBlob = blob;
+            paintItem.resultUrl = url;
+
+            const thumb = document.getElementById(`thumb-${paintItem.id}`);
+            if (thumb) thumb.src = url;
+            const down = document.getElementById(`down-${paintItem.id}`);
+            if (down) down.href = url;
+
+            closeEraseModal();
+        }
+
+        // ================= 我的 =================
+        function initUserProfile() {
+            const savedName = localStorage.getItem('user_name') || '用户';
+            const savedQQ = localStorage.getItem('user_qq') || '';
+            const savedAvatar = localStorage.getItem('user_avatar');
+
+            document.getElementById('userNameInput').value = savedName;
+            document.getElementById('prefQQInput').value = savedQQ;
+            if (savedAvatar) {
+                document.getElementById('userAvatarImg').src = savedAvatar;
+            }
+        }
+
+        function saveUserProfileAuto() {
+            const name = document.getElementById('userNameInput').value.trim() || '用户';
+            const qq = document.getElementById('prefQQInput').value.trim();
+            localStorage.setItem('user_name', name);
+            localStorage.setItem('user_qq', qq);
+        }
+
+        function handleAvatarChange(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const base64 = ev.target.result;
+                document.getElementById('userAvatarImg').src = base64;
+                localStorage.setItem('user_avatar', base64);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleWallpaperChange(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const base64 = ev.target.result;
+                applyWallpaperStyle(base64);
+                localStorage.setItem('custom_wallpaper', base64);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function restoreDefaultWallpaper() {
+            localStorage.removeItem('custom_wallpaper');
+            const body = document.getElementById('mainBody');
+            body.style.backgroundImage = '';
+            body.className = "bg-gradient-to-br from-[#FFF9FB] via-[#FFF3F6] to-[#FFEBF1] text-[#4F2D35] min-h-screen antialiased selection:bg-pink-100 transition-all duration-300";
+        }
+
+        function loadCustomWallpaper() {
+            const savedWp = localStorage.getItem('custom_wallpaper');
+            if (savedWp) {
+                applyWallpaperStyle(savedWp);
+            }
+        }
+
+        function applyWallpaperStyle(bgUrl) {
+            const body = document.getElementById('mainBody');
+            body.style.backgroundImage = `url('${bgUrl}')`;
+            body.style.backgroundSize = 'cover';
+            body.style.backgroundPosition = 'center';
+            body.style.backgroundAttachment = 'fixed';
+        }
+
+        function exportAllDataBackup() {
+            const backupData = {
+                version: '1.0',
+                timestamp: Date.now(),
+                userName: localStorage.getItem('user_name') || '用户',
+                userQQ: localStorage.getItem('user_qq') || '',
+                userAvatar: localStorage.getItem('user_avatar') || '',
+                customWallpaper: localStorage.getItem('custom_wallpaper') || '',
+                rootFolder: rootFolder,
+                galleryPackages: galleryPackages.map(p => ({
+                    id: p.id,
+                    author: p.author,
+                    qq: p.qq,
+                    date: p.date,
+                    opacity: p.opacity,
+                    blendMode: p.blendMode,
+                    coverUrl: p.coverUrl
+                }))
+            };
+            const jsonStr = JSON.stringify(backupData, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            saveAs(blob, `贴膜机数据备份_${Date.now()}.json`);
+        }
+
+        function handleImportDataBackup(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    if (data.userName) localStorage.setItem('user_name', data.userName);
+                    if (data.userQQ) localStorage.setItem('user_qq', data.userQQ);
+                    if (data.userAvatar) localStorage.setItem('user_avatar', data.userAvatar);
+                    if (data.customWallpaper) {
+                        localStorage.setItem('custom_wallpaper', data.customWallpaper);
+                        applyWallpaperStyle(data.customWallpaper);
+                    }
+                    if (data.rootFolder) {
+                        rootFolder = data.rootFolder;
+                        currentFolderNode = rootFolder;
+                    }
+                    initUserProfile();
+                    renderRepoView();
+                    alert('数据备份已成功恢复！');
+                } catch(err) {
+                    alert('数据解析失败，请确保导入了正确的备份文件。');
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
