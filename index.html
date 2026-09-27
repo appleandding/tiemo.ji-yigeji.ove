@@ -766,15 +766,16 @@ input[type="range"]::-moz-range-thumb {
 }
 .img-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* 水印网格 */
+/* 水印与原图通用网格与多选选中样式 */
 .wm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 @media (min-width: 520px) { .wm-grid { grid-template-columns: repeat(4, 1fr); } }
 .wm-cell {
   aspect-ratio: 1/1; border-radius: 16px; overflow: hidden;
   border: 1px solid var(--glass-border);
   background: #fff; position: relative; cursor: pointer;
-  transition: transform .15s ease, border-color .15s ease;
+  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
   box-shadow: 0 2px 6px rgba(100,116,139,0.1);
+  user-select: none;
 }
 .wm-cell:active { transform: scale(0.96); border-color: var(--accent); }
 .wm-cell img {
@@ -805,10 +806,44 @@ input[type="range"]::-moz-range-thumb {
   border: none; cursor: pointer; padding: 0;
   z-index: 3;
 }
-.wm-cell.selected {
-  border: 2px solid var(--accent);
-  box-shadow: 0 0 0 2px rgba(100,116,139,0.2), 0 2px 8px rgba(100,116,139,0.2);
+/* 多选模式样式 */
+.img-cell { position: relative; cursor: pointer; user-select: none; }
+.selectable-item.is-selected {
+  outline: 2.5px solid var(--accent);
+  box-shadow: 0 0 0 3px rgba(100,116,139,0.25);
+  transform: scale(0.97);
 }
+.select-check-badge {
+  position: absolute; top: 6px; left: 6px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  border: 1.5px solid var(--accent);
+  display: none; align-items: center; justify-content: center;
+  z-index: 5; pointer-events: none;
+}
+.selectable-mode .select-check-badge { display: flex; }
+.selectable-item.is-selected .select-check-badge {
+  background: var(--accent);
+  color: #fff;
+}
+.batch-toolbar {
+  position: sticky; bottom: 10px; z-index: 20;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 24px rgba(51,65,85,0.15);
+  border-radius: 20px; padding: 10px 14px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  animation: slideUp .2s ease;
+}
+@keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.text-action-btn {
+  background: transparent; border: none; font-size: 12px; font-weight: 700;
+  color: var(--accent); cursor: pointer; font-family: inherit; padding: 4px 6px;
+}
+.text-action-btn:active { opacity: 0.7; }
+.folder-card { user-select: none; -webkit-touch-callout: none; }
 
 .empty-hint {
   grid-column: 1 / -1;
@@ -905,37 +940,68 @@ input[type="range"]::-moz-range-thumb {
 .modal-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scrollbar-width: none; padding-right: 2px; }
 .modal-scroll::-webkit-scrollbar { display: none; }
 
-/* 擦除工作台 */
-.erase-modal-card { max-width: 900px; width: 100%; height: 92vh; }
+/* 擦除精修工作台（正方形视口 + 工具栏） */
+.erase-modal-card {
+  max-width: 480px; width: 95%; max-height: 94vh;
+  display: flex; flex-direction: column; gap: 10px; padding: 16px;
+}
+.square-stage-wrap {
+  width: 100%; display: flex; justify-content: center; align-items: center;
+}
 #paintContainer {
-  flex: 1; position: relative; overflow: hidden;
-  background: #EEF2F6;
-  border-radius: 20px;
+  width: min(80vw, 340px); height: min(80vw, 340px);
+  aspect-ratio: 1 / 1;
+  position: relative; overflow: hidden;
+  background: #E2E8F0;
+  border-radius: 22px;
   display: flex; align-items: center; justify-content: center;
   touch-action: none; user-select: none;
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--glass-border);
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.06);
 }
 #paintTransformWrap {
   position: relative; transform-origin: center center;
-  transition: transform .06s linear;
   display: flex; align-items: center; justify-content: center;
+  will-change: transform;
 }
 #paintCanvas {
   max-width: 100%; max-height: 100%;
-  border-radius: 14px;
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 4px 18px rgba(100,116,139,0.18);
+  border-radius: 12px;
   touch-action: none;
   display: block;
 }
-.erase-toolbar {
-  display: flex; flex-wrap: wrap; align-items: center;
-  justify-content: space-between; gap: 10px;
-  padding-top: 10px; border-top: 1px solid var(--line);
+/* 框下工具栏 */
+.erase-mid-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; width: min(80vw, 340px); margin: 0 auto;
 }
-.brush-group { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; color: var(--text-muted); }
-.brush-group input[type="range"] { width: 80px; }
-.brush-val { color: var(--text-main); font-weight: 800; min-width: 34px; font-variant-numeric: tabular-nums; }
+.mode-switch-group {
+  display: flex; background: var(--glass-subtle);
+  border: 1px solid var(--glass-border); border-radius: 14px; padding: 2px;
+}
+.tool-mode-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 12px; border-radius: 11px; border: none;
+  background: transparent; font-size: 11px; font-weight: 700;
+  color: var(--text-muted); cursor: pointer; font-family: inherit;
+  transition: all .16s ease;
+}
+.tool-mode-btn.active {
+  background: #FFFFFF; color: var(--text-main);
+  box-shadow: 0 1px 4px rgba(100,116,139,0.18);
+}
+.erase-bottom-bar {
+  display: flex; flex-direction: column; gap: 8px;
+  padding-top: 8px; border-top: 1px solid var(--line);
+}
+.brush-size-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; font-size: 11px; font-weight: 700; color: var(--text-muted);
+}
+.brush-size-row input[type="range"] { flex: 1; }
+.erase-footer-actions {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
 
 /* 我的 */
 .profile-hero { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 20px 14px; }
@@ -979,6 +1045,79 @@ input[type="range"]::-moz-range-thumb {
 }
 .action-btn:active { transform: scale(0.97); }
 .action-btn.ghost { color: var(--text-muted); font-weight: 600; }
+
+/* ============ 高颜值更新弹窗与全屏公告 ============ */
+.update-popup-card {
+  max-width: 420px; width: 92%; max-height: 84vh;
+  border-radius: 28px; padding: 22px 18px 18px;
+  box-shadow: 0 20px 50px rgba(51, 65, 85, 0.22), var(--glass-shine);
+  display: flex; flex-direction: column; gap: 14px;
+}
+.update-popup-header {
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px dashed var(--line); padding-bottom: 12px;
+}
+.update-title-group {
+  display: flex; align-items: center; gap: 10px;
+}
+.update-icon-badge {
+  width: 42px; height: 42px; border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.95), var(--glass-subtle));
+  border: 1px solid var(--glass-border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent); box-shadow: var(--glass-shine);
+}
+.ver-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(100, 116, 139, 0.12); border: 1px solid rgba(100, 116, 139, 0.2);
+  color: var(--accent); font-size: 10px; font-weight: 800;
+  padding: 2px 8px; border-radius: 8px; margin-top: 3px;
+}
+.update-scroll-body {
+  flex: 1; overflow-y: auto; padding-right: 4px;
+  display: flex; flex-direction: column; gap: 12px;
+  scrollbar-width: none;
+}
+.update-scroll-body::-webkit-scrollbar { display: none; }
+.log-section-card {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px; padding: 12px 14px;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.8);
+}
+.log-sec-title {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11.5px; font-weight: 800; color: var(--text-main);
+  margin-bottom: 6px;
+}
+.log-sec-title svg { color: var(--accent); flex-shrink: 0; }
+.log-item-text {
+  font-size: 11px; line-height: 1.7; color: var(--text-muted);
+  font-weight: 600; text-align: justify;
+}
+.log-item-text + .log-item-text { margin-top: 6px; border-top: 1px dashed rgba(226,232,240,0.8); padding-top: 6px; }
+.update-confirm-btn {
+  width: 100%; padding: 13px; border-radius: 18px;
+  background: var(--text-main); color: #FFFFFF;
+  border: none; font-size: 12.5px; font-weight: 800;
+  font-family: inherit; cursor: pointer; transition: all .16s ease;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 4px 14px rgba(51,65,85,0.2);
+}
+.update-confirm-btn:active { transform: scale(0.98); opacity: 0.9; }
+
+/* 公告 APP 历史版本卡片 */
+.history-ver-card {
+  border-radius: 22px; padding: 16px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.history-ver-card.current {
+  border: 1.5px solid var(--accent);
+}
+.history-header {
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--line); padding-bottom: 8px;
+}
 </style>
 </head>
 
@@ -1053,9 +1192,9 @@ input[type="range"]::-moz-range-thumb {
       </div>
 
       <div class="profile-card-fade">
-        <div class="profile-name editable" id="homeName" contenteditable="true" spellcheck="false">兔耳抹眼泪_</div>
-        <div class="profile-qq editable" id="homeQQ" contenteditable="true" spellcheck="false">QQ: 10001</div>
-        <div class="profile-bio editable" contenteditable="true" spellcheck="false">愿你眼里的星星，永远明亮璀璨</div>
+        <div class="profile-name editable" id="homeName" data-wkey="home_name" contenteditable="true" spellcheck="false">兔耳抹眼泪_</div>
+        <div class="profile-qq editable" id="homeQQ" data-wkey="home_qq" contenteditable="true" spellcheck="false">QQ: 10001</div>
+        <div class="profile-bio editable" id="homeBio" data-wkey="home_bio" contenteditable="true" spellcheck="false">愿你眼里的星星，永远明亮璀璨</div>
       </div>
     </div>
 
@@ -1065,7 +1204,7 @@ input[type="range"]::-moz-range-thumb {
           <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7-6.3-4.6L5.7 21l2.3-7-6-4.6h7.6z"/></svg>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7-6.3-4.6L5.7 21l2.3-7-6-4.6h7.6z"/></svg>
         </div>
-        <div class="quote-content editable" contenteditable="true" spellcheck="false">我同时遇见三叶草和你<br>不用质疑你是它的第四片叶子<br>而我是世界上最幸运的人</div>
+        <div class="quote-content editable" id="quoteContent" data-wkey="quote_content" contenteditable="true" spellcheck="false">我同时遇见三叶草和你<br>不用质疑你是它的第四片叶子<br>而我是世界上最幸运的人</div>
         <div class="quote-footer">
           <div class="quote-upload-btn" id="quoteUploadBtn" title="点击添加照片/头像">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
@@ -1159,17 +1298,17 @@ input[type="range"]::-moz-range-thumb {
       <div class="liquid-glass music-widget" id="musicCard">
         <div class="music-header">
           <span>正在播放</span>
-          <span class="editable" contenteditable="true" spellcheck="false" style="font-weight: 600; color: var(--text-main);">失眠了</span>
+          <span class="editable" data-wkey="music_status" contenteditable="true" spellcheck="false" style="font-weight: 600; color: var(--text-main);">失眠了</span>
         </div>
         <div class="music-main">
           <div class="album-art" id="musicAlbumArt" title="点击添加唱片头像/封面">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="0.5" fill="currentColor"/></svg>
           </div>
           <div class="music-details">
-            <div class="music-title editable" contenteditable="true" spellcheck="false">明明你也想我吧</div>
+            <div class="music-title editable" data-wkey="music_title" contenteditable="true" spellcheck="false">明明你也想我吧</div>
             <div class="music-time">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <span class="editable" contenteditable="true" spellcheck="false">09:41:00</span>
+              <span class="editable" data-wkey="music_time" contenteditable="true" spellcheck="false">09:41:00</span>
             </div>
           </div>
         </div>
@@ -1190,25 +1329,25 @@ input[type="range"]::-moz-range-thumb {
   <div class="page" id="page2">
 
     <div class="polaroid-freestyle-wrap">
-      <div class="polaroid-frame left polaroid-clickable" title="点击添加照片">
-        <div class="polaroid-img-box">
+      <div class="polaroid-frame left polaroid-clickable" data-pid="pol_left" title="点击添加照片">
+        <div class="polaroid-img-box" id="polBoxLeft">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><path d="M8 12s1.5-2 4-2 4 2 4 2"/></svg>
         </div>
-        <span class="polaroid-note editable" contenteditable="true" spellcheck="false">MEMORIES</span>
+        <span class="polaroid-note editable" data-wkey="pol_note_left" contenteditable="true" spellcheck="false">MEMORIES</span>
       </div>
 
-      <div class="polaroid-frame center polaroid-clickable" title="点击添加照片">
-        <div class="polaroid-img-box">
+      <div class="polaroid-frame center polaroid-clickable" data-pid="pol_center" title="点击添加照片">
+        <div class="polaroid-img-box" id="polBoxCenter">
           <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
         </div>
-        <span class="polaroid-note editable" contenteditable="true" spellcheck="false">PORTRAIT</span>
+        <span class="polaroid-note editable" data-wkey="pol_note_center" contenteditable="true" spellcheck="false">PORTRAIT</span>
       </div>
 
-      <div class="polaroid-frame right polaroid-clickable" title="点击添加照片">
-        <div class="polaroid-img-box">
+      <div class="polaroid-frame right polaroid-clickable" data-pid="pol_right" title="点击添加照片">
+        <div class="polaroid-img-box" id="polBoxRight">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
         </div>
-        <span class="polaroid-note editable" contenteditable="true" spellcheck="false">MOMENTS</span>
+        <span class="polaroid-note editable" data-wkey="pol_note_right" contenteditable="true" spellcheck="false">MOMENTS</span>
       </div>
     </div>
 
@@ -1459,6 +1598,9 @@ input[type="range"]::-moz-range-thumb {
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
     </button>
     <div class="app-title">图库</div>
+    <div class="app-header-right">
+      <button class="text-action-btn" id="gallerySelectToggleBtn" onclick="toggleGallerySelectMode()">多选</button>
+    </div>
   </div>
 
   <div class="app-body" id="galleryListView">
@@ -1521,6 +1663,9 @@ input[type="range"]::-moz-range-thumb {
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
     </button>
     <div class="app-title">原po原图</div>
+    <div class="app-header-right">
+      <button class="text-action-btn" id="repoSelectToggleBtn" onclick="toggleRepoSelectMode()">多选</button>
+    </div>
   </div>
 
   <div class="app-body">
@@ -1548,6 +1693,7 @@ input[type="range"]::-moz-range-thumb {
     </button>
     <div class="app-title">水印</div>
     <div class="app-header-right">
+      <button class="text-action-btn" id="wmSelectToggleBtn" onclick="toggleWmSelectMode()">多选</button>
       <span class="mini-badge"><span class="bdot"></span><span id="wmTotalCount">0 张</span></span>
     </div>
   </div>
@@ -1765,7 +1911,7 @@ input[type="range"]::-moz-range-thumb {
     <div class="modal-head">
       <div>
         <h3>导出 ZIP 图包</h3>
-        <p>填写署名与 QQ，归档到图库</p>
+        <p>署名在前，QQ在后，图包名在最后</p>
       </div>
       <button class="x-btn" onclick="closeExportZipModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
@@ -1773,17 +1919,40 @@ input[type="range"]::-moz-range-thumb {
     </div>
 
     <div class="field">
-      <label>第一行：署名（原po / 制作人）</label>
+      <label>署名（原po / 制作人）</label>
       <input type="text" id="zipAuthorInput" placeholder="输入署名…">
     </div>
     <div class="field">
-      <label>第二行：QQ 号</label>
+      <label>QQ 号</label>
       <input type="text" id="zipQQInput" placeholder="输入QQ号…">
+    </div>
+    <div class="field">
+      <label>图包名称</label>
+      <input type="text" id="zipPackNameInput" placeholder="输入图包名（例如：日常特辑）…" value="贴膜包">
     </div>
 
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeExportZipModal()">取消</button>
       <button class="btn-solid" onclick="confirmAndDownloadZip()">确认导出并归档</button>
+    </div>
+  </div>
+</div>
+
+<!-- 移动到文件夹通用弹窗 -->
+<div id="moveTargetModal" class="modal-mask hidden">
+  <div class="modal-card" style="max-height: 80vh;">
+    <div class="modal-head">
+      <div>
+        <h3 id="moveModalTitle">移动到文件夹</h3>
+        <p>请选择要移入的目标文件夹</p>
+      </div>
+      <button class="x-btn" onclick="closeMoveTargetModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-scroll" id="moveFolderOptionsList"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeMoveTargetModal()">取消</button>
     </div>
   </div>
 </div>
@@ -1813,36 +1982,67 @@ input[type="range"]::-moz-range-thumb {
   </div>
 </div>
 
-<!-- 手动擦脸精修 -->
+<!-- 手动擦脸精修（正方形框 + 画笔/移动切换 + 撤回） -->
 <div id="eraseModal" class="modal-mask hidden">
   <div class="modal-card erase-modal-card">
     <div class="modal-head">
       <div>
         <h3>手动擦脸精修</h3>
-        <p>单指涂抹擦除 · 双指自由缩放滑动 · 滚轮缩放</p>
+        <p>选画笔擦除水印 · 选移动拖动画布 · 双指可自由缩放</p>
       </div>
       <button class="x-btn" onclick="closeEraseModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
 
-    <div id="paintContainer">
-      <div id="paintTransformWrap">
-        <canvas id="paintCanvas"></canvas>
+    <!-- 正方形工作视口 -->
+    <div class="square-stage-wrap">
+      <div id="paintContainer">
+        <div id="paintTransformWrap">
+          <canvas id="paintCanvas"></canvas>
+        </div>
       </div>
     </div>
 
-    <div class="erase-toolbar">
-      <div class="brush-group">
-        <span>画笔</span>
-        <input type="range" id="eraserBrushSize" min="10" max="180" value="45">
-        <span class="brush-val" id="eraserBrushSizeVal">45px</span>
-        <button class="mini-btn ghost" onclick="resetZoomPan()">复位视图</button>
-        <button class="mini-btn ghost" onclick="resetCurrentPaintMask()">重置擦除</button>
+    <!-- 正方形框下方核心操作条：模式切换与撤回 -->
+    <div class="erase-mid-bar">
+      <div class="mode-switch-group">
+        <button type="button" class="tool-mode-btn active" id="btnToolBrush" onclick="setEraseToolMode('brush')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+          <span>画笔</span>
+        </button>
+        <button type="button" class="tool-mode-btn" id="btnToolMove" onclick="setEraseToolMode('move')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>
+          <span>移动</span>
+        </button>
       </div>
-      <div style="display:flex; gap:8px;">
-        <button class="btn-ghost" onclick="closeEraseModal()">取消</button>
-        <button class="btn-solid" onclick="savePaintResult()">保存修改</button>
+
+      <div style="display:flex; align-items:center; gap:6px;">
+        <button class="mini-btn ghost" id="undoBtn" onclick="undoPaintHistory()" title="撤回上一步">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/></svg>
+          <span>撤回</span>
+        </button>
+        <button class="mini-btn ghost" onclick="resetZoomPan()" title="居中复位">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+          <span>复位</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 底部画笔粗细与确认操作 -->
+    <div class="erase-bottom-bar">
+      <div class="brush-size-row">
+        <span>粗细</span>
+        <input type="range" id="eraserBrushSize" min="10" max="180" value="45">
+        <span class="brush-val" id="eraserBrushSizeVal" style="font-size:11px; min-width:32px; text-align:right;">45px</span>
+      </div>
+
+      <div class="erase-footer-actions">
+        <button class="mini-btn ghost" onclick="resetCurrentPaintMask()">清空擦除</button>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-ghost" onclick="closeEraseModal()">取消</button>
+          <button class="btn-solid" onclick="savePaintResult()">保存修改</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1893,24 +2093,106 @@ input[type="range"]::-moz-range-thumb {
   </div>
 </div>
 
-<!-- 公告弹窗 -->
-<div id="noticeModal" class="modal-mask hidden">
-  <div class="modal-card">
-    <div class="modal-head">
-      <div>
-        <h3>公告</h3>
-        <p>drizzle 使用小提示</p>
+<!-- ============================================================ -->
+<!-- 应用视图 6：公告（全屏独立 APP，记录所有历史版本更新） -->
+<!-- ============================================================ -->
+<section class="app-view" id="app-notice">
+  <div class="app-header">
+    <button class="back-btn" onclick="closeApp('notice')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="app-title">更新公告与历史</div>
+    <div class="app-header-right">
+      <span class="mini-badge ready"><span class="bdot"></span><span>v1.0.9 最新版</span></span>
+    </div>
+  </div>
+
+  <div class="app-body" id="noticeHistoryList">
+    <!-- 动态渲染历史版本 -->
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 更新弹窗（仅弹一次，已读后永久关闭，新版发布才再弹） -->
+<!-- ============================================================ -->
+<div id="updateNoticeModal" class="modal-mask hidden">
+  <div class="modal-card update-popup-card">
+    <div class="update-popup-header">
+      <div class="update-title-group">
+        <div class="update-icon-badge">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+        </div>
+        <div>
+          <div style="font-size:14px; font-weight:800; color:var(--text-main);">版本更新公告</div>
+          <div class="ver-badge">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>v1.0.9 正式上线</span>
+          </div>
+        </div>
       </div>
-      <button class="x-btn" onclick="document.getElementById('noticeModal').classList.add('hidden')">
+      <button class="x-btn" onclick="acknowledgeUpdateVersion()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
-    <div style="font-size:11.5px; line-height:1.85; color:var(--text-main); font-weight:600;">
-      · 水印 APP 里可以按文件夹分组保存你的水印，贴膜时点水印框即可从库里选。<br>
-      · 图库自动归档每次导出的 ZIP，支持整组重调浓度。<br>
-      · 原图原po 支持多级子文件夹分类管理。<br>
-      · 「我的」里可以做全局壁纸与数据备份。
+
+    <!-- 更新内容正文列表 -->
+    <div class="update-scroll-body">
+      <div class="log-section-card">
+        <div class="log-sec-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>一、小组件问题修复</span>
+        </div>
+        <div class="log-item-text">1. 用户上传的小组件图片将存入数据库存储，不会被强制清理，不会进行画质压缩，不会自动清除素材。</div>
+        <div class="log-item-text">2. 用户对小组件内文字做出的修改会完整留存，修改的数据不会被无故清空。</div>
+      </div>
+
+      <div class="log-section-card">
+        <div class="log-sec-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          <span>二、图库原图、作者水印相关存储调整</span>
+        </div>
+        <div class="log-item-text">1. 用户上传的图片文件完整保存，不压缩画质，无自动清理机制，数据永久保留，仅支持用户手动多选后自行删除。</div>
+      </div>
+
+      <div class="log-section-card">
+        <div class="log-sec-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          <span>三、功能优化</span>
+        </div>
+        <div class="log-item-text">1. 图库右上角新增多选操作入口，支持逐个勾选图片、一键全选；勾选后可执行删除、移动至其他文件夹操作。</div>
+        <div class="log-item-text">2. 支持长按文件夹重命名。</div>
+        <div class="log-item-text">3. 文件夹数量统计逻辑优化：根目录文件夹展示的图片总数，为其内部所有子文件夹图片数量的合计数值，子文件夹独立统计自身图片数量。</div>
+        <div class="log-item-text">4. ZIP导出包命名格式调整，命名顺序：署名‑QQ号‑图包名称。</div>
+      </div>
+
+      <div class="log-section-card">
+        <div class="log-sec-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+          <span>四、贴膜机出图功能更新</span>
+        </div>
+        <div class="log-item-text">1. 使用手动修正功能时，裁切框自动恢复为正方形。裁切框下方新增功能按钮：移动、画笔。<br>开启移动模式后，双指缩放画面的同时可以拖动调整图片位置；画笔模式用于水印擦除操作，操作支持撤回。</div>
+      </div>
+
+      <div class="log-section-card">
+        <div class="log-sec-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>五、图库数据问题修复</span>
+        </div>
+        <div class="log-item-text">修复进入图库页面，素材数据读取保存异常、程序报错的问题。</div>
+      </div>
+
+      <div style="font-size:10px; color:var(--text-light); text-align:center; padding: 4px 0;">
+        如有使用过程中遇到任何问题，欢迎及时反馈。可在底部「公告」随时查看历史更新。
+      </div>
     </div>
+
+    <!-- 底部确认已读按钮 -->
+    <button class="update-confirm-btn" onclick="acknowledgeUpdateVersion()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      <span>我知道了，已读不再弹出</span>
+    </button>
   </div>
 </div>
 
@@ -1960,11 +2242,11 @@ let currentWmFolderNode = watermarkRoot;
 let wmPickerCurrentNode = watermarkRoot;
 
 /* ================================================================
-   IndexedDB 持久化
+   IndexedDB 持久化（升级至版本 3：加入小组件图片与文字原样存储）
 ================================================================ */
 const DrizzleDB = {
   dbName: 'drizzle_permanent_store',
-  dbVersion: 2,
+  dbVersion: 3,
   db: null,
   async init() {
     return new Promise((resolve, reject) => {
@@ -1974,8 +2256,50 @@ const DrizzleDB = {
         if (!db.objectStoreNames.contains('gallery_packages')) db.createObjectStore('gallery_packages', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('raw_repo')) db.createObjectStore('raw_repo', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('watermark_repo')) db.createObjectStore('watermark_repo', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('widget_assets')) db.createObjectStore('widget_assets', { keyPath: 'key' });
+        if (!db.objectStoreNames.contains('widget_texts')) db.createObjectStore('widget_texts', { keyPath: 'key' });
       };
       req.onsuccess = (e) => { this.db = e.target.result; resolve(this.db); };
+      req.onerror = (e) => reject(e);
+    });
+  },
+  async saveWidgetAsset(key, blob) {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('widget_assets', 'readwrite');
+      tx.objectStore('widget_assets').put({ key, blob });
+      tx.oncomplete = () => resolve();
+      tx.onerror = (e) => reject(e);
+    });
+  },
+  async getWidgetAsset(key) {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('widget_assets', 'readonly');
+      const req = tx.objectStore('widget_assets').get(key);
+      req.onsuccess = () => resolve(req.result ? req.result.blob : null);
+      req.onerror = (e) => reject(e);
+    });
+  },
+  async saveWidgetText(key, text) {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('widget_texts', 'readwrite');
+      tx.objectStore('widget_texts').put({ key, text });
+      tx.oncomplete = () => resolve();
+      tx.onerror = (e) => reject(e);
+    });
+  },
+  async getAllWidgetTexts() {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('widget_texts', 'readonly');
+      const req = tx.objectStore('widget_texts').getAll();
+      req.onsuccess = () => {
+        const map = {};
+        (req.result || []).forEach(item => { map[item.key] = item.text; });
+        resolve(map);
+      };
       req.onerror = (e) => reject(e);
     });
   },
@@ -1984,6 +2308,15 @@ const DrizzleDB = {
     return new Promise((resolve, reject) => {
       const tx = this.db.transaction('gallery_packages', 'readwrite');
       tx.objectStore('gallery_packages').put(pkg);
+      tx.oncomplete = () => resolve();
+      tx.onerror = (e) => reject(e);
+    });
+  },
+  async deletePackage(pkgId) {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('gallery_packages', 'readwrite');
+      tx.objectStore('gallery_packages').delete(pkgId);
       tx.oncomplete = () => resolve();
       tx.onerror = (e) => reject(e);
     });
@@ -2056,12 +2389,43 @@ function reviveWmNodeUrls(node) {
   }
 }
 
-/* 递归统计水印库图片总数 */
+/* 递归统计原图库文件夹图片总数（直属图片 + 所有子级相加） */
+function countRepoTreeImages(node) {
+  if (!node) return 0;
+  let total = (node.images || []).length;
+  (node.subFolders || []).forEach(sub => { total += countRepoTreeImages(sub); });
+  return total;
+}
+
+/* 递归统计水印库图片总数（直属图片 + 所有子级相加） */
 function countWmTree(node) {
   if (!node) return 0;
   let total = (node.watermarks || []).length;
-  (node.subFolders || []).forEach(sub => total += countWmTree(sub));
+  (node.subFolders || []).forEach(sub => { total += countWmTree(sub); });
   return total;
+}
+
+/* 长按识别通用绑定器（长按500ms触发改名） */
+function bindLongPressRename(el, onRename) {
+  let pressTimer = null;
+  let isMoved = false;
+
+  const start = () => {
+    isMoved = false;
+    pressTimer = setTimeout(() => {
+      if (!isMoved) onRename();
+    }, 520);
+  };
+  const cancel = () => { clearTimeout(pressTimer); };
+
+  el.addEventListener('touchstart', start, { passive: true });
+  el.addEventListener('touchmove', () => { isMoved = true; cancel(); }, { passive: true });
+  el.addEventListener('touchend', cancel);
+  el.addEventListener('touchcancel', cancel);
+  el.addEventListener('mousedown', start);
+  el.addEventListener('mousemove', () => { isMoved = true; cancel(); });
+  el.addEventListener('mouseup', cancel);
+  el.addEventListener('mouseleave', cancel);
 }
 
 /* ================================================================
@@ -2203,6 +2567,7 @@ function openApp(name) {
   if (name === 'repo') renderRepoView();
   if (name === 'watermark') renderWmView();
   if (name === 'profile') initUserProfile();
+  if (name === 'notice') renderNoticeHistory();
 }
 
 function closeApp(name) {
@@ -2211,7 +2576,7 @@ function closeApp(name) {
 }
 
 function openNotice() {
-  document.getElementById('noticeModal').classList.remove('hidden');
+  openApp('notice');
 }
 
 /* ================================================================
@@ -2286,47 +2651,59 @@ document.querySelectorAll('.editable').forEach(el => {
   el.addEventListener('blur', () => { viewport.style.scrollSnapType = 'x mandatory'; });
 });
 
-/* 主屏头像 */
+/* ============ 组件图片与文字持久化存储（不压缩画质、永不主动清除） ============ */
 const mainAvatar = document.getElementById('mainAvatar');
 const avatarFileInput = document.getElementById('avatarFileInput');
 mainAvatar.addEventListener('click', () => avatarFileInput.click());
-avatarFileInput.addEventListener('change', (e) => {
+avatarFileInput.addEventListener('change', async (e) => {
   const file = e.target.files[0];
-  if (file) mainAvatar.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Avatar">`;
+  if (file) {
+    await DrizzleDB.saveWidgetAsset('main_avatar', file);
+    mainAvatar.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Avatar">`;
+  }
 });
 
 /* 台词卡小图 */
 const quoteUploadBtn = document.getElementById('quoteUploadBtn');
 const quoteFileInput = document.getElementById('quoteFileInput');
 quoteUploadBtn.addEventListener('click', () => quoteFileInput.click());
-quoteFileInput.addEventListener('change', (e) => {
+quoteFileInput.addEventListener('change', async (e) => {
   const file = e.target.files[0];
-  if (file) quoteUploadBtn.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Pic">`;
+  if (file) {
+    await DrizzleDB.saveWidgetAsset('quote_pic', file);
+    quoteUploadBtn.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Pic">`;
+  }
 });
 
 /* 音乐封面 */
 const musicAlbumArt = document.getElementById('musicAlbumArt');
 const musicAlbumInput = document.getElementById('musicAlbumInput');
 musicAlbumArt.addEventListener('click', () => musicAlbumInput.click());
-musicAlbumInput.addEventListener('change', (e) => {
+musicAlbumInput.addEventListener('change', async (e) => {
   const file = e.target.files[0];
-  if (file) musicAlbumArt.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Album">`;
+  if (file) {
+    await DrizzleDB.saveWidgetAsset('music_art', file);
+    musicAlbumArt.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Album">`;
+  }
 });
 
-/* 拍立得 */
-let currentPolaroidTarget = null;
+/* 拍立得三格分别绑定与持久化 */
+let currentPolaroidTargetKey = null;
+let currentPolaroidTargetEl = null;
 const polaroidFileInput = document.getElementById('polaroidFileInput');
 document.querySelectorAll('.polaroid-clickable').forEach(frame => {
   frame.addEventListener('click', (e) => {
     if (e.target.classList.contains('editable')) return;
-    currentPolaroidTarget = frame.querySelector('.polaroid-img-box');
+    currentPolaroidTargetKey = frame.getAttribute('data-pid');
+    currentPolaroidTargetEl = frame.querySelector('.polaroid-img-box');
     polaroidFileInput.click();
   });
 });
-polaroidFileInput.addEventListener('change', (e) => {
+polaroidFileInput.addEventListener('change', async (e) => {
   const file = e.target.files[0];
-  if (file && currentPolaroidTarget) {
-    currentPolaroidTarget.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Pic">`;
+  if (file && currentPolaroidTargetKey && currentPolaroidTargetEl) {
+    await DrizzleDB.saveWidgetAsset(currentPolaroidTargetKey, file);
+    currentPolaroidTargetEl.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Pic">`;
   }
 });
 
@@ -2334,10 +2711,57 @@ polaroidFileInput.addEventListener('change', (e) => {
 const sysAudioAvatar = document.getElementById('sysAudioAvatar');
 const sysAvatarFileInput = document.getElementById('sysAvatarFileInput');
 sysAudioAvatar.addEventListener('click', () => sysAvatarFileInput.click());
-sysAvatarFileInput.addEventListener('change', (e) => {
+sysAvatarFileInput.addEventListener('change', async (e) => {
   const file = e.target.files[0];
-  if (file) sysAudioAvatar.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Avatar">`;
+  if (file) {
+    await DrizzleDB.saveWidgetAsset('sys_audio_avatar', file);
+    sysAudioAvatar.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Avatar">`;
+  }
 });
+
+/* 统一监听主屏所有可编辑文字，失焦或回车立即永久保存至数据库 */
+function initEditablePersistence() {
+  document.querySelectorAll('.editable').forEach((el, index) => {
+    const key = el.getAttribute('data-wkey') || `w_editable_${index}`;
+    el.setAttribute('data-wkey', key);
+    el.addEventListener('blur', async () => {
+      await DrizzleDB.saveWidgetText(key, el.innerHTML);
+    });
+  });
+}
+initEditablePersistence();
+
+/* 启动时恢复所有小组件原画质图片和文字 */
+async function restoreAllWidgetData() {
+  try {
+    const assetKeys = [
+      { key: 'main_avatar', el: mainAvatar },
+      { key: 'quote_pic', el: quoteUploadBtn },
+      { key: 'music_art', el: musicAlbumArt },
+      { key: 'pol_left', el: document.getElementById('polBoxLeft') },
+      { key: 'pol_center', el: document.getElementById('polBoxCenter') },
+      { key: 'pol_right', el: document.getElementById('polBoxRight') },
+      { key: 'sys_audio_avatar', el: sysAudioAvatar }
+    ];
+    for (const item of assetKeys) {
+      if (!item.el) continue;
+      const blob = await DrizzleDB.getWidgetAsset(item.key);
+      if (blob) {
+        item.el.innerHTML = `<img src="${URL.createObjectURL(blob)}" alt="pic">`;
+      }
+    }
+
+    const texts = await DrizzleDB.getAllWidgetTexts();
+    document.querySelectorAll('.editable').forEach(el => {
+      const key = el.getAttribute('data-wkey');
+      if (key && texts[key] !== undefined) {
+        el.innerHTML = texts[key];
+      }
+    });
+  } catch (err) {
+    console.error('小组件数据恢复失败:', err);
+  }
+}
 
 /* ================================================================
    贴膜机 —— 水印导入（本地 / 水印库）
@@ -2393,6 +2817,17 @@ function handleWmFile(e) {
 /* ================================================================
    水印库 —— 渲染 + 上传 + 分组
 ================================================================ */
+let isWmSelectMode = false;
+let wmSelectedImageIds = new Set();
+
+function toggleWmSelectMode() {
+  isWmSelectMode = !isWmSelectMode;
+  wmSelectedImageIds.clear();
+  const btn = document.getElementById('wmSelectToggleBtn');
+  if (btn) btn.innerText = isWmSelectMode ? '取消多选' : '多选';
+  renderWmView();
+}
+
 function renderWmView() {
   /* 面包屑 */
   const bc = document.getElementById('wmBreadcrumbs');
@@ -2404,49 +2839,110 @@ function renderWmView() {
                     <span class="c active">${currentWmFolderNode.name}</span>`;
   }
 
-  /* 总数徽章 */
+  /* 总数徽章（递归统计） */
   document.getElementById('wmTotalCount').innerText = countWmTree(watermarkRoot) + ' 张';
 
-  /* 子文件夹 */
+  /* 子文件夹（展示总包含数 = 直属 + 全部子文件夹相加；绑定长按改名） */
   const fGrid = document.getElementById('wmFolderGrid');
   fGrid.innerHTML = '';
   currentWmFolderNode.subFolders.forEach(sub => {
-    const cnt = (sub.watermarks || []).length;
-    const subCnt = sub.subFolders ? sub.subFolders.length : 0;
+    const totalCount = countWmTree(sub);
     const fCard = document.createElement('div');
     fCard.className = 'folder-card';
+    fCard.title = '长按可更改文件夹名称';
     fCard.innerHTML = `
       <svg class="fi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
       <div style="min-width:0;">
         <div class="fn">${sub.name}</div>
-        <div class="fc">${cnt} 张水印${subCnt ? ' · ' + subCnt + ' 子夹' : ''}</div>
+        <div class="fc">含 ${totalCount} 张水印</div>
       </div>`;
-    fCard.onclick = () => navigateToWmFolder(sub);
+
+    fCard.onclick = () => { if (!isWmSelectMode) navigateToWmFolder(sub); };
+    bindLongPressRename(fCard, async () => {
+      const newName = prompt('修改文件夹名称：', sub.name);
+      if (newName && newName.trim() && newName.trim() !== sub.name) {
+        sub.name = newName.trim();
+        await DrizzleDB.saveWmRepo(watermarkRoot);
+        renderWmView();
+      }
+    });
     fGrid.appendChild(fCard);
   });
 
   /* 水印图片 */
   const iGrid = document.getElementById('wmImageGrid');
   iGrid.innerHTML = '';
+  if (isWmSelectMode) iGrid.classList.add('selectable-mode');
+  else iGrid.classList.remove('selectable-mode');
+
   if (currentWmFolderNode.watermarks.length === 0) {
     iGrid.innerHTML = `<div class="empty-hint">这个文件夹还没有水印<br>点上方「+ 上传水印」加入吧</div>`;
-    return;
+  } else {
+    currentWmFolderNode.watermarks.forEach(wm => {
+      const isSelected = wmSelectedImageIds.has(wm.id);
+      const cell = document.createElement('div');
+      cell.className = `wm-cell selectable-item ${isSelected ? 'is-selected' : ''}`;
+      cell.innerHTML = `
+        <div class="select-check-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <img src="${wm.src}" alt="${wm.name}">
+        ${!isWmSelectMode ? `
+        <button class="wm-del" onclick="event.stopPropagation();deleteWmItem('${wm.id}')">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>` : ''}
+        <div class="wm-name">${wm.name}</div>`;
+
+      cell.onclick = () => {
+        if (isWmSelectMode) {
+          if (wmSelectedImageIds.has(wm.id)) wmSelectedImageIds.delete(wm.id);
+          else wmSelectedImageIds.add(wm.id);
+          renderWmView();
+        } else {
+          applyWatermarkFromSrc(wm.src, wm.name);
+          alert(`已选用水印「${wm.name}」\n去「贴膜」就可以直接用了。`);
+        }
+      };
+      iGrid.appendChild(cell);
+    });
   }
-  currentWmFolderNode.watermarks.forEach(wm => {
-    const cell = document.createElement('div');
-    cell.className = 'wm-cell';
-    cell.innerHTML = `
-      <img src="${wm.src}" alt="${wm.name}">
-      <button class="wm-del" onclick="event.stopPropagation();deleteWmItem('${wm.id}')">
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
-      <div class="wm-name">${wm.name}</div>`;
-    cell.onclick = () => {
-      applyWatermarkFromSrc(wm.src, wm.name);
-      alert(`已选用水印「${wm.name}」\n去「贴膜」就可以直接用了。`);
-    };
-    iGrid.appendChild(cell);
-  });
+
+  /* 水印多选操作悬浮栏 */
+  const oldBar = document.getElementById('wmBatchBar');
+  if (oldBar) oldBar.remove();
+
+  if (isWmSelectMode) {
+    const bar = document.createElement('div');
+    bar.id = 'wmBatchBar';
+    bar.className = 'batch-toolbar';
+    const isAll = currentWmFolderNode.watermarks.length > 0 && wmSelectedImageIds.size === currentWmFolderNode.watermarks.length;
+    bar.innerHTML = `
+      <div style="font-size:11.5px; font-weight:700; color:var(--text-main);">已选 ${wmSelectedImageIds.size} 张</div>
+      <div style="display:flex; gap:6px;">
+        <button class="mini-btn ghost" onclick="toggleSelectAllWmImages()">${isAll ? '取消全选' : '一键全选'}</button>
+        <button class="mini-btn" onclick="openMoveImagesDialog('wm')">移动进文件夹</button>
+        <button class="mini-btn ghost" style="color:#ef4444;" onclick="executeDeleteWmSelected()">删除</button>
+      </div>`;
+    document.querySelector('#app-watermark .app-body').appendChild(bar);
+  }
+}
+
+function toggleSelectAllWmImages() {
+  if (wmSelectedImageIds.size === currentWmFolderNode.watermarks.length) {
+    wmSelectedImageIds.clear();
+  } else {
+    currentWmFolderNode.watermarks.forEach(w => wmSelectedImageIds.add(w.id));
+  }
+  renderWmView();
+}
+
+async function executeDeleteWmSelected() {
+  if (wmSelectedImageIds.size === 0) { alert('请先选择要删除的水印'); return; }
+  if (!confirm(`确定要永久删除已选中的 ${wmSelectedImageIds.size} 张水印吗？`)) return;
+  currentWmFolderNode.watermarks = currentWmFolderNode.watermarks.filter(w => !wmSelectedImageIds.has(w.id));
+  wmSelectedImageIds.clear();
+  await DrizzleDB.saveWmRepo(watermarkRoot);
+  renderWmView();
 }
 
 function navigateToWmFolder(node) {
@@ -2782,10 +3278,17 @@ async function executeBatchWatermark() {
     const blob = await new Promise(res => finalCanvas.toBlob(res, mimeType, 1.0));
     const url = URL.createObjectURL(blob);
 
+    // 将水印膜当前 Canvas 导出为无损 PNG Blob，用于永久存入 IndexedDB
+    const wmBlob = await new Promise(res => wmCanvas.toBlob(res, 'image/png'));
+    // 确保提取出原始未贴膜原图的 Blob
+    const baseBlob = item.file || item.blob || (await (await fetch(item.src)).blob());
+
     currentProcessedBatch.push({
       id: i,
       name: `watermarked_${item.name}`,
       file: item.file,
+      baseBlob: baseBlob,
+      wmBlob: wmBlob,
       baseImg: baseImg,
       wmCanvas: wmCanvas,
       blendMode: blendMode,
@@ -2839,18 +3342,20 @@ function renderCurrentBatchResults() {
 }
 
 /* ================================================================
-   导出 ZIP
+   导出 ZIP（署名在前，QQ号在后，图包名在QQ号后面）
 ================================================================ */
 function openExportZipModal() {
   document.getElementById('zipAuthorInput').value = document.getElementById('userNameInput').value || '用户';
   document.getElementById('zipQQInput').value = document.getElementById('prefQQInput').value || '';
+  document.getElementById('zipPackNameInput').value = '贴膜包';
   document.getElementById('exportZipModal').classList.remove('hidden');
 }
 function closeExportZipModal() { document.getElementById('exportZipModal').classList.add('hidden'); }
 
 async function confirmAndDownloadZip() {
   const author = document.getElementById('zipAuthorInput').value.trim() || '用户';
-  const qq = document.getElementById('zipQQInput').value.trim() || '未知QQ';
+  const qq = document.getElementById('zipQQInput').value.trim() || '00000';
+  const packName = document.getElementById('zipPackNameInput').value.trim() || '贴膜包';
   const opacity = parseFloat(opacityInput.value);
 
   const pkgId = `pkg_${Date.now()}`;
@@ -2859,6 +3364,7 @@ async function confirmAndDownloadZip() {
     timestamp: Date.now(),
     author: author,
     qq: qq,
+    packName: packName,
     date: new Date().toLocaleDateString(),
     opacity: opacity,
     blendMode: blendModeSelect.value,
@@ -2868,6 +3374,8 @@ async function confirmAndDownloadZip() {
       name: it.name,
       blendMode: it.blendMode,
       mimeType: it.mimeType,
+      baseBlob: it.baseBlob,
+      wmBlob: it.wmBlob,
       resultBlob: it.resultBlob,
       resultUrl: it.resultUrl
     }))
@@ -2879,15 +3387,29 @@ async function confirmAndDownloadZip() {
   const zip = new JSZip();
   pkgToStore.items.forEach(it => zip.file(it.name, it.resultBlob));
   const zipBlob = await zip.generateAsync({ type: 'blob' });
-  saveAs(zipBlob, `[${author}]_[${qq}]_贴膜包.zip`);
+
+  /* 严格规范命名：[署名]_[QQ号]_[图包名].zip */
+  const finalZipFileName = `[${author}]_[${qq}]_[${packName}].zip`;
+  saveAs(zipBlob, finalZipFileName);
 
   closeExportZipModal();
-  alert(`已成功导出无损 ZIP！已永久保存至「图库」，退出页面也不会丢失。`);
+  alert(`已成功导出无损 ZIP（${finalZipFileName}）！已永久归档至「图库」。`);
 }
 
 /* ================================================================
-   图库
+   图库（支持多选批量删除）
 ================================================================ */
+let isGallerySelectMode = false;
+let gallerySelectedPkgIds = new Set();
+
+function toggleGallerySelectMode() {
+  isGallerySelectMode = !isGallerySelectMode;
+  gallerySelectedPkgIds.clear();
+  const btn = document.getElementById('gallerySelectToggleBtn');
+  if (btn) btn.innerText = isGallerySelectMode ? '取消多选' : '多选';
+  renderGallery();
+}
+
 function renderGallery() {
   const grid = document.getElementById('galleryPackageGrid');
   const search = document.getElementById('gallerySearchInput').value.trim().toLowerCase();
@@ -2900,21 +3422,75 @@ function renderGallery() {
 
   if (filtered.length === 0) {
     grid.innerHTML = `<div style="grid-column:1/-1; padding:36px 0; text-align:center; font-size:11.5px; color:var(--text-muted); font-weight:700;">暂无符合条件的图包</div>`;
-    return;
+  } else {
+    filtered.forEach(pkg => {
+      const isSelected = gallerySelectedPkgIds.has(pkg.id);
+      const card = document.createElement('div');
+      card.className = `pkg-card selectable-item ${isSelected ? 'is-selected' : ''}`;
+      card.innerHTML = `
+        <div class="select-check-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <img src="${pkg.coverUrl}">
+        <div class="pkg-overlay">
+          <div class="pkg-author">${pkg.author} ${pkg.packName ? '· ' + pkg.packName : ''}</div>
+          <div class="pkg-meta"><span>QQ: ${pkg.qq}</span><span>${pkg.items.length} 张</span></div>
+        </div>`;
+
+      card.onclick = () => {
+        if (isGallerySelectMode) {
+          if (gallerySelectedPkgIds.has(pkg.id)) gallerySelectedPkgIds.delete(pkg.id);
+          else gallerySelectedPkgIds.add(pkg.id);
+          renderGallery();
+        } else {
+          openPackageDetail(pkg);
+        }
+      };
+      grid.appendChild(card);
+    });
   }
 
-  filtered.forEach(pkg => {
-    const card = document.createElement('div');
-    card.className = 'pkg-card';
-    card.innerHTML = `
-      <img src="${pkg.coverUrl}">
-      <div class="pkg-overlay">
-        <div class="pkg-author">${pkg.author}</div>
-        <div class="pkg-meta"><span>QQ: ${pkg.qq}</span><span>${pkg.items.length} 张</span></div>
+  /* 图库多选悬浮栏 */
+  const oldBar = document.getElementById('galleryBatchBar');
+  if (oldBar) oldBar.remove();
+
+  if (isGallerySelectMode) {
+    const bar = document.createElement('div');
+    bar.id = 'galleryBatchBar';
+    bar.className = 'batch-toolbar';
+    const isAll = filtered.length > 0 && gallerySelectedPkgIds.size === filtered.length;
+    bar.innerHTML = `
+      <div style="font-size:11.5px; font-weight:700; color:var(--text-main);">已选 ${gallerySelectedPkgIds.size} 个图包</div>
+      <div style="display:flex; gap:6px;">
+        <button class="mini-btn ghost" onclick="toggleSelectAllGalleryPkgs()">${isAll ? '取消全选' : '一键全选'}</button>
+        <button class="mini-btn ghost" style="color:#ef4444;" onclick="executeDeleteGallerySelected()">删除图包</button>
       </div>`;
-    card.onclick = () => openPackageDetail(pkg);
-    grid.appendChild(card);
-  });
+    document.getElementById('galleryListView').appendChild(bar);
+  }
+}
+
+function toggleSelectAllGalleryPkgs() {
+  const search = document.getElementById('gallerySearchInput').value.trim().toLowerCase();
+  const filtered = galleryPackages.filter(p =>
+    (p.qq || '').toLowerCase().includes(search) || (p.author || '').toLowerCase().includes(search)
+  );
+  if (gallerySelectedPkgIds.size === filtered.length) {
+    gallerySelectedPkgIds.clear();
+  } else {
+    filtered.forEach(p => gallerySelectedPkgIds.add(p.id));
+  }
+  renderGallery();
+}
+
+async function executeDeleteGallerySelected() {
+  if (gallerySelectedPkgIds.size === 0) { alert('请先选择要删除的图包'); return; }
+  if (!confirm(`确定要永久删除已选中的 ${gallerySelectedPkgIds.size} 个图包吗？删除后不可找回。`)) return;
+  for (const id of gallerySelectedPkgIds) {
+    await DrizzleDB.deletePackage(id);
+  }
+  galleryPackages = galleryPackages.filter(p => !gallerySelectedPkgIds.has(p.id));
+  gallerySelectedPkgIds.clear();
+  renderGallery();
 }
 
 function filterGallery() { renderGallery(); }
@@ -2955,10 +3531,26 @@ async function applyGroupOpacityChange() {
   activeDetailPkg.opacity = parseFloat(document.getElementById('detailGroupOpacity').value);
   const blendMode = activeDetailPkg.blendMode || 'overlay';
 
-  let ok = false;
   for (let item of activeDetailPkg.items) {
+    // 若缺少内存图层，通过永久保存的 Blob 恢复
+    if ((!item.baseImg || !item.wmCanvas) && item.baseBlob && item.wmBlob) {
+      try {
+        const bImg = await loadImage(URL.createObjectURL(item.baseBlob));
+        const wImg = await loadImage(URL.createObjectURL(item.wmBlob));
+        const wCanvas = document.createElement('canvas');
+        wCanvas.width = bImg.naturalWidth || bImg.width;
+        wCanvas.height = bImg.naturalHeight || bImg.height;
+        const wctx = wCanvas.getContext('2d');
+        wctx.drawImage(wImg, 0, 0, wCanvas.width, wCanvas.height);
+        item.baseImg = bImg;
+        item.wmCanvas = wCanvas;
+      } catch (e) {
+        console.error('复原图层异常:', e);
+      }
+    }
+
     if (!item.baseImg || !item.wmCanvas) continue;
-    ok = true;
+
     const naturalW = item.baseImg.naturalWidth || item.baseImg.width;
     const naturalH = item.baseImg.naturalHeight || item.baseImg.height;
 
@@ -2981,14 +3573,12 @@ async function applyGroupOpacityChange() {
     item.resultUrl = URL.createObjectURL(blob);
   }
 
-  if (!ok) {
-    alert('该图包为历史归档，原图数据未保留在内存中，无法重新合成浓度。\n请重新贴膜后再次导出。');
-    return;
-  }
+  // 同步更新保存至 IndexedDB
+  await DrizzleDB.savePackage(activeDetailPkg);
 
   activeDetailPkg.coverUrl = activeDetailPkg.items[0].resultUrl;
   renderDetailImages();
-  alert('整组浓度已更新，依然保持 100% 原始画质！');
+  alert('整组浓度已更新并自动持久化，依然保持 100% 原始画质。');
 }
 
 async function downloadActivePackageZip() {
@@ -2997,6 +3587,78 @@ async function downloadActivePackageZip() {
   activeDetailPkg.items.forEach(it => zip.file(it.name, it.resultBlob));
   const zipBlob = await zip.generateAsync({ type: 'blob' });
   saveAs(zipBlob, `[${activeDetailPkg.author}]_[${activeDetailPkg.qq}]_贴膜包.zip`);
+}
+
+/* ================================================================
+   通用文件夹移动弹窗
+================================================================ */
+let activeMoveType = ''; // 'repo' | 'wm'
+
+function getAllFoldersFlat(node, prefix = '') {
+  let list = [{ node: node, label: prefix ? `${prefix} / ${node.name}` : node.name }];
+  (node.subFolders || []).forEach(sub => {
+    list = list.concat(getAllFoldersFlat(sub, prefix ? `${prefix} / ${node.name}` : node.name));
+  });
+  return list;
+}
+
+function openMoveImagesDialog(type) {
+  activeMoveType = type;
+  const listEl = document.getElementById('moveFolderOptionsList');
+  listEl.innerHTML = '';
+
+  const targetRoot = type === 'repo' ? rootFolder : watermarkRoot;
+  const allFolders = getAllFoldersFlat(targetRoot);
+
+  allFolders.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'channel-btn';
+    card.style.padding = '10px 14px';
+    card.innerHTML = `
+      <div class="channel-icon" style="width:30px; height:30px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+      </div>
+      <div style="font-size:12px; font-weight:700; color:var(--text-main);">${item.label}</div>`;
+
+    card.onclick = () => executeMoveSelectedTo(item.node);
+    listEl.appendChild(card);
+  });
+
+  document.getElementById('moveTargetModal').classList.remove('hidden');
+}
+
+function closeMoveTargetModal() {
+  document.getElementById('moveTargetModal').classList.add('hidden');
+}
+
+async function executeMoveSelectedTo(targetFolderNode) {
+  if (activeMoveType === 'repo') {
+    if (targetFolderNode === currentFolderNode) {
+      alert('已在当前文件夹中，无需移动。');
+      return;
+    }
+    const moving = currentFolderNode.images.filter(img => repoSelectedImageIds.has(img.id));
+    currentFolderNode.images = currentFolderNode.images.filter(img => !repoSelectedImageIds.has(img.id));
+    targetFolderNode.images.push(...moving);
+    repoSelectedImageIds.clear();
+    await DrizzleDB.saveRepo(rootFolder);
+    closeMoveTargetModal();
+    renderRepoView();
+    alert(`成功将 ${moving.length} 张原图移至「${targetFolderNode.name}」！`);
+  } else if (activeMoveType === 'wm') {
+    if (targetFolderNode === currentWmFolderNode) {
+      alert('已在当前文件夹中，无需移动。');
+      return;
+    }
+    const moving = currentWmFolderNode.watermarks.filter(w => wmSelectedImageIds.has(w.id));
+    currentWmFolderNode.watermarks = currentWmFolderNode.watermarks.filter(w => !wmSelectedImageIds.has(w.id));
+    targetFolderNode.watermarks.push(...moving);
+    wmSelectedImageIds.clear();
+    await DrizzleDB.saveWmRepo(watermarkRoot);
+    closeMoveTargetModal();
+    renderWmView();
+    alert(`成功将 ${moving.length} 张水印移至「${targetFolderNode.name}」！`);
+  }
 }
 
 /* ================================================================
@@ -3012,6 +3674,17 @@ function reviveRepoNodeUrls(node) {
   }
 }
 
+let isRepoSelectMode = false;
+let repoSelectedImageIds = new Set();
+
+function toggleRepoSelectMode() {
+  isRepoSelectMode = !isRepoSelectMode;
+  repoSelectedImageIds.clear();
+  const btn = document.getElementById('repoSelectToggleBtn');
+  if (btn) btn.innerText = isRepoSelectMode ? '取消多选' : '多选';
+  renderRepoView();
+}
+
 function renderRepoView() {
   const bc = document.getElementById('repoBreadcrumbs');
   if (currentFolderNode === rootFolder) {
@@ -3022,29 +3695,96 @@ function renderRepoView() {
                     <span class="c active">${currentFolderNode.name}</span>`;
   }
 
+  /* 子文件夹（展示总包含张数 = 直属 + 全部子文件夹图片相加；绑定长按改名） */
   const fGrid = document.getElementById('repoSubFolderGrid');
   fGrid.innerHTML = '';
   currentFolderNode.subFolders.forEach(sub => {
+    const totalCount = countRepoTreeImages(sub);
     const fCard = document.createElement('div');
     fCard.className = 'folder-card';
+    fCard.title = '长按可更改文件夹名称';
     fCard.innerHTML = `
       <svg class="fi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
       <div style="min-width:0;">
         <div class="fn">${sub.name}</div>
-        <div class="fc">${sub.images.length} 张原图</div>
+        <div class="fc">含 ${totalCount} 张原图</div>
       </div>`;
-    fCard.onclick = () => navigateToFolder(sub);
+
+    fCard.onclick = () => { if (!isRepoSelectMode) navigateToFolder(sub); };
+    bindLongPressRename(fCard, async () => {
+      const newName = prompt('修改文件夹名称：', sub.name);
+      if (newName && newName.trim() && newName.trim() !== sub.name) {
+        sub.name = newName.trim();
+        await DrizzleDB.saveRepo(rootFolder);
+        renderRepoView();
+      }
+    });
     fGrid.appendChild(fCard);
   });
 
+  /* 原图列表 */
   const iGrid = document.getElementById('repoImageGrid');
   iGrid.innerHTML = '';
+  if (isRepoSelectMode) iGrid.classList.add('selectable-mode');
+  else iGrid.classList.remove('selectable-mode');
+
   currentFolderNode.images.forEach(imgItem => {
+    if (!imgItem.id) imgItem.id = `raw_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const isSelected = repoSelectedImageIds.has(imgItem.id);
     const iCard = document.createElement('div');
-    iCard.className = 'img-cell';
-    iCard.innerHTML = `<img src="${imgItem.src}">`;
+    iCard.className = `img-cell selectable-item ${isSelected ? 'is-selected' : ''}`;
+    iCard.innerHTML = `
+      <div class="select-check-badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <img src="${imgItem.src}">`;
+
+    iCard.onclick = () => {
+      if (isRepoSelectMode) {
+        if (repoSelectedImageIds.has(imgItem.id)) repoSelectedImageIds.delete(imgItem.id);
+        else repoSelectedImageIds.add(imgItem.id);
+        renderRepoView();
+      }
+    };
     iGrid.appendChild(iCard);
   });
+
+  /* 多选操作悬浮栏 */
+  const oldBar = document.getElementById('repoBatchBar');
+  if (oldBar) oldBar.remove();
+
+  if (isRepoSelectMode) {
+    const bar = document.createElement('div');
+    bar.id = 'repoBatchBar';
+    bar.className = 'batch-toolbar';
+    const isAll = currentFolderNode.images.length > 0 && repoSelectedImageIds.size === currentFolderNode.images.length;
+    bar.innerHTML = `
+      <div style="font-size:11.5px; font-weight:700; color:var(--text-main);">已选 ${repoSelectedImageIds.size} 项</div>
+      <div style="display:flex; gap:6px;">
+        <button class="mini-btn ghost" onclick="toggleSelectAllRepoImages()">${isAll ? '取消全选' : '一键全选'}</button>
+        <button class="mini-btn" onclick="openMoveImagesDialog('repo')">移动进文件夹</button>
+        <button class="mini-btn ghost" style="color:#ef4444;" onclick="executeDeleteRepoSelected()">删除</button>
+      </div>`;
+    document.querySelector('#app-repo .app-body').appendChild(bar);
+  }
+}
+
+function toggleSelectAllRepoImages() {
+  if (repoSelectedImageIds.size === currentFolderNode.images.length) {
+    repoSelectedImageIds.clear();
+  } else {
+    currentFolderNode.images.forEach(img => repoSelectedImageIds.add(img.id));
+  }
+  renderRepoView();
+}
+
+async function executeDeleteRepoSelected() {
+  if (repoSelectedImageIds.size === 0) { alert('请先选择要删除的图片'); return; }
+  if (!confirm(`确定要永久删除已选中的 ${repoSelectedImageIds.size} 张原图吗？`)) return;
+  currentFolderNode.images = currentFolderNode.images.filter(img => !repoSelectedImageIds.has(img.id));
+  repoSelectedImageIds.clear();
+  await DrizzleDB.saveRepo(rootFolder);
+  renderRepoView();
 }
 
 function navigateToFolder(node) {
@@ -3130,36 +3870,97 @@ function importAllFromCurrentModalFolder() {
 }
 
 /* ================================================================
-   手动擦除工作台
+   手动擦除工作台（正方形框 + 画笔/移动双模式 + 多步撤回 + 历史图层数据恢复）
 ================================================================ */
 let paintItem = null;
 let paintSourceList = null;
 let paintCanvas = document.getElementById('paintCanvas');
 let paintCtx = paintCanvas.getContext('2d');
 let tempEditWmCanvas = null;
-let isPainting = false;
 
+let currentToolMode = 'brush'; // 'brush' 画笔擦除 | 'move' 单指平移
+let paintHistoryStack = [];    // 撤回历史栈
+
+let isInteracting = false;
+let mouseStartPos = { x: 0, y: 0 };
 let viewScale = 1, panX = 0, panY = 0;
-let touchMode = 'none';
 let initialPinchDist = 0, initialPinchScale = 1;
 let pinchStartCenter = { x: 0, y: 0 };
 let panStartOffset = { x: 0, y: 0 };
 
 const eraserBrushSize = document.getElementById('eraserBrushSize');
 const eraserBrushSizeVal = document.getElementById('eraserBrushSizeVal');
-eraserBrushSize.addEventListener('input', (e) => eraserBrushSizeVal.innerText = `${e.target.value}px`);
+eraserBrushSize.addEventListener('input', (e) => {
+  eraserBrushSizeVal.innerText = `${e.target.value}px`;
+});
+
+function setEraseToolMode(mode) {
+  currentToolMode = mode;
+  const btnB = document.getElementById('btnToolBrush');
+  const btnM = document.getElementById('btnToolMove');
+  if (btnB) btnB.classList.toggle('active', mode === 'brush');
+  if (btnM) btnM.classList.toggle('active', mode === 'move');
+}
 
 function updateTransform() {
   const wrap = document.getElementById('paintTransformWrap');
   if (wrap) wrap.style.transform = `translate(${panX}px, ${panY}px) scale(${viewScale})`;
 }
 
-function resetZoomPan() { viewScale = 1; panX = 0; panY = 0; updateTransform(); }
+function resetZoomPan() {
+  viewScale = 1; panX = 0; panY = 0;
+  updateTransform();
+}
 
-function openEraseModal(id, sourceList) {
+/* 记录历史状态以便撤回 */
+function pushPaintHistory() {
+  if (!tempEditWmCanvas) return;
+  const backup = document.createElement('canvas');
+  backup.width = tempEditWmCanvas.width;
+  backup.height = tempEditWmCanvas.height;
+  const bCtx = backup.getContext('2d');
+  bCtx.drawImage(tempEditWmCanvas, 0, 0);
+
+  paintHistoryStack.push(backup);
+  if (paintHistoryStack.length > 25) paintHistoryStack.shift();
+}
+
+function undoPaintHistory() {
+  if (paintHistoryStack.length === 0) {
+    alert('已经没有可以撤回的操作了。');
+    return;
+  }
+  const lastCanvas = paintHistoryStack.pop();
+  const tctx = tempEditWmCanvas.getContext('2d');
+  tctx.clearRect(0, 0, tempEditWmCanvas.width, tempEditWmCanvas.height);
+  tctx.drawImage(lastCanvas, 0, 0);
+  renderPaint();
+}
+
+/* 打开精修：若图包来自历史归档，自动依据 baseBlob 与 wmBlob 动态复原图层，彻底杜绝报错 */
+async function openEraseModal(id, sourceList) {
   paintSourceList = sourceList;
   paintItem = sourceList.find(i => i.id === id);
   if (!paintItem) return;
+
+  // 核心修复：若内存中丢失 baseImg 或 wmCanvas，尝试通过存储的 Blob 自动恢复
+  if ((!paintItem.baseImg || !paintItem.wmCanvas) && paintItem.baseBlob && paintItem.wmBlob) {
+    try {
+      const bImg = await loadImage(URL.createObjectURL(paintItem.baseBlob));
+      const wImg = await loadImage(URL.createObjectURL(paintItem.wmBlob));
+
+      const wCanvas = document.createElement('canvas');
+      wCanvas.width = bImg.naturalWidth || bImg.width;
+      wCanvas.height = bImg.naturalHeight || bImg.height;
+      const wctx = wCanvas.getContext('2d');
+      wctx.drawImage(wImg, 0, 0, wCanvas.width, wCanvas.height);
+
+      paintItem.baseImg = bImg;
+      paintItem.wmCanvas = wCanvas;
+    } catch (err) {
+      console.error('复原原始图层数据失败:', err);
+    }
+  }
 
   if (!paintItem.baseImg || !paintItem.wmCanvas) {
     alert('该图缺少原始图层数据，无法进入精修。请重新贴膜后再试。');
@@ -3178,6 +3979,8 @@ function openEraseModal(id, sourceList) {
   paintCanvas.width = naturalW;
   paintCanvas.height = naturalH;
 
+  paintHistoryStack = [];
+  setEraseToolMode('brush');
   resetZoomPan();
   renderPaint();
   document.getElementById('eraseModal').classList.remove('hidden');
@@ -3187,12 +3990,13 @@ function closeEraseModal() {
   document.getElementById('eraseModal').classList.add('hidden');
   paintItem = null;
   tempEditWmCanvas = null;
+  paintHistoryStack = [];
 }
 
 function renderPaint() {
   if (!paintItem || !tempEditWmCanvas) return;
   const opacity = parseFloat(opacityInput.value) / 100;
-  const blendMode = blendModeSelect.value || 'overlay';
+  const blendMode = paintItem.blendMode || blendModeSelect.value || 'overlay';
 
   paintCtx.imageSmoothingEnabled = true;
   paintCtx.imageSmoothingQuality = 'high';
@@ -3231,13 +4035,33 @@ function doEraseStroke(clientX, clientY) {
   renderPaint();
 }
 
-paintCanvas.addEventListener('mousedown', (e) => {
-  if (e.button === 0) { isPainting = true; doEraseStroke(e.clientX, e.clientY); }
-});
-window.addEventListener('mousemove', (e) => { if (isPainting) doEraseStroke(e.clientX, e.clientY); });
-window.addEventListener('mouseup', () => isPainting = false);
-
+/* 交互事件统一处理：画笔与移动模式分流 */
 const paintContainer = document.getElementById('paintContainer');
+
+paintCanvas.addEventListener('mousedown', (e) => {
+  if (e.button !== 0) return;
+  isInteracting = true;
+  if (currentToolMode === 'brush') {
+    pushPaintHistory();
+    doEraseStroke(e.clientX, e.clientY);
+  } else {
+    mouseStartPos = { x: e.clientX - panX, y: e.clientY - panY };
+  }
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!isInteracting) return;
+  if (currentToolMode === 'brush') {
+    doEraseStroke(e.clientX, e.clientY);
+  } else if (currentToolMode === 'move') {
+    panX = e.clientX - mouseStartPos.x;
+    panY = e.clientY - mouseStartPos.y;
+    updateTransform();
+  }
+});
+
+window.addEventListener('mouseup', () => { isInteracting = false; });
+
 paintContainer.addEventListener('wheel', (e) => {
   e.preventDefault();
   const zoomDelta = e.deltaY < 0 ? 1.15 : 0.85;
@@ -3248,12 +4072,15 @@ paintContainer.addEventListener('wheel', (e) => {
 paintContainer.addEventListener('touchstart', (e) => {
   e.preventDefault();
   if (e.touches.length === 1) {
-    touchMode = 'draw';
-    isPainting = true;
-    doEraseStroke(e.touches[0].clientX, e.touches[0].clientY);
+    isInteracting = true;
+    if (currentToolMode === 'brush') {
+      pushPaintHistory();
+      doEraseStroke(e.touches[0].clientX, e.touches[0].clientY);
+    } else {
+      mouseStartPos = { x: e.touches[0].clientX - panX, y: e.touches[0].clientY - panY };
+    }
   } else if (e.touches.length === 2) {
-    touchMode = 'pinch';
-    isPainting = false;
+    isInteracting = false;
     const t1 = e.touches[0], t2 = e.touches[1];
     initialPinchDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
     initialPinchScale = viewScale;
@@ -3264,14 +4091,18 @@ paintContainer.addEventListener('touchstart', (e) => {
 
 paintContainer.addEventListener('touchmove', (e) => {
   e.preventDefault();
-  if (touchMode === 'draw' && isPainting && e.touches.length === 1) {
-    doEraseStroke(e.touches[0].clientX, e.touches[0].clientY);
-  } else if (touchMode === 'pinch' && e.touches.length === 2) {
+  if (e.touches.length === 1 && isInteracting) {
+    if (currentToolMode === 'brush') {
+      doEraseStroke(e.touches[0].clientX, e.touches[0].clientY);
+    } else if (currentToolMode === 'move') {
+      panX = e.touches[0].clientX - mouseStartPos.x;
+      panY = e.touches[0].clientY - mouseStartPos.y;
+      updateTransform();
+    }
+  } else if (e.touches.length === 2 && initialPinchDist > 0) {
     const t1 = e.touches[0], t2 = e.touches[1];
     const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-    if (initialPinchDist > 0) {
-      viewScale = Math.min(Math.max(0.6, initialPinchScale * (dist / initialPinchDist)), 6);
-    }
+    viewScale = Math.min(Math.max(0.6, initialPinchScale * (dist / initialPinchDist)), 6);
     const cx = (t1.clientX + t2.clientX) / 2;
     const cy = (t1.clientY + t2.clientY) / 2;
     panX = panStartOffset.x + (cx - pinchStartCenter.x);
@@ -3281,15 +4112,17 @@ paintContainer.addEventListener('touchmove', (e) => {
 }, { passive: false });
 
 paintContainer.addEventListener('touchend', (e) => {
-  if (e.touches.length === 0) { isPainting = false; touchMode = 'none'; }
-  else if (e.touches.length === 1) { touchMode = 'none'; isPainting = false; }
+  if (e.touches.length === 0) isInteracting = false;
 });
 
 function resetCurrentPaintMask() {
-  if (!tempEditWmCanvas || !watermarkImg) return;
+  if (!tempEditWmCanvas) return;
+  pushPaintHistory();
   const tctx = tempEditWmCanvas.getContext('2d');
   tctx.clearRect(0, 0, tempEditWmCanvas.width, tempEditWmCanvas.height);
-  tctx.drawImage(watermarkImg, 0, 0, tempEditWmCanvas.width, tempEditWmCanvas.height);
+  if (watermarkImg) {
+    tctx.drawImage(watermarkImg, 0, 0, tempEditWmCanvas.width, tempEditWmCanvas.height);
+  }
   renderPaint();
 }
 
@@ -3304,10 +4137,17 @@ async function savePaintResult() {
 
   const mimeType = getImageMimeType(paintItem.file, paintItem.name);
   const blob = await new Promise(res => paintCanvas.toBlob(res, mimeType, 1.0));
+  const newWmBlob = await new Promise(res => paintItem.wmCanvas.toBlob(res, 'image/png'));
   const url = URL.createObjectURL(blob);
 
   paintItem.resultBlob = blob;
   paintItem.resultUrl = url;
+  paintItem.wmBlob = newWmBlob;
+
+  // 若处于图库详情状态，同步更新持久化到 IndexedDB
+  if (activeDetailPkg) {
+    await DrizzleDB.savePackage(activeDetailPkg);
+  }
 
   const thumb = document.getElementById(`thumb-${paintItem.id}`);
   if (thumb) thumb.src = url;
@@ -3316,7 +4156,6 @@ async function savePaintResult() {
 
   closeEraseModal();
 }
-
 /* ================================================================
    我的 —— 用户资料 / 壁纸 / 备份
 ================================================================ */
@@ -3547,7 +4386,137 @@ async function triggerPwaInstall() {
   deferredPrompt = null;
 }
 
+/* ================================================================
+   更新公告版本管理与历史更新归档
+================================================================ */
+const CURRENT_APP_VERSION = 'v1.0.9';
+
+const APP_UPDATE_HISTORY = [
+  {
+    version: 'v1.0.9',
+    tag: '当前版本',
+    date: '2026/09/27',
+    sections: [
+      {
+        title: '一、小组件问题修复',
+        items: [
+          '用户上传的小组件图片将存入数据库存储，不会被强制清理，不会进行画质压缩，不会自动清除素材。',
+          '用户对小组件内文字做出的修改会完整留存，修改的数据不会被无故清空。'
+        ]
+      },
+      {
+        title: '二、图库原图、作者水印相关存储调整',
+        items: [
+          '用户上传的图片文件完整保存，不压缩画质，无自动清理机制，数据永久保留，仅支持用户手动多选后自行删除。'
+        ]
+      },
+      {
+        title: '三、功能优化',
+        items: [
+          '图库右上角新增多选操作入口，支持逐个勾选图片、一键全选；勾选后可执行删除、移动至其他文件夹操作。',
+          '支持长按文件夹重命名。',
+          '文件夹数量统计逻辑优化：根目录文件夹展示的图片总数，为其内部所有子文件夹图片数量的合计数值，子文件夹独立统计自身图片数量。',
+          'ZIP导出包命名格式调整，命名顺序：署名‑QQ号‑图包名称。'
+        ]
+      },
+      {
+        title: '四、贴膜机出图功能更新',
+        items: [
+          '使用手动修正功能时，裁切框自动恢复为正方形。裁切框下方新增功能按钮：移动、画笔。开启移动模式后，双指缩放画面的同时可以拖动调整图片位置；画笔模式用于水印擦除操作，操作支持撤回。'
+        ]
+      },
+      {
+        title: '五、图库数据问题修复',
+        items: [
+          '修复进入图库页面，素材数据读取保存异常、程序报错的问题。'
+        ]
+      }
+    ]
+  },
+  {
+    version: 'v1.0.6',
+    tag: '历史版本',
+    date: '2026/09/15',
+    sections: [
+      {
+        title: '基础功能更新',
+        items: [
+          '新增独立水印管理 APP 与多层级文件夹结构。',
+          '强化 AI 自动识别并擦除脸部水印算法。',
+          '提供无损画质 ZIP 批量导出通道。'
+        ]
+      }
+    ]
+  },
+  {
+    version: 'v1.0.4',
+    tag: '初始版本',
+    date: '2026/08/20',
+    sections: [
+      {
+        title: '初代发布',
+        items: [
+          '上线拟态 iOS 玻璃桌面小组件与细雨开屏动画。',
+          '支持基础贴膜与透明度调节。'
+        ]
+      }
+    ]
+  }
+];
+
+function checkVersionAndShowPopup() {
+  const lastReadVer = localStorage.getItem('drizzle_last_read_version');
+  if (lastReadVer !== CURRENT_APP_VERSION) {
+    // 尚未已读过该版本，弹出更新窗口
+    document.getElementById('updateNoticeModal').classList.remove('hidden');
+  }
+}
+
+function acknowledgeUpdateVersion() {
+  // 写入已读版本，之后永久不再弹窗（直到你下一次修改 CURRENT_APP_VERSION）
+  localStorage.setItem('drizzle_last_read_version', CURRENT_APP_VERSION);
+  document.getElementById('updateNoticeModal').classList.add('hidden');
+}
+
+function renderNoticeHistory() {
+  const container = document.getElementById('noticeHistoryList');
+  if (!container) return;
+  container.innerHTML = '';
+
+  APP_UPDATE_HISTORY.forEach((entry, idx) => {
+    const isCurrent = idx === 0;
+    const card = document.createElement('div');
+    card.className = `card history-ver-card ${isCurrent ? 'current' : ''}`;
+
+    let sectionsHtml = '';
+    entry.sections.forEach(sec => {
+      const itemsHtml = sec.items.map(it => `<div class="log-item-text" style="color:var(--text-main); font-weight:500;">· ${it}</div>`).join('');
+      sectionsHtml += `
+        <div style="background:var(--glass-subtle); border-radius:14px; padding:10px 12px; margin-top:6px;">
+          <div style="font-size:11.5px; font-weight:800; color:var(--text-main); margin-bottom:5px;">${sec.title}</div>
+          ${itemsHtml}
+        </div>
+      `;
+    });
+
+    card.innerHTML = `
+      <div class="history-header">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:13px; font-weight:800; color:var(--text-main);">${entry.version}</span>
+          <span class="mini-badge ${isCurrent ? 'ready' : ''}" style="padding:2px 7px;">${entry.tag}</span>
+        </div>
+        <span style="font-size:10px; color:var(--text-light); font-weight:600;">${entry.date}</span>
+      </div>
+      <div>${sectionsHtml}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
+  /* 检查更新弹窗（已读则不再弹） */
+  checkVersionAndShowPopup();
+
   /* ================= PWA 安装支持（解决无法安装） ================= */
   (function initPWA() {
     if ('serviceWorker' in navigator) {
@@ -3573,9 +4542,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   loadFaceModel();
   setTimeout(bootTick, 120);
 
-  /* 用户资料 */
+  /* 用户资料与壁纸 */
   initUserProfile();
   loadCustomWallpaper();
+  
+  /* 恢复所有小组件无损图片与文字持久化数据 */
+  await restoreAllWidgetData();
 
   /* IndexedDB */
   try {
