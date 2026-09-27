@@ -1159,14 +1159,14 @@ input[type="range"]::-moz-range-thumb {
       <div class="liquid-glass music-widget" id="musicCard">
         <div class="music-header">
           <span>正在播放</span>
-          <span class="editable" contenteditable="true" spellcheck="false" style="font-weight: 600; color: var(--text-main);">泪的告白</span>
+          <span class="editable" contenteditable="true" spellcheck="false" style="font-weight: 600; color: var(--text-main);">失眠了</span>
         </div>
         <div class="music-main">
           <div class="album-art" id="musicAlbumArt" title="点击添加唱片头像/封面">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="0.5" fill="currentColor"/></svg>
           </div>
           <div class="music-details">
-            <div class="music-title editable" contenteditable="true" spellcheck="false">没关系 我们还有以前</div>
+            <div class="music-title editable" contenteditable="true" spellcheck="false">明明你也想我吧</div>
             <div class="music-time">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               <span class="editable" contenteditable="true" spellcheck="false">09:41:00</span>
@@ -1600,6 +1600,20 @@ input[type="range"]::-moz-range-thumb {
     </div>
 
     <div class="card">
+      <div class="card-title" style="margin-bottom:12px;">应用安装与快捷方式</div>
+      <div class="btn-grid" style="grid-template-columns: 1fr;">
+        <button class="action-btn" onclick="openInstallModal()" style="background: rgba(100, 116, 139, 0.12); border-color: var(--accent);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span style="font-weight: 800;">下载到主屏幕 / 桌面</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
       <div class="card-title" style="margin-bottom:12px;">全局壁纸与数据管理</div>
       <div class="btn-grid">
         <button class="action-btn" onclick="document.getElementById('wallpaperUploadInput').click()">
@@ -1830,6 +1844,51 @@ input[type="range"]::-moz-range-thumb {
         <button class="btn-ghost" onclick="closeEraseModal()">取消</button>
         <button class="btn-solid" onclick="savePaintResult()">保存修改</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- 添加到主屏幕弹窗 -->
+<div id="installModal" class="modal-mask hidden">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <h3>下载到主屏幕</h3>
+        <p>像原生 App 一样使用 drizzle</p>
+      </div>
+      <button class="x-btn" onclick="closeInstallModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    
+    <div id="pwaInstallBtnWrapper" class="hidden" style="padding: 10px 0; text-align: center;">
+      <p style="font-size:11.5px; color:var(--text-muted); margin-bottom:10px;">系统检测到你的浏览器支持一键安装</p>
+      <button class="primary-btn" onclick="triggerPwaInstall()" style="padding:12px 20px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        一键安装
+      </button>
+    </div>
+
+    <div id="manualInstallGuide" style="display: block;">
+      <div style="font-size:11.5px; font-weight:700; color:var(--text-main); margin-bottom:8px;">因为是在本地打开，请按以下步骤手动添加：</div>
+      
+      <div style="font-size:11px; line-height:1.7; color:var(--text-muted); background:var(--glass-subtle); padding:12px; border-radius:16px; margin-bottom:8px;">
+        <b style="color:var(--text-main);">iOS (Safari)</b><br>
+        1. 点击底部中间的「分享」按钮 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg><br>
+        2. 向下滑动找到「添加到主屏幕」<br>
+        3. 点击「添加」即可
+      </div>
+
+      <div style="font-size:11px; line-height:1.7; color:var(--text-muted); background:var(--glass-subtle); padding:12px; border-radius:16px;">
+        <b style="color:var(--text-main);"> Android (Chrome / Edge)</b><br>
+        1. 点击右上角「三个点」菜单<br>
+        2. 选择「添加到主屏幕」或「安装应用」<br>
+        3. 确认添加即可
+      </div>
+    </div>
+
+    <div class="modal-actions" style="margin-top:6px;">
+      <button class="btn-ghost" onclick="closeInstallModal()">我知道了</button>
     </div>
   </div>
 </div>
@@ -3448,6 +3507,46 @@ function handleImportDataBackup(e) {
 /* ================================================================
    启动
 ================================================================ */
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // 如果在支持的环境下，显示一键安装按钮
+  const wrapper = document.getElementById('pwaInstallBtnWrapper');
+  const guide = document.getElementById('manualInstallGuide');
+  if (wrapper) wrapper.classList.remove('hidden');
+  if (guide) guide.style.display = 'none';
+});
+
+function openInstallModal() {
+  // 每次打开时检查一下环境
+  const wrapper = document.getElementById('pwaInstallBtnWrapper');
+  const guide = document.getElementById('manualInstallGuide');
+  if (deferredPrompt) {
+    if (wrapper) wrapper.classList.remove('hidden');
+    if (guide) guide.style.display = 'none';
+  } else {
+    if (wrapper) wrapper.classList.add('hidden');
+    if (guide) guide.style.display = 'block';
+  }
+  document.getElementById('installModal').classList.remove('hidden');
+}
+
+function closeInstallModal() {
+  document.getElementById('installModal').classList.add('hidden');
+}
+
+async function triggerPwaInstall() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    closeInstallModal();
+  }
+  deferredPrompt = null;
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
   /* ================= PWA 安装支持（解决无法安装） ================= */
   (function initPWA() {
