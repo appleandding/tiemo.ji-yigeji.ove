@@ -6,6 +6,7 @@
 <title>drizzle</title>
 <link rel="icon" href="https://image.58sb.cn/file/img/4y9EiqBY.jpg" type="image/jpeg">
 <link rel="apple-touch-icon" href="https://image.58sb.cn/file/img/4y9EiqBY.jpg">
+<link id="pwa-manifest" rel="manifest">
 
 <script src="https://unpkg.com/@tensorflow/tfjs-core@3.21.0/dist/tf-core.min.js"></script>
 <script src="https://unpkg.com/@tensorflow/tfjs-converter@3.21.0/dist/tf-converter.min.js"></script>
@@ -3343,7 +3344,29 @@ function loadCustomWallpaper() {
   if (savedWp) applyWallpaperStyle(savedWp);
 }
 
-function exportAllDataBackup() {
+async function exportAllDataBackup() {
+  // 将水印库的 Blob 转为 Base64，以便保存在 JSON 中
+  const processWmNode = async (node) => {
+    const newNode = { id: node.id, name: node.name, watermarks: [], subFolders: [] };
+    for (let w of (node.watermarks || [])) {
+      let base64 = '';
+      if (w.blob) {
+        base64 = await new Promise(r => {
+          const reader = new FileReader();
+          reader.onload = e => r(e.target.result);
+          reader.readAsDataURL(w.blob);
+        });
+      }
+      newNode.watermarks.push({ id: w.id, name: w.name, base64 });
+    }
+    for (let sub of (node.subFolders || [])) {
+      newNode.subFolders.push(await processWmNode(sub));
+    }
+    return newNode;
+  };
+
+  const wmData = await processWmNode(watermarkRoot);
+
   const backupData = {
     version: '1.0',
     timestamp: Date.now(),
@@ -3355,8 +3378,10 @@ function exportAllDataBackup() {
     galleryPackages: galleryPackages.map(p => ({
       id: p.id, author: p.author, qq: p.qq, date: p.date,
       opacity: p.opacity, blendMode: p.blendMode, coverUrl: p.coverUrl
-    }))
+    })),
+    watermarkRoot: wmData // 加入水印库
   };
+
   const jsonStr = JSON.stringify(backupData, null, 2);
   const blob = new Blob([jsonStr], { type: 'application/json' });
   saveAs(blob, `贴膜机数据备份_${Date.now()}.json`);
@@ -3366,7 +3391,7 @@ function handleImportDataBackup(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = (ev) => {
+  reader.onload = async (ev) => {
     try {
       const data = JSON.parse(ev.target.result);
       if (data.userName) localStorage.setItem('user_name', data.userName);
@@ -3381,10 +3406,39 @@ function handleImportDataBackup(e) {
         reviveRepoNodeUrls(rootFolder);
         currentFolderNode = rootFolder;
       }
+
+      // 恢复水印库
+      if (data.watermarkRoot) {
+        const reviveWmNode = (node) => {
+          const newNode = { id: node.id, name: node.name, subFolders: [], watermarks: [] };
+          for (let w of (node.watermarks || [])) {
+            if (w.base64) {
+              const arr = w.base64.split(',');
+              const mime = arr[0].match(/:(.*?);/)[1];
+              const bstr = atob(arr[1]);
+              let n = bstr.length;
+              const u8arr = new Uint8Array(n);
+              while (n--) u8arr[n] = bstr.charCodeAt(n);
+              const blob = new Blob([u8arr], { type: mime });
+              newNode.watermarks.push({ id: w.id, name: w.name, blob, src: URL.createObjectURL(blob) });
+            }
+          }
+          for (let sub of (node.subFolders || [])) {
+            newNode.subFolders.push(reviveWmNode(sub));
+          }
+          return newNode;
+        };
+        watermarkRoot = reviveWmNode(data.watermarkRoot);
+        currentWmFolderNode = watermarkRoot;
+        await DrizzleDB.saveWmRepo(watermarkRoot);
+        renderWmView();
+      }
+
       initUserProfile();
       renderRepoView();
       alert('数据备份已成功恢复！');
     } catch (err) {
+      console.error(err);
       alert('数据解析失败，请确保导入了正确的备份文件。');
     }
   };
@@ -3395,6 +3449,26 @@ function handleImportDataBackup(e) {
    启动
 ================================================================ */
 window.addEventListener('DOMContentLoaded', async () => {
+  /* ================= PWA 安装支持（解决无法安装） ================= */
+  (function initPWA() {
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        self.addEventListener('install', e => self.skipWaiting());
+        self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+        self.addEventListener('fetch', e => {
+          e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+        });
+      `;
+      const swBlob = new Blob([swCode], { type: 'application/javascript' });
+      const swURL = URL.createObjectURL(swBlob);
+      navigator.serviceWorker.register(swURL).then(() => {
+        console.log('PWA Service Worker 注册成功');
+      }).catch(err => {
+        console.warn('Service Worker 注册失败（可能是本地 file:// 协议导致）', err);
+      });
+    }
+  })();
+
   /* 开场动画 */
   initRain();
   loadFaceModel();
