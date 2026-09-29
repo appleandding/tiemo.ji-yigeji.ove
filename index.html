@@ -3108,28 +3108,29 @@ function initRain() {
   frame();
 }
 
-/* 后台异步加载 AI，设置 3 秒超时熔断，不阻塞开屏 */
+/* 恢复开屏联动：在开屏阶段完整装载小助手 AI 核心模型 */
 async function loadFaceModel() {
   const badge = document.getElementById('aiStatusBadge');
   const badgeText = document.getElementById('aiStatusText');
-  
-  const loadPromise = (async () => {
-    if (window.tf) {
-      await tf.setBackend('webgl').catch(() => tf.setBackend('cpu'));
-    }
-    if (window.blazeface) {
-      return await blazeface.load({ maxFaces: 10, iouThreshold: 0.3, scoreThreshold: 0.65 });
-    }
-    return null;
-  })();
-
-  const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 3000));
 
   try {
-    faceModel = await Promise.race([loadPromise, timeoutPromise]);
+    if (window.tf) {
+      await tf.setBackend('webgl').catch(() => tf.setBackend('cpu'));
+      await tf.ready();
+    }
+    if (window.blazeface) {
+      faceModel = await blazeface.load({ maxFaces: 10, iouThreshold: 0.3, scoreThreshold: 0.65 });
+    }
   } catch (e) {
-    faceModel = null;
+    try {
+      if (window.blazeface) {
+        faceModel = await blazeface.load();
+      }
+    } catch (err) {
+      faceModel = null;
+    }
   }
+
   modelReady = true;
 
   if (badge && badgeText) {
@@ -3152,20 +3153,23 @@ function updateBootUI(p) {
   if (pct) pct.innerText = Math.round(p) + '%';
 }
 
-/* 平滑极速进度条：1.2 ~ 1.5 秒自然拉满进主屏 */
+/* 开屏进度与小助手加载深度联动 */
 function bootTick() {
   if (bootFinished) return;
 
-  bootProgress += 3.2 + Math.random() * 2.8;
-  if (bootProgress > 100) bootProgress = 100;
-  
+  let inc;
+  if (bootProgress < 70) inc = 1.6 + Math.random() * 1.4;
+  else if (bootProgress < 90) inc = 0.55 + Math.random() * 0.9;
+  else inc = modelReady ? 2.5 : 0;
+
+  bootProgress = Math.min(bootProgress + inc, modelReady ? 100 : 92);
   updateBootUI(bootProgress);
 
   if (bootProgress >= 100) {
     finishBoot();
     return;
   }
-  setTimeout(bootTick, 35);
+  setTimeout(bootTick, 45);
 }
 
 function finishBoot() {
@@ -5390,9 +5394,18 @@ paintContainer.addEventListener('wheel', (e) => {
   updateTransform();
 }, { passive: false });
 
+/* 核心修复：高灵敏双指缩放与拖动手势算法（双指优先级最高） */
 paintContainer.addEventListener('touchstart', (e) => {
   e.preventDefault();
-  if (e.touches.length === 1) {
+  if (e.touches.length >= 2) {
+    // 只要有 2 根及以上手指触碰，立即强制切断画笔绘制，无缝开启双指缩放/漫游
+    isInteracting = false;
+    const t1 = e.touches[0], t2 = e.touches[1];
+    initialPinchDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+    initialPinchScale = viewScale;
+    pinchStartCenter = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
+    panStartOffset = { x: panX, y: panY };
+  } else if (e.touches.length === 1) {
     isInteracting = true;
     if (currentToolMode === 'brush') {
       pushPaintHistory();
@@ -5400,19 +5413,34 @@ paintContainer.addEventListener('touchstart', (e) => {
     } else {
       mouseStartPos = { x: e.touches[0].clientX - panX, y: e.touches[0].clientY - panY };
     }
-  } else if (e.touches.length === 2) {
-    isInteracting = false;
-    const t1 = e.touches[0], t2 = e.touches[1];
-    initialPinchDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-    initialPinchScale = viewScale;
-    pinchStartCenter = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
-    panStartOffset = { x: panX, y: panY };
   }
 }, { passive: false });
 
 paintContainer.addEventListener('touchmove', (e) => {
   e.preventDefault();
-  if (e.touches.length === 1 && isInteracting) {
+  if (e.touches.length >= 2) {
+    isInteracting = false;
+    const t1 = e.touches[0], t2 = e.touches[1];
+    const currentDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+
+    // 动态校准基准距离，防止单指突变双指时发生跳跃
+    if (!initialPinchDist || initialPinchDist <= 0) {
+      initialPinchDist = currentDist;
+      initialPinchScale = viewScale;
+      pinchStartCenter = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
+      panStartOffset = { x: panX, y: panY };
+    }
+
+    if (initialPinchDist > 0) {
+      const scaleFactor = currentDist / initialPinchDist;
+      viewScale = Math.min(Math.max(0.5, initialPinchScale * scaleFactor), 8);
+      const cx = (t1.clientX + t2.clientX) / 2;
+      const cy = (t1.clientY + t2.clientY) / 2;
+      panX = panStartOffset.x + (cx - pinchStartCenter.x);
+      panY = panStartOffset.y + (cy - pinchStartCenter.y);
+      updateTransform();
+    }
+  } else if (e.touches.length === 1 && isInteracting) {
     if (currentToolMode === 'brush') {
       doEraseStroke(e.touches[0].clientX, e.touches[0].clientY);
     } else if (currentToolMode === 'move') {
@@ -5420,20 +5448,21 @@ paintContainer.addEventListener('touchmove', (e) => {
       panY = e.touches[0].clientY - mouseStartPos.y;
       updateTransform();
     }
-  } else if (e.touches.length === 2 && initialPinchDist > 0) {
-    const t1 = e.touches[0], t2 = e.touches[1];
-    const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-    viewScale = Math.min(Math.max(0.6, initialPinchScale * (dist / initialPinchDist)), 6);
-    const cx = (t1.clientX + t2.clientX) / 2;
-    const cy = (t1.clientY + t2.clientY) / 2;
-    panX = panStartOffset.x + (cx - pinchStartCenter.x);
-    panY = panStartOffset.y + (cy - pinchStartCenter.y);
-    updateTransform();
   }
 }, { passive: false });
 
 paintContainer.addEventListener('touchend', (e) => {
-  if (e.touches.length === 0) isInteracting = false;
+  if (e.touches.length < 2) {
+    initialPinchDist = 0;
+  }
+  if (e.touches.length === 0) {
+    isInteracting = false;
+  }
+});
+
+paintContainer.addEventListener('touchcancel', () => {
+  isInteracting = false;
+  initialPinchDist = 0;
 });
 
 function resetCurrentPaintMask() {
