@@ -6,6 +6,11 @@
 <title>drizzle</title>
 <link rel="icon" href="https://image.58sb.cn/file/img/4y9EiqBY.jpg" type="image/jpeg">
 <link rel="apple-touch-icon" href="https://image.58sb.cn/file/img/4y9EiqBY.jpg">
+<meta name="theme-color" content="#F5F7FA">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="drizzle">
 <link id="pwa-manifest" rel="manifest">
 
 <script src="https://unpkg.com/@tensorflow/tfjs-core@3.21.0/dist/tf-core.min.js"></script>
@@ -1135,6 +1140,202 @@ input[type="range"]::-moz-range-thumb {
   display: flex; align-items: center; justify-content: space-between;
   border-bottom: 1px solid var(--line); padding-bottom: 8px;
 }
+
+/* ============ 门槛记录 APP 专属同色系样式 ============ */
+.threshold-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 4px 2px;
+}
+.threshold-actions {
+  display: flex; align-items: center; gap: 8px;
+}
+.round-add-btn {
+  width: 32px; height: 32px; border-radius: 12px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shine);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-main); cursor: pointer; transition: transform .15s ease;
+}
+.round-add-btn:active { transform: scale(0.92); }
+.total-spend-pill {
+  font-size: 11px; font-weight: 700; color: var(--text-main);
+  background: var(--glass-subtle); border: 1px solid var(--glass-border);
+  padding: 5px 12px; border-radius: 14px; box-shadow: var(--glass-shine);
+  display: flex; align-items: center; gap: 3px;
+}
+.total-spend-pill .val {
+  color: #0f172a; font-weight: 800; font-size: 12.5px;
+}
+
+.threshold-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+}
+.threshold-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px; box-shadow: var(--glass-shine);
+  padding: 11px; display: flex; flex-direction: column; gap: 6px;
+  position: relative; cursor: pointer; user-select: none;
+  transition: transform .15s ease, border-color .15s ease;
+}
+.threshold-card:active { transform: scale(0.98); }
+.threshold-card-top {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 6px;
+}
+.threshold-cname {
+  font-size: 12.5px; font-weight: 800; color: var(--text-main);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.threshold-price {
+  font-size: 12px; font-weight: 800; color: #334155;
+  background: rgba(255, 255, 255, 0.85); padding: 1.5px 7px;
+  border-radius: 10px; border: 1px solid var(--glass-border); flex-shrink: 0;
+}
+.threshold-lx {
+  font-size: 10px; color: var(--text-muted); font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.threshold-card-img {
+  width: 100%; aspect-ratio: 16 / 10; border-radius: 12px;
+  object-fit: cover; background: #e2e8f0; border: 1px solid var(--glass-border);
+  display: block; margin-top: 2px;
+}
+
+/* 门槛多图网格与上传盒 */
+.threshold-imgs-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px;
+}
+.threshold-imgs-grid.single { grid-template-columns: 1fr; }
+.threshold-imgs-grid.double { grid-template-columns: repeat(2, 1fr); }
+.threshold-thumb-cell {
+  position: relative; aspect-ratio: 1 / 1; border-radius: 12px;
+  overflow: hidden; background: #e2e8f0; border: 1px solid var(--glass-border);
+}
+.threshold-thumb-cell img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.threshold-thumb-cell .del-thumb-btn {
+  position: absolute; top: 4px; right: 4px; width: 20px; height: 20px;
+  border-radius: 50%; background: rgba(15, 23, 42, 0.75); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  border: none; cursor: pointer; z-index: 5;
+}
+
+/* 门槛弹窗内多图上传区 */
+.thresh-modal-upload-wrap {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.threshold-upload-trigger {
+  width: 100%; padding: 14px;
+  border: 1.5px dashed rgba(148, 163, 184, 0.65);
+  border-radius: 18px; background: rgba(255, 255, 255, 0.45);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer; transition: all .2s ease;
+}
+.threshold-upload-trigger:active { transform: scale(0.99); background: rgba(255,255,255,0.75); }
+.threshold-upload-trigger span { font-size: 11.5px; font-weight: 700; color: var(--text-main); }
+.thresh-modal-preview-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+}
+
+/* 全屏灯箱放大展示与下载工具栏 */
+.lightbox-mask {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.lightbox-mask.hidden { display: none !important; }
+.lightbox-top-bar {
+  position: absolute; top: max(16px, env(safe-area-inset-top)); right: 20px;
+  display: flex; align-items: center; gap: 12px; z-index: 1010;
+}
+.lightbox-btn {
+  padding: 8px 14px; border-radius: 14px;
+  background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main); font-size: 11.5px; font-weight: 700;
+  display: flex; align-items: center; gap: 6px; cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+.lightbox-btn:active { transform: scale(0.95); }
+.lightbox-img {
+  max-width: 96vw; max-height: 82vh; object-fit: contain;
+  border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  animation: zoomPop .2s ease-out;
+}
+@keyframes zoomPop { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* ============ 联系 APP 专属同色系样式 ============ */
+.contact-group-bar {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+}
+.group-add-btn {
+  width: 32px; height: 32px; border-radius: 12px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shine); display: flex; align-items: center;
+  justify-content: center; color: var(--accent); cursor: pointer; flex-shrink: 0;
+  transition: transform .15s ease;
+}
+.group-add-btn:active { transform: scale(0.92); }
+.group-scroll-tabs {
+  display: flex; align-items: center; gap: 6px; overflow-x: auto;
+  scrollbar-width: none; flex: 1; padding: 2px 0;
+}
+.group-scroll-tabs::-webkit-scrollbar { display: none; }
+.group-tab-pill {
+  padding: 6px 14px; border-radius: 14px; font-size: 11px; font-weight: 700;
+  background: rgba(255, 255, 255, 0.65); border: 1px solid var(--glass-border);
+  color: var(--text-muted); cursor: pointer; white-space: nowrap;
+  box-shadow: var(--glass-shine); transition: all .16s ease; user-select: none;
+}
+.group-tab-pill.active {
+  background: rgba(226, 232, 240, 0.95); border-color: var(--accent);
+  color: var(--text-main); font-weight: 800;
+}
+.group-tab-pill:active { transform: scale(0.95); }
+
+.contact-action-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 2px 2px;
+}
+.contact-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+}
+@media (min-width: 540px) { .contact-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.contact-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px; box-shadow: var(--glass-shine);
+  padding: 12px; display: flex; flex-direction: column; gap: 6px;
+  position: relative; cursor: pointer; user-select: none;
+  transition: transform .15s ease, border-color .15s ease;
+}
+.contact-card:active { transform: scale(0.98); }
+.contact-card-name {
+  font-size: 13px; font-weight: 800; color: var(--text-main);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.contact-card-lx {
+  font-size: 11px; font-weight: 600; color: var(--accent);
+  background: rgba(255, 255, 255, 0.7); border: 1px solid var(--glass-border);
+  padding: 3px 8px; border-radius: 10px; word-break: break-all;
+}
+.contact-tags-box {
+  display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px;
+}
+.contact-tag-badge {
+  font-size: 9.5px; font-weight: 700; color: var(--text-muted);
+  background: var(--glass-subtle); border: 1px solid var(--glass-border);
+  border-radius: 8px; padding: 1.5px 6px; box-shadow: inset 0 1px 1px rgba(255,255,255,0.7);
+}
 </style>
 </head>
 
@@ -1142,20 +1343,21 @@ input[type="range"]::-moz-range-thumb {
 <div class="dot-pattern"></div>
 
 <!-- 隐藏文件输入 -->
-<input type="file" id="wmInput" accept="image/png,image/webp" class="hidden-file-input" onchange="handleWmFile(event)">
+<input type="file" id="wmInput" class="hidden-file-input" onchange="handleWmFile(event)">
 <input type="file" id="rawInputByFiles" multiple class="hidden-file-input" onchange="handleBulkFiles(event)">
 <input type="file" id="rawInputByFolder" webkitdirectory directory multiple class="hidden-file-input" onchange="handleBulkFiles(event)">
-<input type="file" id="rawInputByMedia" accept="image/*" multiple class="hidden-file-input" onchange="handleBulkFiles(event)">
+<input type="file" id="rawInputByMedia" multiple class="hidden-file-input" onchange="handleBulkFiles(event)">
 <input type="file" id="repoImageUpload" multiple class="hidden-file-input" onchange="handleUploadToCurrentFolder(event)">
-<input type="file" id="wmLibraryUpload" multiple accept="image/*" class="hidden-file-input" onchange="handleWmLibraryUpload(event)">
-<input type="file" id="avatarFileInput" class="hidden-file-input" accept="image/*">
-<input type="file" id="quoteFileInput" class="hidden-file-input" accept="image/*">
-<input type="file" id="musicAlbumInput" class="hidden-file-input" accept="image/*">
-<input type="file" id="polaroidFileInput" class="hidden-file-input" accept="image/*">
-<input type="file" id="sysAvatarFileInput" class="hidden-file-input" accept="image/*">
-<input type="file" id="profileAvatarInput" class="hidden-file-input" accept="image/*" onchange="handleAvatarChange(event)">
-<input type="file" id="wallpaperUploadInput" class="hidden-file-input" accept="image/*" onchange="handleWallpaperChange(event)">
+<input type="file" id="wmLibraryUpload" multiple class="hidden-file-input" onchange="handleWmLibraryUpload(event)">
+<input type="file" id="avatarFileInput" class="hidden-file-input">
+<input type="file" id="quoteFileInput" class="hidden-file-input">
+<input type="file" id="musicAlbumInput" class="hidden-file-input">
+<input type="file" id="polaroidFileInput" class="hidden-file-input">
+<input type="file" id="sysAvatarFileInput" class="hidden-file-input">
+<input type="file" id="profileAvatarInput" class="hidden-file-input" onchange="handleAvatarChange(event)">
+<input type="file" id="wallpaperUploadInput" class="hidden-file-input" onchange="handleWallpaperChange(event)">
 <input type="file" id="dataImportInput" class="hidden-file-input" accept=".json" onchange="handleImportDataBackup(event)">
+<input type="file" id="thresholdImageInput" class="hidden-file-input" multiple accept="image/*" onchange="handleThresholdFileSelect(event)">
 
 <!-- ============ 开场雨滴遮罩 ============ -->
 <div id="bootOverlay">
@@ -1283,7 +1485,7 @@ input[type="range"]::-moz-range-thumb {
           <span class="app-name">我的</span>
         </div>
 
-        <div class="app-item">
+        <div class="app-item" onclick="openApp('contacts')">
           <div class="app-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -1292,7 +1494,7 @@ input[type="range"]::-moz-range-thumb {
           <span class="app-name">联系</span>
         </div>
 
-        <div class="app-item">
+        <div class="app-item" onclick="openApp('threshold')">
           <div class="app-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
@@ -1763,6 +1965,26 @@ input[type="range"]::-moz-range-thumb {
     </div>
 
     <div class="card">
+      <div class="card-title-row">
+        <div class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>永久数据保护（防清理）</span>
+        </div>
+        <span class="mini-badge" id="storagePersistBadge"><span class="bdot"></span><span id="storagePersistStatus">检测中</span></span>
+      </div>
+      <div class="check-row" style="margin-top:8px; border-top:none; padding-top:0;">
+        <div style="display:flex; flex-direction:column; gap:2px;">
+          <span style="font-size:11.5px; font-weight:700;">强制锁定本地数据库</span>
+          <span style="font-size:9.5px; color:var(--text-muted); font-weight:500;">即使手机剩余空间低于 3GB，系统也不会自动清除图库与凭证</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="storagePersistToggle" onchange="togglePersistentStorage(this.checked)">
+          <span class="slider-track"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
       <div class="card-title" style="margin-bottom:12px;">应用安装与快捷方式</div>
       <div class="btn-grid" style="grid-template-columns: 1fr;">
         <button class="action-btn" onclick="openInstallModal()" style="background: rgba(100, 116, 139, 0.12); border-color: var(--accent);">
@@ -2097,15 +2319,256 @@ input[type="range"]::-moz-range-thumb {
       </div>
 
       <div style="font-size:11px; line-height:1.7; color:var(--text-muted); background:var(--glass-subtle); padding:12px; border-radius:16px;">
-        <b style="color:var(--text-main);"> Android (Chrome / Edge)</b><br>
-        1. 点击右上角「三个点」菜单<br>
-        2. 选择「添加到主屏幕」或「安装应用」<br>
-        3. 确认添加即可
+        <b style="color:var(--text-main);">Edge 浏览器 (新版专属)</b><br>
+        1. 点击底部或右上角「三条杠 / 三个点」菜单 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg><br>
+        2. 点击「添加到手机」或「安装应用 / 添加到主屏幕」<br>
+        3. 若提示创建快捷方式，点击「添加」即可在桌面生成独立原生 App 图标。
       </div>
     </div>
 
     <div class="modal-actions" style="margin-top:6px;">
       <button class="btn-ghost" onclick="closeInstallModal()">我知道了</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 应用视图 7：门槛记录（独立 APP） -->
+<!-- ============================================================ -->
+<section class="app-view" id="app-threshold">
+  <div class="app-header">
+    <button class="back-btn" onclick="closeApp('threshold')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="app-title">门槛记录</div>
+    <div class="app-header-right">
+      <button class="text-action-btn" id="threshSelectToggleBtn" onclick="toggleThresholdSelectMode()">多选</button>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <!-- 顶部搜索框：搜索会名 -->
+    <div class="search-wrap">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" id="thresholdSearchInput" oninput="filterThresholdCards()" placeholder="搜索会名查找门槛…" class="search-input">
+    </div>
+
+    <!-- 搜索框下方栏：加号键、多选键、总门槛消费 -->
+    <div class="threshold-bar">
+      <div class="threshold-actions">
+        <button class="round-add-btn" onclick="openAddThresholdModal()" title="添加门槛记录">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button class="mini-btn" onclick="toggleThresholdSelectMode()">
+          <span id="threshBarSelectText">多选删除</span>
+        </button>
+      </div>
+
+      <div class="total-spend-pill">
+        <span>总门槛消费：</span>
+        <span class="val" id="thresholdTotalAmountLabel">￥0.00</span>
+      </div>
+    </div>
+
+    <!-- 两列卡片网格 -->
+    <div class="threshold-grid" id="thresholdCardsGrid"></div>
+  </div>
+</section>
+
+<!-- 同色系重命名文件夹弹窗（解决原生 prompt 被拦截及样式问题） -->
+<div id="renameFolderModal" class="modal-mask hidden">
+  <div class="modal-card" style="max-width:320px;">
+    <div class="modal-head">
+      <div>
+        <h3>修改文件夹名称</h3>
+        <p>请输入全新的文件夹名字</p>
+      </div>
+      <button class="x-btn" onclick="closeFolderRenameModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="field" style="margin-top:6px;">
+      <label>文件夹名称</label>
+      <input type="text" id="renameFolderInput" placeholder="输入文件夹名…" autocomplete="off">
+    </div>
+    <div class="modal-actions" style="margin-top:8px;">
+      <button class="btn-ghost" onclick="closeFolderRenameModal()">取消</button>
+      <button class="btn-solid" onclick="confirmFolderRename()">确认修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- 门槛记录录入/修改同色系弹窗 -->
+<div id="thresholdEditModal" class="modal-mask hidden">
+  <div class="modal-card" style="max-width:360px; max-height:90vh;">
+    <div class="modal-head">
+      <div>
+        <h3 id="thresholdModalTitle">添加门槛记录</h3>
+        <p>录入会籍、联系方式与门槛消费详情</p>
+      </div>
+      <button class="x-btn" onclick="closeThresholdModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-scroll" style="padding-top:4px;">
+      <div class="field">
+        <label>第一行：会名</label>
+        <input type="text" id="thresholdClubNameInput" placeholder="请输入会名…">
+      </div>
+
+      <div class="field">
+        <label>第二行：lx（负责人/意向群/会联系）</label>
+        <input type="text" id="thresholdContactInput" placeholder="请输入联系方式…">
+      </div>
+
+      <div class="field">
+        <label>第三行：入会金额（元）</label>
+        <input type="number" step="0.01" id="thresholdAmountInput" placeholder="请输入金额，例如 50 或 100…">
+      </div>
+
+      <!-- 多图宫格上传与预览区 -->
+      <div class="field" style="margin-top:4px;">
+        <label>入会凭证 / 证明图片（支持任意多张、任意MB大小）</label>
+        <div class="thresh-modal-upload-wrap">
+          <div class="threshold-upload-trigger" onclick="triggerThresholdImgUpload()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/><line x1="12" y1="7" x2="12" y2="13"/><line x1="9" y1="10" x2="15" y2="10"/></svg>
+            <span>点击添加凭证图片（支持多选）</span>
+          </div>
+          <div class="thresh-modal-preview-grid" id="threshModalPreviewGrid"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="margin-top:6px;">
+      <button class="btn-ghost" onclick="closeThresholdModal()">取消</button>
+      <button class="btn-solid" id="saveThresholdBtn" onclick="saveThresholdRecord()">保存门槛记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- 图片全屏灯箱放大展示 + 下载按键 -->
+<div id="thresholdLightbox" class="lightbox-mask hidden" onclick="closeThresholdLightbox(event)">
+  <div class="lightbox-top-bar" onclick="event.stopPropagation()">
+    <button class="lightbox-btn" onclick="downloadLightboxImage()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span>下载原图</span>
+    </button>
+    <button class="lightbox-btn" onclick="closeThresholdLightboxDirect()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      <span>关闭</span>
+    </button>
+  </div>
+  <img id="thresholdLightboxImg" class="lightbox-img" src="" alt="放大图" onclick="event.stopPropagation()">
+</div>
+
+<!-- ============================================================ -->
+<!-- 应用视图 8：联系（独立 APP） -->
+<!-- ============================================================ -->
+<section class="app-view" id="app-contacts">
+  <div class="app-header">
+    <button class="back-btn" onclick="closeApp('contacts')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="app-title">联系人</div>
+    <div class="app-header-right">
+      <button class="text-action-btn" id="contactSelectToggleBtn" onclick="toggleContactSelectMode()">多选</button>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <!-- 1. 顶部搜索框：搜索负责人/原po/联系方式/风格标签 -->
+    <div class="search-wrap">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" id="contactSearchInput" oninput="filterContactsList()" placeholder="搜索负责人 / 联系方式 / 风格标签…" class="search-input">
+    </div>
+
+    <!-- 2. 分组栏：左侧加号可添加新分组，右侧四组+自定义分组 -->
+    <div class="contact-group-bar">
+      <button class="group-add-btn" onclick="openAddGroupModal()" title="添加新分组">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <div class="group-scroll-tabs" id="contactGroupTabs"></div>
+    </div>
+
+    <!-- 3. 操作条：添加联系人加号键与当前分组统计/分组删除入口 -->
+    <div class="contact-action-row">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button class="round-add-btn" onclick="openAddContactModal()" title="添加联系人">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <span style="font-size:11px; font-weight:700; color:var(--text-muted);" id="contactCountBadge">0 位联系人</span>
+      </div>
+      <button class="mini-btn ghost" id="deleteCurrentGroupBtn" onclick="deleteCurrentActiveGroup()" style="font-size:9.5px; color:#ef4444;">删除本组</button>
+    </div>
+
+    <!-- 4. 联系人卡片展示区 -->
+    <div class="contact-grid" id="contactsGrid"></div>
+  </div>
+</section>
+
+<!-- 联系人添加/编辑同色系弹窗 -->
+<div id="contactEditModal" class="modal-mask hidden">
+  <div class="modal-card" style="max-width:360px;">
+    <div class="modal-head">
+      <div>
+        <h3 id="contactModalTitle">添加联系人</h3>
+        <p>输入所属分组、负责人及风格标签</p>
+      </div>
+      <button class="x-btn" onclick="closeContactModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="field" style="margin-top:4px;">
+      <label>归属分组</label>
+      <div class="select-pill" style="width:100%; justify-content:space-between; padding:6px 12px;">
+        <span style="font-size:11px;">所属分区</span>
+        <select id="contactGroupSelect" style="font-size:12px; font-weight:700; outline:none;"></select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>负责人 / 原po / 会联系：</label>
+      <input type="text" id="contactNameInput" placeholder="输入负责人或原po名称…">
+    </div>
+
+    <div class="field">
+      <label>联系：</label>
+      <input type="text" id="contactDetailInput" placeholder="输入QQ号 / 微信 / 意向群 / 门槛群号…">
+    </div>
+
+    <div class="field">
+      <label>标签（风格标签，逗号隔开，可不填）：</label>
+      <input type="text" id="contactTagsInput" placeholder="例如：自设, 纯欲, 甜酷（选填）">
+    </div>
+
+    <div class="modal-actions" style="margin-top:6px;">
+      <button class="btn-ghost" onclick="closeContactModal()">取消</button>
+      <button class="btn-solid" onclick="confirmSaveContact()">保存联系人</button>
+    </div>
+  </div>
+</div>
+
+<!-- 添加新分组同色系弹窗 -->
+<div id="addGroupModal" class="modal-mask hidden">
+  <div class="modal-card" style="max-width:320px;">
+    <div class="modal-head">
+      <div>
+        <h3>新建分组</h3>
+        <p>为联系人建立新的分类标签</p>
+      </div>
+      <button class="x-btn" onclick="closeAddGroupModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="field" style="margin-top:6px;">
+      <label>分组名称</label>
+      <input type="text" id="newGroupNameInput" placeholder="例如：周边团、置换圈…">
+    </div>
+    <div class="modal-actions" style="margin-top:8px;">
+      <button class="btn-ghost" onclick="closeAddGroupModal()">取消</button>
+      <button class="btn-solid" onclick="confirmAddNewGroup()">确认添加</button>
     </div>
   </div>
 </div>
@@ -2120,7 +2583,7 @@ input[type="range"]::-moz-range-thumb {
     </button>
     <div class="app-title">更新公告与历史</div>
     <div class="app-header-right">
-      <span class="mini-badge ready"><span class="bdot"></span><span>v1.0.9 最新版</span></span>
+      <span class="mini-badge ready"><span class="bdot"></span><span>v1.1.0 最新版</span></span>
     </div>
   </div>
 
@@ -2145,7 +2608,7 @@ input[type="range"]::-moz-range-thumb {
           <div style="font-size:14px; font-weight:800; color:var(--text-main);">版本更新公告</div>
           <div class="ver-badge">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            <span>v1.0.9 正式上线</span>
+            <span>v1.1.0 正式上线</span>
           </div>
         </div>
       </div>
@@ -2156,52 +2619,47 @@ input[type="range"]::-moz-range-thumb {
 
     <!-- 更新内容正文列表 -->
     <div class="update-scroll-body">
-      <div class="log-section-card">
+      <div class="log-section-card" style="background: rgba(240, 244, 248, 0.75);">
         <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-          <span>一、小组件问题修复</span>
+          <span>版本概览</span>
         </div>
-        <div class="log-item-text">1. 用户上传的小组件图片将存入数据库存储，不会被强制清理，不会进行画质压缩，不会自动清除素材。</div>
-        <div class="log-item-text">2. 用户对小组件内文字做出的修改会完整留存，修改的数据不会被无故清空。</div>
+        <div class="log-item-text">本版本对「门槛记录」及「联系」两大核心应用进行系统性优化，涵盖交互修复、功能新增与数据保障三大方向，现已全部完成并上线。</div>
       </div>
 
       <div class="log-section-card">
         <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-          <span>二、图库原图、作者水印相关存储调整</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M12 11v6M9 14h6"/></svg>
+          <span>一、门槛记录 APP</span>
         </div>
-        <div class="log-item-text">1. 用户上传的图片文件完整保存，不压缩画质，无自动清理机制，数据永久保留，仅支持用户手动多选后自行删除。</div>
+        <div class="log-item-text"><b>1. 交互修复</b><br>· 文件夹重命名 Bug 修复：长按文件夹将弹出同色系弹窗，支持直接修改文件夹名称。<br>· 返回逻辑优化：进入子目录后，点击返回仅跳转至上一个子目录，不再直接跳转至根目录，提升多级浏览体验。</div>
+        <div class="log-item-text"><b>2. 图片导入</b><br>· 格式全面开放：图片导入不再限制格式，支持各类型图片文件。<br>· 大文件支持：MB 级别大图均可正常导入，保存门槛记录时页面不卡顿，保存后即时生效，无需退出应用刷新。<br>· 多图导入：支持一次导入多张图片，在导入框内自动按宫格排列展示。<br>· 图片查看与下载：点击上传的图片凭证可放大查看，并支持下载保存。</div>
+        <div class="log-item-text"><b>3. 主页面结构</b><br>· 顶部新增搜索框，支持按会名搜索。<br>· 搜索框下方为添加门槛功能区，包含加号键（新增门槛）、多选键（批量删除）及总门槛消费金额自动汇总。</div>
+        <div class="log-item-text"><b>4. 添加门槛弹窗（同色系）</b><br>· 第一行：会名<br>· 第二行：lx（负责人联系 / 意向群联系 / 会联系）<br>· 第三行：入会金额<br>· 虚线方框支持点击导入图片并永久保存，底部设保存按键。</div>
+        <div class="log-item-text"><b>5. 卡片展示与编辑</b><br>· 保存后每行展示双卡片，显示会名、lx、金额。<br>· 点击卡片弹窗可查看或修改记录，点击图片可放大查看与重新保存。</div>
+        <div class="log-item-text"><b>6. 数据保障</b><br>· 所有记录数据永久保存，无法被强制清除。<br>· 开启永久保存功能，即使设备本地可用内存低于 3GB，仍强制保留网页 / APK 数据。<br>· 同步完成数据库扩容，提升存储与读取性能。</div>
       </div>
 
       <div class="log-section-card">
         <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-          <span>三、功能优化</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>二、联系 APP</span>
         </div>
-        <div class="log-item-text">1. 图库右上角新增多选操作入口，支持逐个勾选图片、一键全选；勾选后可执行删除、移动至其他文件夹操作。</div>
-        <div class="log-item-text">2. 支持长按文件夹重命名。</div>
-        <div class="log-item-text">3. 文件夹数量统计逻辑优化：根目录文件夹展示的图片总数，为其内部所有子文件夹图片数量的合计数值，子文件夹独立统计自身图片数量。</div>
-        <div class="log-item-text">4. ZIP导出包命名格式调整，命名顺序：署名‑QQ号‑图包名称。</div>
+        <div class="log-item-text"><b>1. 页面结构</b><br>· 顶部新增搜索栏，支持内容搜索。<br>· 下方新增加号键，点击弹出同色系弹窗。</div>
+        <div class="log-item-text"><b>2. 新增联系弹窗</b><br>· 第一行：负责人 / 原po / 会联系<br>· 第二行：联系<br>· 第三行：风格标签（多个标签逗号隔开，选填）。</div>
+        <div class="log-item-text"><b>3. 数据与删除</b><br>· 点击确认生成卡片并存入，数据永久保留不清除。<br>· 右上角新增多选按键，支持多选批量删除。</div>
+        <div class="log-item-text"><b>4. 分组功能</b><br>· 搜索栏下方分组行，内置四组：原创圈、定制圈、自截会、水印会。<br>· 点击分组行前加号可新增自定义分组，支持单独删除分组内任意内容。</div>
       </div>
 
       <div class="log-section-card">
         <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
-          <span>四、贴膜机出图功能更新</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>三、我的 APP</span>
         </div>
-        <div class="log-item-text">1. 使用手动修正功能时，裁切框自动恢复为正方形。裁切框下方新增功能按钮：移动、画笔。<br>开启移动模式后，双指缩放画面的同时可以拖动调整图片位置；画笔模式用于水印擦除操作，操作支持撤回。</div>
-      </div>
-
-      <div class="log-section-card">
-        <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <span>五、图库数据问题修复</span>
-        </div>
-        <div class="log-item-text">修复进入图库页面，素材数据读取保存异常、程序报错的问题。</div>
+        <div class="log-item-text">· 开启永久数据保存功能，低内存设备亦强制保留数据，避免数据丢失。<br>· 完成数据库优化与扩容，提升整体运行稳定性。</div>
       </div>
 
       <div style="font-size:10px; color:var(--text-light); text-align:center; padding: 4px 0;">
-        如有使用过程中遇到任何问题，欢迎及时反馈。可在底部「公告」随时查看历史更新。
+        以上为本次全部更新内容，可在底部「公告」随时查看历史更新。
       </div>
     </div>
 
@@ -2258,12 +2716,51 @@ let watermarkRoot = {
 let currentWmFolderNode = watermarkRoot;
 let wmPickerCurrentNode = watermarkRoot;
 
+/* 多层级导航路径栈（逐级返回上一个子目录，避免直接跳回根目录） */
+let repoPathStack = [rootFolder];
+let wmPathStack = [watermarkRoot];
+let wmPickerPathStack = [watermarkRoot];
+let modalRepoPathStack = [rootFolder];
+
+/* 同色系重命名操作上下文 */
+let renamingFolderContext = null;
+
+function openFolderRenameModal(folderNode, type) {
+  renamingFolderContext = { folderNode, type };
+  const input = document.getElementById('renameFolderInput');
+  input.value = folderNode.name;
+  document.getElementById('renameFolderModal').classList.remove('hidden');
+  setTimeout(() => { input.focus(); input.select(); }, 60);
+}
+
+function closeFolderRenameModal() {
+  document.getElementById('renameFolderModal').classList.add('hidden');
+  renamingFolderContext = null;
+}
+
+async function confirmFolderRename() {
+  if (!renamingFolderContext) return;
+  const input = document.getElementById('renameFolderInput');
+  const newName = input.value.trim();
+  if (newName && newName !== renamingFolderContext.folderNode.name) {
+    renamingFolderContext.folderNode.name = newName;
+    if (renamingFolderContext.type === 'repo') {
+      await DrizzleDB.saveRepo(rootFolder);
+      renderRepoView();
+    } else if (renamingFolderContext.type === 'wm') {
+      await DrizzleDB.saveWmRepo(watermarkRoot);
+      renderWmView();
+    }
+  }
+  closeFolderRenameModal();
+}
+
 /* ================================================================
-   IndexedDB 持久化（升级至版本 3：加入小组件图片与文字原样存储）
+   IndexedDB 持久化（升级至版本 5：加入联系人与分组永久存储）
 ================================================================ */
 const DrizzleDB = {
   dbName: 'drizzle_permanent_store',
-  dbVersion: 3,
+  dbVersion: 5,
   db: null,
   async init() {
     return new Promise((resolve, reject) => {
@@ -2275,8 +2772,107 @@ const DrizzleDB = {
         if (!db.objectStoreNames.contains('watermark_repo')) db.createObjectStore('watermark_repo', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('widget_assets')) db.createObjectStore('widget_assets', { keyPath: 'key' });
         if (!db.objectStoreNames.contains('widget_texts')) db.createObjectStore('widget_texts', { keyPath: 'key' });
+        if (!db.objectStoreNames.contains('threshold_records')) db.createObjectStore('threshold_records', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('contact_groups')) db.createObjectStore('contact_groups', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('contacts_store')) db.createObjectStore('contacts_store', { keyPath: 'id' });
       };
       req.onsuccess = (e) => { this.db = e.target.result; resolve(this.db); };
+      req.onerror = (e) => reject(e);
+    });
+  },
+  async saveContactGroups(groups) {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('contact_groups', 'readwrite');
+      const store = tx.objectStore('contact_groups');
+      store.clear();
+      groups.forEach(g => store.put(g));
+      tx.oncomplete = () => resolve();
+      tx.onerror = (e) => reject(e);
+    });
+  },
+  async getContactGroups() {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('contact_groups', 'readonly');
+      const req = tx.objectStore('contact_groups').getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = (e) => reject(e);
+    });
+  },
+  async saveContact(contact) {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('contacts_store', 'readwrite');
+      tx.objectStore('contacts_store').put(contact);
+      tx.oncomplete = () => resolve();
+      tx.onerror = (e) => reject(e);
+    });
+  },
+  async deleteContact(id) {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('contacts_store', 'readwrite');
+      tx.objectStore('contacts_store').delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = (e) => reject(e);
+    });
+  },
+  async getAllContacts() {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('contacts_store', 'readonly');
+      const req = tx.objectStore('contacts_store').getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = (e) => reject(e);
+    });
+  },
+  async saveThreshold(record) {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      try {
+        const tx = this.db.transaction('threshold_records', 'readwrite');
+        // 纯净序列化：剔除易失效的 blob:url 字符串，确保原生 Blob 能够 100% 极速写入
+        const dbData = {
+          id: record.id,
+          clubName: record.clubName,
+          contact: record.contact,
+          amount: record.amount,
+          timestamp: record.timestamp || Date.now(),
+          images: (record.images || []).map(img => ({
+            id: img.id,
+            name: img.name,
+            blob: img.blob,
+            size: img.size
+          })),
+          imageBlob: record.imageBlob || (record.images && record.images[0] ? record.images[0].blob : null)
+        };
+        const req = tx.objectStore('threshold_records').put(dbData);
+        req.onsuccess = () => resolve();
+        req.onerror = (e) => reject(e);
+        tx.oncomplete = () => resolve();
+        tx.onerror = (e) => reject(e);
+        tx.onabort = (e) => reject(e);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  },
+  async deleteThreshold(id) {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('threshold_records', 'readwrite');
+      tx.objectStore('threshold_records').delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = (e) => reject(e);
+    });
+  },
+  async getAllThresholds() {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('threshold_records', 'readonly');
+      const req = tx.objectStore('threshold_records').getAll();
+      req.onsuccess = () => resolve(req.result || []);
       req.onerror = (e) => reject(e);
     });
   },
@@ -2460,7 +3056,7 @@ function bindLongPressRename(el, onRename) {
 }
 
 /* ================================================================
-   开场雨滴 + 加载进度
+   开场雨滴 + 极速加载逻辑（彻底杜绝卡顿，1.5 秒必进主屏）
 ================================================================ */
 let modelReady = false;
 let bootProgress = 0;
@@ -2512,29 +3108,38 @@ function initRain() {
   frame();
 }
 
+/* 后台异步加载 AI，设置 3 秒超时熔断，不阻塞开屏 */
 async function loadFaceModel() {
   const badge = document.getElementById('aiStatusBadge');
   const badgeText = document.getElementById('aiStatusText');
-  try {
+  
+  const loadPromise = (async () => {
     if (window.tf) {
       await tf.setBackend('webgl').catch(() => tf.setBackend('cpu'));
     }
-    faceModel = await blazeface.load({ maxFaces: 10, iouThreshold: 0.3, scoreThreshold: 0.65 });
-  } catch (e) {
-    try {
-      faceModel = await blazeface.load();
-    } catch (err) {
-      faceModel = null;
+    if (window.blazeface) {
+      return await blazeface.load({ maxFaces: 10, iouThreshold: 0.3, scoreThreshold: 0.65 });
     }
+    return null;
+  })();
+
+  const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 3000));
+
+  try {
+    faceModel = await Promise.race([loadPromise, timeoutPromise]);
+  } catch (e) {
+    faceModel = null;
   }
   modelReady = true;
 
   if (badge && badgeText) {
     if (faceModel) {
       badge.classList.add('ready');
+      badge.classList.remove('warn');
       badgeText.innerText = '小助手已就绪';
     } else {
       badge.classList.add('warn');
+      badge.classList.remove('ready');
       badgeText.innerText = '小助手离线';
     }
   }
@@ -2547,22 +3152,20 @@ function updateBootUI(p) {
   if (pct) pct.innerText = Math.round(p) + '%';
 }
 
+/* 平滑极速进度条：1.2 ~ 1.5 秒自然拉满进主屏 */
 function bootTick() {
   if (bootFinished) return;
 
-  let inc;
-  if (bootProgress < 70) inc = 1.6 + Math.random() * 1.4;
-  else if (bootProgress < 90) inc = 0.55 + Math.random() * 0.9;
-  else inc = modelReady ? 2.2 : 0;
-
-  bootProgress = Math.min(bootProgress + inc, modelReady ? 100 : 92);
+  bootProgress += 3.2 + Math.random() * 2.8;
+  if (bootProgress > 100) bootProgress = 100;
+  
   updateBootUI(bootProgress);
 
   if (bootProgress >= 100) {
     finishBoot();
     return;
   }
-  setTimeout(bootTick, 55);
+  setTimeout(bootTick, 35);
 }
 
 function finishBoot() {
@@ -2599,6 +3202,650 @@ function openApp(name) {
   if (name === 'watermark') renderWmView();
   if (name === 'profile') initUserProfile();
   if (name === 'notice') renderNoticeHistory();
+  if (name === 'threshold') renderThresholdView();
+  if (name === 'contacts') renderContactsView();
+}
+
+/* ================================================================
+   联系 APP 业务逻辑模块（四组预置 + 自定义分组 + 多选 + 标签）
+================================================================ */
+const DEFAULT_CONTACT_GROUPS = [
+  { id: 'g_original', name: '原创圈' },
+  { id: 'g_custom', name: '定制圈' },
+  { id: 'g_clip', name: '自截会' },
+  { id: 'g_wm', name: '水印会' }
+];
+
+let contactGroups = [...DEFAULT_CONTACT_GROUPS];
+let currentActiveGroupId = 'g_original';
+let contactsList = [];
+let isContactSelectMode = false;
+let contactSelectedIds = new Set();
+let editingContactId = null;
+
+function renderContactsView() {
+  renderContactGroupTabs();
+  renderContactsGrid();
+}
+
+function renderContactGroupTabs() {
+  const tabsContainer = document.getElementById('contactGroupTabs');
+  if (!tabsContainer) return;
+  tabsContainer.innerHTML = '';
+
+  contactGroups.forEach(grp => {
+    const pill = document.createElement('div');
+    pill.className = `group-tab-pill ${grp.id === currentActiveGroupId ? 'active' : ''}`;
+    pill.innerText = grp.name;
+    pill.title = '点击切换分组，长按可删除分组';
+    pill.onclick = () => {
+      currentActiveGroupId = grp.id;
+      contactSelectedIds.clear();
+      renderContactsView();
+    };
+
+    // 支持长按删除分组
+    bindLongPressRename(pill, () => {
+      promptDeleteGroup(grp);
+    });
+
+    tabsContainer.appendChild(pill);
+  });
+
+  const delBtn = document.getElementById('deleteCurrentGroupBtn');
+  if (delBtn) {
+    const curGroup = contactGroups.find(g => g.id === currentActiveGroupId);
+    delBtn.style.display = contactGroups.length > 1 ? 'block' : 'none';
+    delBtn.innerText = `删除「${curGroup ? curGroup.name : '本组'}」`;
+  }
+}
+
+function renderContactsGrid() {
+  const grid = document.getElementById('contactsGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const search = (document.getElementById('contactSearchInput')?.value || '').trim().toLowerCase();
+
+  // 过滤：归属当前激活分组 + 满足搜索框匹配（姓名、联系方式或标签）
+  const inGroup = contactsList.filter(c => c.groupId === currentActiveGroupId);
+  const filtered = inGroup.filter(c => {
+    if (!search) return true;
+    const matchName = (c.name || '').toLowerCase().includes(search);
+    const matchDetail = (c.detail || '').toLowerCase().includes(search);
+    const matchTags = (c.tags || []).some(t => t.toLowerCase().includes(search));
+    return matchName || matchDetail || matchTags;
+  });
+
+  const countBadge = document.getElementById('contactCountBadge');
+  if (countBadge) countBadge.innerText = `${filtered.length} 位联系人`;
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty-hint" style="grid-column:1/-1;">当前分组暂无联系人<br>点击左上方「+」即可录入</div>`;
+  } else {
+    filtered.forEach(c => {
+      const isSelected = contactSelectedIds.has(c.id);
+      const card = document.createElement('div');
+      card.className = `contact-card selectable-item ${isSelected ? 'is-selected' : ''}`;
+
+      let tagsHtml = '';
+      if (c.tags && c.tags.length > 0) {
+        tagsHtml = `<div class="contact-tags-box">` +
+          c.tags.map(t => `<span class="contact-tag-badge"># ${t}</span>`).join('') +
+          `</div>`;
+      }
+
+      card.innerHTML = `
+        <div class="select-check-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="contact-card-name">${c.name || '未命名'}</div>
+        <div class="contact-card-lx">联系：${c.detail || '未填写'}</div>
+        ${tagsHtml}
+      `;
+
+      card.onclick = () => {
+        if (isContactSelectMode) {
+          if (contactSelectedIds.has(c.id)) contactSelectedIds.delete(c.id);
+          else contactSelectedIds.add(c.id);
+          renderContactsGrid();
+        } else {
+          openEditContactModal(c);
+        }
+      };
+
+      grid.appendChild(card);
+    });
+  }
+
+  /* 底部多选批量操作栏 */
+  const oldBar = document.getElementById('contactBatchBar');
+  if (oldBar) oldBar.remove();
+
+  if (isContactSelectMode) {
+    const bar = document.createElement('div');
+    bar.id = 'contactBatchBar';
+    bar.className = 'batch-toolbar';
+    const isAll = filtered.length > 0 && contactSelectedIds.size === filtered.length;
+    bar.innerHTML = `
+      <div style="font-size:11.5px; font-weight:700; color:var(--text-main);">已选 ${contactSelectedIds.size} 位</div>
+      <div style="display:flex; gap:6px;">
+        <button class="mini-btn ghost" onclick="toggleSelectAllContacts()">${isAll ? '取消全选' : '一键全选'}</button>
+        <button class="mini-btn ghost" style="color:#ef4444;" onclick="executeDeleteContactSelected()">删除联系人</button>
+      </div>`;
+    document.querySelector('#app-contacts .app-body').appendChild(bar);
+  }
+}
+
+function filterContactsList() {
+  renderContactsGrid();
+}
+
+function toggleContactSelectMode() {
+  isContactSelectMode = !isContactSelectMode;
+  contactSelectedIds.clear();
+  const btn = document.getElementById('contactSelectToggleBtn');
+  if (btn) btn.innerText = isContactSelectMode ? '取消多选' : '多选';
+  renderContactsGrid();
+}
+
+function toggleSelectAllContacts() {
+  const search = (document.getElementById('contactSearchInput')?.value || '').trim().toLowerCase();
+  const inGroup = contactsList.filter(c => c.groupId === currentActiveGroupId);
+  const filtered = inGroup.filter(c => {
+    if (!search) return true;
+    return (c.name || '').toLowerCase().includes(search) ||
+           (c.detail || '').toLowerCase().includes(search) ||
+           (c.tags || []).some(t => t.toLowerCase().includes(search));
+  });
+
+  if (contactSelectedIds.size === filtered.length) {
+    contactSelectedIds.clear();
+  } else {
+    filtered.forEach(c => contactSelectedIds.add(c.id));
+  }
+  renderContactsGrid();
+}
+
+async function executeDeleteContactSelected() {
+  if (contactSelectedIds.size === 0) { alert('请先选择要删除的联系人'); return; }
+  if (!confirm(`确定要永久删除已选中的 ${contactSelectedIds.size} 位联系人吗？`)) return;
+  for (const id of contactSelectedIds) {
+    await DrizzleDB.deleteContact(id);
+  }
+  contactsList = contactsList.filter(c => !contactSelectedIds.has(c.id));
+  contactSelectedIds.clear();
+  renderContactsGrid();
+}
+
+/* 分组操作：添加新分组 */
+function openAddGroupModal() {
+  document.getElementById('newGroupNameInput').value = '';
+  document.getElementById('addGroupModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('newGroupNameInput').focus(), 80);
+}
+
+function closeAddGroupModal() {
+  document.getElementById('addGroupModal').classList.add('hidden');
+}
+
+async function confirmAddNewGroup() {
+  const name = document.getElementById('newGroupNameInput').value.trim();
+  if (!name) { alert('请输入分组名称'); return; }
+  const newGroup = {
+    id: `grp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    name: name
+  };
+  contactGroups.push(newGroup);
+  currentActiveGroupId = newGroup.id;
+  await DrizzleDB.saveContactGroups(contactGroups);
+  closeAddGroupModal();
+  renderContactsView();
+}
+
+/* 分组操作：删除整个分组 */
+function deleteCurrentActiveGroup() {
+  const grp = contactGroups.find(g => g.id === currentActiveGroupId);
+  if (grp) promptDeleteGroup(grp);
+}
+
+async function promptDeleteGroup(grp) {
+  if (contactGroups.length <= 1) {
+    alert('请至少保留一个分组！');
+    return;
+  }
+  const relatedCount = contactsList.filter(c => c.groupId === grp.id).length;
+  const msg = relatedCount > 0
+    ? `确定要删除分组「${grp.name}」吗？\n该分组下的 ${relatedCount} 位联系人将被一并清理。`
+    : `确定要删除分组「${grp.name}」吗？`;
+
+  if (!confirm(msg)) return;
+
+  // 1. 删除该分组下的所有联系人数据
+  const toDelete = contactsList.filter(c => c.groupId === grp.id);
+  for (const item of toDelete) {
+    await DrizzleDB.deleteContact(item.id);
+  }
+  contactsList = contactsList.filter(c => c.groupId !== grp.id);
+
+  // 2. 从分组列表移除并保存
+  contactGroups = contactGroups.filter(g => g.id !== grp.id);
+  currentActiveGroupId = contactGroups[0].id;
+  await DrizzleDB.saveContactGroups(contactGroups);
+
+  renderContactsView();
+}
+
+/* 联系人添加与修改 */
+function populateGroupSelect(selectedGroupId) {
+  const sel = document.getElementById('contactGroupSelect');
+  if (!sel) return;
+  sel.innerHTML = '';
+  contactGroups.forEach(g => {
+    const opt = document.createElement('option');
+    opt.value = g.id;
+    opt.innerText = g.name;
+    if (g.id === selectedGroupId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function openAddContactModal() {
+  editingContactId = null;
+  document.getElementById('contactModalTitle').innerText = '添加联系人';
+  populateGroupSelect(currentActiveGroupId);
+  document.getElementById('contactNameInput').value = '';
+  document.getElementById('contactDetailInput').value = '';
+  document.getElementById('contactTagsInput').value = '';
+  document.getElementById('contactEditModal').classList.remove('hidden');
+}
+
+function openEditContactModal(contact) {
+  editingContactId = contact.id;
+  document.getElementById('contactModalTitle').innerText = '修改联系人信息';
+  populateGroupSelect(contact.groupId || currentActiveGroupId);
+  document.getElementById('contactNameInput').value = contact.name || '';
+  document.getElementById('contactDetailInput').value = contact.detail || '';
+  document.getElementById('contactTagsInput').value = (contact.tags || []).join('，');
+  document.getElementById('contactEditModal').classList.remove('hidden');
+}
+
+function closeContactModal() {
+  document.getElementById('contactEditModal').classList.add('hidden');
+}
+
+async function confirmSaveContact() {
+  const groupId = document.getElementById('contactGroupSelect').value;
+  const name = document.getElementById('contactNameInput').value.trim();
+  const detail = document.getElementById('contactDetailInput').value.trim();
+  const rawTags = document.getElementById('contactTagsInput').value.trim();
+
+  if (!name) { alert('请填写第一行的负责人/原po/会联系！'); return; }
+  if (!detail) { alert('请填写第二行的联系方式！'); return; }
+
+  // 解析逗号（兼容中文逗号与英文逗号）
+  const tags = rawTags
+    ? rawTags.split(/[,，、\s]+/).filter(t => t.length > 0)
+    : [];
+
+  if (editingContactId) {
+    const item = contactsList.find(c => c.id === editingContactId);
+    if (item) {
+      item.groupId = groupId;
+      item.name = name;
+      item.detail = detail;
+      item.tags = tags;
+      await DrizzleDB.saveContact(item);
+    }
+  } else {
+    const newContact = {
+      id: `cnt_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      groupId: groupId,
+      name: name,
+      detail: detail,
+      tags: tags,
+      timestamp: Date.now()
+    };
+    contactsList.unshift(newContact);
+    await DrizzleDB.saveContact(newContact);
+  }
+
+  currentActiveGroupId = groupId;
+  closeContactModal();
+  renderContactsView();
+}
+
+/* ================================================================
+   门槛记录 APP 核心业务模块（多图无卡顿、宫格排布、灯箱下载）
+================================================================ */
+let thresholdRecords = [];
+let isThresholdSelectMode = false;
+let thresholdSelectedIds = new Set();
+let editingThresholdId = null;
+let currentEditingImages = []; // 暂存编辑态下的图片数组 [{ id, blob, src, name, size }]
+let activeLightboxImage = null; // 当前放大预览的图对象 { src, name, blob }
+
+function toggleThresholdSelectMode() {
+  isThresholdSelectMode = !isThresholdSelectMode;
+  thresholdSelectedIds.clear();
+  const topBtn = document.getElementById('threshSelectToggleBtn');
+  const barText = document.getElementById('threshBarSelectText');
+  if (topBtn) topBtn.innerText = isThresholdSelectMode ? '取消多选' : '多选';
+  if (barText) barText.innerText = isThresholdSelectMode ? '取消选择' : '多选删除';
+  renderThresholdView();
+}
+
+function updateTotalAmountDisplay() {
+  const total = thresholdRecords.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+  const label = document.getElementById('thresholdTotalAmountLabel');
+  if (label) label.innerText = `￥${total.toFixed(2)}`;
+}
+
+/* 统一规范解析多图列表（完美兼容早期单图字段） */
+function getRecordImages(record) {
+  if (record.images && Array.isArray(record.images) && record.images.length > 0) {
+    return record.images;
+  }
+  if (record.imageSrc || record.imageBlob) {
+    return [{
+      id: 'legacy_0',
+      src: record.imageSrc || (record.imageBlob ? URL.createObjectURL(record.imageBlob) : ''),
+      blob: record.imageBlob,
+      name: '凭证_1.jpg'
+    }];
+  }
+  return [];
+}
+
+function renderThresholdView() {
+  updateTotalAmountDisplay();
+  const search = (document.getElementById('thresholdSearchInput')?.value || '').trim().toLowerCase();
+  const grid = document.getElementById('thresholdCardsGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const filtered = thresholdRecords.filter(r => (r.clubName || '').toLowerCase().includes(search));
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty-hint" style="grid-column:1/-1;">还没有门槛记录<br>点击上方「+」录入会籍与门槛吧</div>`;
+  } else {
+    filtered.forEach(record => {
+      const isSelected = thresholdSelectedIds.has(record.id);
+      const card = document.createElement('div');
+      card.className = `threshold-card selectable-item ${isSelected ? 'is-selected' : ''}`;
+
+      const imgs = getRecordImages(record);
+      let imgsHtml = '';
+      if (imgs.length === 1) {
+        imgsHtml = `<div class="threshold-imgs-grid single">
+          <div class="threshold-thumb-cell" style="aspect-ratio: 16/10;">
+            <img src="${imgs[0].src}" loading="lazy" decoding="async" alt="凭证" onclick="event.stopPropagation(); showThresholdLightbox('${imgs[0].src}', '${imgs[0].name || record.clubName}', imgs[0].blob)">
+          </div>
+        </div>`;
+      } else if (imgs.length === 2) {
+        imgsHtml = `<div class="threshold-imgs-grid double">` +
+          imgs.map(img => `
+            <div class="threshold-thumb-cell">
+              <img src="${img.src}" loading="lazy" decoding="async" alt="凭证" onclick="event.stopPropagation(); showThresholdLightbox('${img.src}', '${img.name || record.clubName}', img.blob)">
+            </div>
+          `).join('') + `</div>`;
+      } else if (imgs.length > 2) {
+        imgsHtml = `<div class="threshold-imgs-grid">` +
+          imgs.map(img => `
+            <div class="threshold-thumb-cell">
+              <img src="${img.src}" loading="lazy" decoding="async" alt="凭证" onclick="event.stopPropagation(); showThresholdLightbox('${img.src}', '${img.name || record.clubName}', img.blob)">
+            </div>
+          `).join('') + `</div>`;
+      }
+
+      card.innerHTML = `
+        <div class="select-check-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="threshold-card-top">
+          <div class="threshold-cname">${record.clubName || '未命名会'}</div>
+          <div class="threshold-price">￥${parseFloat(record.amount || 0).toFixed(2)}</div>
+        </div>
+        <div class="threshold-lx">lx: ${record.contact || '无联系方式'}</div>
+        ${imgsHtml}
+      `;
+
+      card.onclick = () => {
+        if (isThresholdSelectMode) {
+          if (thresholdSelectedIds.has(record.id)) thresholdSelectedIds.delete(record.id);
+          else thresholdSelectedIds.add(record.id);
+          renderThresholdView();
+        } else {
+          openEditThresholdModal(record);
+        }
+      };
+      grid.appendChild(card);
+    });
+  }
+
+  /* 底部多选批量操作栏 */
+  const oldBar = document.getElementById('threshBatchBar');
+  if (oldBar) oldBar.remove();
+
+  if (isThresholdSelectMode) {
+    const bar = document.createElement('div');
+    bar.id = 'threshBatchBar';
+    bar.className = 'batch-toolbar';
+    const isAll = filtered.length > 0 && thresholdSelectedIds.size === filtered.length;
+    bar.innerHTML = `
+      <div style="font-size:11.5px; font-weight:700; color:var(--text-main);">已选 ${thresholdSelectedIds.size} 项</div>
+      <div style="display:flex; gap:6px;">
+        <button class="mini-btn ghost" onclick="toggleSelectAllThreshold()">${isAll ? '取消全选' : '一键全选'}</button>
+        <button class="mini-btn ghost" style="color:#ef4444;" onclick="executeDeleteThresholdSelected()">删除记录</button>
+      </div>`;
+    document.querySelector('#app-threshold .app-body').appendChild(bar);
+  }
+}
+
+function filterThresholdCards() {
+  renderThresholdView();
+}
+
+function toggleSelectAllThreshold() {
+  const search = (document.getElementById('thresholdSearchInput')?.value || '').trim().toLowerCase();
+  const filtered = thresholdRecords.filter(r => (r.clubName || '').toLowerCase().includes(search));
+  if (thresholdSelectedIds.size === filtered.length) {
+    thresholdSelectedIds.clear();
+  } else {
+    filtered.forEach(r => thresholdSelectedIds.add(r.id));
+  }
+  renderThresholdView();
+}
+
+async function executeDeleteThresholdSelected() {
+  if (thresholdSelectedIds.size === 0) { alert('请先选择要删除的门槛记录'); return; }
+  if (!confirm(`确定要永久删除已选中的 ${thresholdSelectedIds.size} 条门槛记录吗？`)) return;
+  for (const id of thresholdSelectedIds) {
+    await DrizzleDB.deleteThreshold(id);
+  }
+  thresholdRecords = thresholdRecords.filter(r => !thresholdSelectedIds.has(r.id));
+  thresholdSelectedIds.clear();
+  renderThresholdView();
+}
+
+/* 渲染弹窗内已选中的多张凭证小缩略图 */
+function renderModalThumbsGrid() {
+  const container = document.getElementById('threshModalPreviewGrid');
+  if (!container) return;
+  container.innerHTML = '';
+  currentEditingImages.forEach((img, idx) => {
+    const cell = document.createElement('div');
+    cell.className = 'threshold-thumb-cell';
+    cell.innerHTML = `
+      <img src="${img.src}" alt="img">
+      <button type="button" class="del-thumb-btn" onclick="event.stopPropagation(); removeEditingImageAt(${idx})">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    `;
+    cell.onclick = () => showThresholdLightbox(img.src, img.name, img.blob);
+    container.appendChild(cell);
+  });
+}
+
+function removeEditingImageAt(index) {
+  currentEditingImages.splice(index, 1);
+  renderModalThumbsGrid();
+}
+
+function openAddThresholdModal() {
+  editingThresholdId = null;
+  currentEditingImages = [];
+
+  document.getElementById('thresholdModalTitle').innerText = '添加门槛记录';
+  document.getElementById('thresholdClubNameInput').value = '';
+  document.getElementById('thresholdContactInput').value = '';
+  document.getElementById('thresholdAmountInput').value = '';
+
+  renderModalThumbsGrid();
+  document.getElementById('thresholdEditModal').classList.remove('hidden');
+}
+
+function openEditThresholdModal(record) {
+  editingThresholdId = record.id;
+  currentEditingImages = [...getRecordImages(record)];
+
+  document.getElementById('thresholdModalTitle').innerText = '查看与修改门槛记录';
+  document.getElementById('thresholdClubNameInput').value = record.clubName || '';
+  document.getElementById('thresholdContactInput').value = record.contact || '';
+  document.getElementById('thresholdAmountInput').value = record.amount || '';
+
+  renderModalThumbsGrid();
+  document.getElementById('thresholdEditModal').classList.remove('hidden');
+}
+
+function closeThresholdModal() {
+  document.getElementById('thresholdEditModal').classList.add('hidden');
+  currentEditingImages = [];
+}
+
+function triggerThresholdImgUpload() {
+  document.getElementById('thresholdImageInput').click();
+}
+
+/* 选择任意大 MB 图片，异步直出 ObjectURL，0 秒卡顿 */
+function handleThresholdFileSelect(e) {
+  const files = Array.from(e.target.files || []);
+  if (files.length === 0) return;
+
+  files.forEach(file => {
+    const blobUrl = URL.createObjectURL(file);
+    currentEditingImages.push({
+      id: `img_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      blob: file,
+      src: blobUrl,
+      name: file.name,
+      size: file.size
+    });
+  });
+
+  renderModalThumbsGrid();
+  e.target.value = '';
+}
+
+/* 核心修复：乐观秒级渲染 + 异步静默持久化，彻底杜绝卡顿与弹窗停滞 */
+async function saveThresholdRecord() {
+  const clubName = document.getElementById('thresholdClubNameInput').value.trim();
+  const contact = document.getElementById('thresholdContactInput').value.trim();
+  const amountVal = parseFloat(document.getElementById('thresholdAmountInput').value);
+
+  if (!clubName) { alert('请填写第一行的会名！'); return; }
+  const amount = isNaN(amountVal) ? 0 : amountVal;
+
+  // 1. 整理内存中的图片数据（带即时预览 src）
+  const cleanImages = currentEditingImages.map(img => ({
+    id: img.id,
+    name: img.name || '凭证.jpg',
+    blob: img.blob,
+    src: img.src || (img.blob ? URL.createObjectURL(img.blob) : ''),
+    size: img.size || (img.blob ? img.blob.size : 0)
+  }));
+
+  let targetRecord = null;
+
+  if (editingThresholdId) {
+    const item = thresholdRecords.find(r => r.id === editingThresholdId);
+    if (item) {
+      item.clubName = clubName;
+      item.contact = contact;
+      item.amount = amount;
+      item.images = cleanImages;
+      item.imageBlob = cleanImages[0] ? cleanImages[0].blob : null;
+      item.imageSrc = cleanImages[0] ? cleanImages[0].src : '';
+      targetRecord = item;
+    }
+  } else {
+    targetRecord = {
+      id: `thresh_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      clubName,
+      contact,
+      amount,
+      images: cleanImages,
+      imageBlob: cleanImages[0] ? cleanImages[0].blob : null,
+      imageSrc: cleanImages[0] ? cleanImages[0].src : '',
+      timestamp: Date.now()
+    };
+    thresholdRecords.unshift(targetRecord);
+  }
+
+  // 2. 核心：立即关闭弹窗并立刻刷新前台网格，零等待，绝不阻塞界面
+  const saveBtn = document.getElementById('saveThresholdBtn');
+  if (saveBtn) { saveBtn.innerText = '保存门槛记录'; saveBtn.style.opacity = '1'; }
+  closeThresholdModal();
+  renderThresholdView();
+
+  // 3. 后台静默保存到 IndexedDB 数据库（无需等待即可完成）
+  if (targetRecord) {
+    try {
+      await DrizzleDB.saveThreshold(targetRecord);
+    } catch (err) {
+      console.error('后台持久化门槛数据异常:', err);
+    }
+  }
+}
+
+/* 灯箱放大预览与下载 */
+function showThresholdLightbox(src, name, blob) {
+  activeLightboxImage = { src, name: name || '凭证原图.jpg', blob };
+  const box = document.getElementById('thresholdLightbox');
+  const img = document.getElementById('thresholdLightboxImg');
+  img.src = src;
+  box.classList.remove('hidden');
+}
+
+function closeThresholdLightbox(e) {
+  if (e && e.target && e.target.closest('.lightbox-top-bar')) return;
+  document.getElementById('thresholdLightbox').classList.add('hidden');
+  activeLightboxImage = null;
+}
+
+function closeThresholdLightboxDirect() {
+  document.getElementById('thresholdLightbox').classList.add('hidden');
+  activeLightboxImage = null;
+}
+
+async function downloadLightboxImage() {
+  if (!activeLightboxImage || !activeLightboxImage.src) return;
+  try {
+    let blobToDownload = activeLightboxImage.blob;
+    if (!blobToDownload) {
+      const resp = await fetch(activeLightboxImage.src);
+      blobToDownload = await resp.blob();
+    }
+    const safeName = (activeLightboxImage.name || '门槛凭证原图.jpg').replace(/\s+/g, '_');
+    saveAs(blobToDownload, safeName);
+  } catch (err) {
+    console.error('下载凭证失败:', err);
+    // 降级使用 a 标签下载
+    const a = document.createElement('a');
+    a.href = activeLightboxImage.src;
+    a.download = activeLightboxImage.name || '门槛凭证原图.jpg';
+    a.click();
+  }
 }
 
 function closeApp(name) {
@@ -2860,27 +4107,30 @@ function toggleWmSelectMode() {
 }
 
 function renderWmView() {
-  /* 面包屑 */
+  /* 面包屑：多层级逐级返回上一个子目录 */
   const bc = document.getElementById('wmBreadcrumbs');
-  if (currentWmFolderNode === watermarkRoot) {
-    bc.innerHTML = `<span class="c active">水印库</span>`;
-  } else {
-    bc.innerHTML = `<span class="c" onclick="navigateToWmFolder(watermarkRoot)">水印库</span>
-                    <span class="sep">/</span>
-                    <span class="c active">${currentWmFolderNode.name}</span>`;
-  }
+  let crumbsHtml = '';
+  wmPathStack.forEach((node, index) => {
+    const isLast = index === wmPathStack.length - 1;
+    if (isLast) {
+      crumbsHtml += `<span class="c active">${node.name}</span>`;
+    } else {
+      crumbsHtml += `<span class="c" onclick="popWmPathToIndex(${index})">${node.name}</span><span class="sep">/</span>`;
+    }
+  });
+  bc.innerHTML = crumbsHtml;
 
-  /* 总数徽章（递归统计） */
+  /* 总数徽章 */
   document.getElementById('wmTotalCount').innerText = countWmTree(watermarkRoot) + ' 张';
 
-  /* 子文件夹（展示总包含数 = 直属 + 全部子文件夹相加；绑定长按改名） */
+  /* 子文件夹：长按触发同色系重命名弹窗 */
   const fGrid = document.getElementById('wmFolderGrid');
   fGrid.innerHTML = '';
   currentWmFolderNode.subFolders.forEach(sub => {
     const totalCount = countWmTree(sub);
     const fCard = document.createElement('div');
     fCard.className = 'folder-card';
-    fCard.title = '长按可更改文件夹名称';
+    fCard.title = '长按修改名称';
     fCard.innerHTML = `
       <svg class="fi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
       <div style="min-width:0;">
@@ -2889,13 +4139,8 @@ function renderWmView() {
       </div>`;
 
     fCard.onclick = () => { if (!isWmSelectMode) navigateToWmFolder(sub); };
-    bindLongPressRename(fCard, async () => {
-      const newName = prompt('修改文件夹名称：', sub.name);
-      if (newName && newName.trim() && newName.trim() !== sub.name) {
-        sub.name = newName.trim();
-        await DrizzleDB.saveWmRepo(watermarkRoot);
-        renderWmView();
-      }
+    bindLongPressRename(fCard, () => {
+      openFolderRenameModal(sub, 'wm');
     });
     fGrid.appendChild(fCard);
   });
@@ -2977,6 +4222,7 @@ async function executeDeleteWmSelected() {
 }
 
 function navigateToWmFolder(node) {
+  wmPathStack.push(node);
   currentWmFolderNode = node;
   renderWmView();
 }
@@ -2994,12 +4240,12 @@ async function promptCreateWmFolder() {
   renderWmView();
 }
 
+/* 上传水印：不限制文件格式，所有格式均允许保存与预览 */
 async function handleWmLibraryUpload(e) {
   const files = Array.from(e.target.files);
-  const imgFiles = files.filter(f => f.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp)$/i.test(f.name));
-  if (imgFiles.length === 0) { e.target.value = ''; return; }
+  if (files.length === 0) return;
 
-  for (let f of imgFiles) {
+  for (let f of files) {
     currentWmFolderNode.watermarks.push({
       id: `wm_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       name: f.name.replace(/\.[^.]+$/, ''),
@@ -3725,24 +4971,40 @@ function toggleRepoSelectMode() {
   renderRepoView();
 }
 
-function renderRepoView() {
-  const bc = document.getElementById('repoBreadcrumbs');
-  if (currentFolderNode === rootFolder) {
-    bc.innerHTML = `<span class="c active">根目录</span>`;
-  } else {
-    bc.innerHTML = `<span class="c" onclick="navigateToFolder(rootFolder)">根目录</span>
-                    <span class="sep">/</span>
-                    <span class="c active">${currentFolderNode.name}</span>`;
-  }
+function popRepoPathToIndex(index) {
+  repoPathStack = repoPathStack.slice(0, index + 1);
+  currentFolderNode = repoPathStack[repoPathStack.length - 1];
+  renderRepoView();
+}
 
-  /* 子文件夹（展示总包含张数 = 直属 + 全部子文件夹图片相加；绑定长按改名） */
+function popWmPathToIndex(index) {
+  wmPathStack = wmPathStack.slice(0, index + 1);
+  currentWmFolderNode = wmPathStack[wmPathStack.length - 1];
+  renderWmView();
+}
+
+function renderRepoView() {
+  /* 面包屑：多层级逐级返回上一个子目录 */
+  const bc = document.getElementById('repoBreadcrumbs');
+  let crumbsHtml = '';
+  repoPathStack.forEach((node, index) => {
+    const isLast = index === repoPathStack.length - 1;
+    if (isLast) {
+      crumbsHtml += `<span class="c active">${node.name}</span>`;
+    } else {
+      crumbsHtml += `<span class="c" onclick="popRepoPathToIndex(${index})">${node.name}</span><span class="sep">/</span>`;
+    }
+  });
+  bc.innerHTML = crumbsHtml;
+
+  /* 子文件夹：长按触发同色系重命名弹窗 */
   const fGrid = document.getElementById('repoSubFolderGrid');
   fGrid.innerHTML = '';
   currentFolderNode.subFolders.forEach(sub => {
     const totalCount = countRepoTreeImages(sub);
     const fCard = document.createElement('div');
     fCard.className = 'folder-card';
-    fCard.title = '长按可更改文件夹名称';
+    fCard.title = '长按修改名称';
     fCard.innerHTML = `
       <svg class="fi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
       <div style="min-width:0;">
@@ -3751,13 +5013,8 @@ function renderRepoView() {
       </div>`;
 
     fCard.onclick = () => { if (!isRepoSelectMode) navigateToFolder(sub); };
-    bindLongPressRename(fCard, async () => {
-      const newName = prompt('修改文件夹名称：', sub.name);
-      if (newName && newName.trim() && newName.trim() !== sub.name) {
-        sub.name = newName.trim();
-        await DrizzleDB.saveRepo(rootFolder);
-        renderRepoView();
-      }
+    bindLongPressRename(fCard, () => {
+      openFolderRenameModal(sub, 'repo');
     });
     fGrid.appendChild(fCard);
   });
@@ -3834,6 +5091,7 @@ async function executeDeleteRepoSelected() {
 }
 
 function navigateToFolder(node) {
+  repoPathStack.push(node);
   currentFolderNode = node;
   renderRepoView();
 }
@@ -3846,13 +5104,12 @@ async function promptCreateFolder() {
   renderRepoView();
 }
 
+/* 导入原图：不限制任何文件格式，100% 完整原件直存 */
 async function handleUploadToCurrentFolder(e) {
   const files = Array.from(e.target.files);
-  const imgFiles = files.filter(f => f.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp)$/i.test(f.name));
-  if (imgFiles.length === 0) { e.target.value = ''; return; }
+  if (files.length === 0) return;
 
-  // 100% 原始画质直存，并带上文件原始字节大小
-  for (let f of imgFiles) {
+  for (let f of files) {
     currentFolderNode.images.push({
       id: `raw_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       name: f.name,
@@ -4306,6 +5563,49 @@ function loadCustomWallpaper() {
   if (savedWp) applyWallpaperStyle(savedWp);
 }
 
+/* ============ 永久存储（持久化锁）============ */
+async function checkStoragePersistence() {
+  const badge = document.getElementById('storagePersistBadge');
+  const text = document.getElementById('storagePersistStatus');
+  const toggle = document.getElementById('storagePersistToggle');
+  if (!navigator.storage || !navigator.storage.persisted) {
+    if (text) text.innerText = '当前设备不支持';
+    return;
+  }
+  const isPersisted = await navigator.storage.persisted();
+  if (toggle) toggle.checked = isPersisted;
+  if (badge && text) {
+    if (isPersisted) {
+      badge.classList.add('ready');
+      text.innerText = '永久保护已激活';
+    } else {
+      badge.classList.remove('ready');
+      text.innerText = '未锁定';
+    }
+  }
+}
+
+async function togglePersistentStorage(enable) {
+  const toggle = document.getElementById('storagePersistToggle');
+  if (!navigator.storage || !navigator.storage.persist) {
+    alert('当前运行环境不支持 StorageManager API。');
+    if (toggle) toggle.checked = false;
+    return;
+  }
+  if (enable) {
+    const granted = await navigator.storage.persist();
+    if (granted) {
+      alert('已成功为 drizzle 开启「永久数据保护」！\n即使系统存储空间紧张，也不会自动清理原图与门槛数据。');
+    } else {
+      alert('系统暂未授予完全免清理权限，请将本网页「添加到主屏幕」或在浏览器设置中设为信任。');
+    }
+    await checkStoragePersistence();
+  } else {
+    alert('已处于保护状态，若需解除可在浏览器站点权限中重置。');
+    await checkStoragePersistence();
+  }
+}
+
 async function exportAllDataBackup() {
   // 将水印库的 Blob 转为 Base64，以便保存在 JSON 中
   const processWmNode = async (node) => {
@@ -4453,12 +5753,49 @@ async function triggerPwaInstall() {
 /* ================================================================
    更新公告版本管理与历史更新归档
 ================================================================ */
-const CURRENT_APP_VERSION = 'v1.0.9';
+const CURRENT_APP_VERSION = 'v1.1.0';
 
 const APP_UPDATE_HISTORY = [
   {
+    version: 'v1.1.0',
+    tag: '最新版本',
+    date: '2026/09/29',
+    sections: [
+      {
+        title: '版本概览',
+        items: [
+          '本版本对「门槛记录」及「联系」两大核心应用进行系统性优化，涵盖交互修复、功能新增与数据保障三大方向，现已全部完成并上线。'
+        ]
+      },
+      {
+        title: '一、门槛记录 APP',
+        items: [
+          '【交互修复】文件夹重命名 Bug 修复，长按文件夹直接弹出同色系修改框；多级子目录返回逻辑优化，逐级返回上层目录。',
+          '【图片导入】格式全面开放，支持任意类型；MB 级别大图秒速导入，保存门槛记录时零卡顿、即时生效无感刷新；支持多图导入并自动按宫格排列；支持点击凭证大图查看与原画质下载。',
+          '【主页与弹窗结构】新增顶部会名搜索框、加号键、多选批量删除及总门槛消费（￥）自动汇总；全新同色系弹窗规范录入第一行会名、第二行lx、第三行金额及图片凭证。',
+          '【卡片展示】双列卡片直观呈现会名、lx、金额；支持点击卡片重新编辑修改及大图查看。',
+          '【数据保障】永久保存机制，开启永久数据保护后，低内存设备（<3GB）亦强制保留数据；完成底层数据库扩容优化。'
+        ]
+      },
+      {
+        title: '二、联系 APP',
+        items: [
+          '【页面与弹窗】顶部搜索栏支持内容检索；新增同色系弹窗录入（负责人/原po/会联系、联系方式、风格标签）。',
+          '【分组与删除】内置原创圈、定制圈、自截会、水印会四组；支持加号新建自定义分组与单独删除；支持右上角多选批量删除联系人。'
+        ]
+      },
+      {
+        title: '三、我的 APP',
+        items: [
+          '开启永久数据保存保护锁，设备低内存状态下强制保留数据，避免浏览器静默清除。',
+          '底层数据库结构扩容与优化，提升整体流畅度与稳定性。'
+        ]
+      }
+    ]
+  },
+  {
     version: 'v1.0.9',
-    tag: '当前版本',
+    tag: '历史版本',
     date: '2026/09/27',
     sections: [
       {
@@ -4581,23 +5918,70 @@ window.addEventListener('DOMContentLoaded', async () => {
   /* 检查更新弹窗（已读则不再弹） */
   checkVersionAndShowPopup();
 
-  /* ================= PWA 安装支持（解决无法安装） ================= */
-  (function initPWA() {
+  /* ================= PWA 与 Edge 浏览器安装适配增强 ================= */
+  (function initPWAForEdge() {
+    // 1. 动态生成符合 Edge / Chrome 新版规范的 Web App Manifest
+    const manifestData = {
+      name: "drizzle",
+      short_name: "drizzle",
+      description: "drizzle 细雨小助手",
+      start_url: window.location.href.split('#')[0],
+      scope: "./",
+      display: "standalone",
+      orientation: "portrait",
+      background_color: "#F5F7FA",
+      theme_color: "#F5F7FA",
+      icons: [
+        {
+          src: "https://image.58sb.cn/file/img/4y9EiqBY.jpg",
+          sizes: "192x192",
+          type: "image/jpeg",
+          purpose: "any maskable"
+        },
+        {
+          src: "https://image.58sb.cn/file/img/4y9EiqBY.jpg",
+          sizes: "512x512",
+          type: "image/jpeg",
+          purpose: "any maskable"
+        }
+      ]
+    };
+
+    const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/manifest+json' });
+    const manifestURL = URL.createObjectURL(manifestBlob);
+    const manifestLink = document.getElementById('pwa-manifest') || document.querySelector('link[rel="manifest"]');
+    if (manifestLink) {
+      manifestLink.setAttribute('href', manifestURL);
+    }
+
+    // 2. 注册 Service Worker 满足 Edge PWA 可安装性判定
     if ('serviceWorker' in navigator) {
       const swCode = `
-        self.addEventListener('install', e => self.skipWaiting());
-        self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+        const CACHE_NAME = 'drizzle-edge-pwa-v1';
+        self.addEventListener('install', e => {
+          self.skipWaiting();
+        });
+        self.addEventListener('activate', e => {
+          e.waitUntil(clients.claim());
+        });
         self.addEventListener('fetch', e => {
-          e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+          if (e.request.method !== 'GET') return;
+          e.respondWith(
+            fetch(e.request).catch(() => caches.match(e.request))
+          );
         });
       `;
-      const swBlob = new Blob([swCode], { type: 'application/javascript' });
-      const swURL = URL.createObjectURL(swBlob);
-      navigator.serviceWorker.register(swURL).then(() => {
-        console.log('PWA Service Worker 注册成功');
-      }).catch(err => {
-        console.warn('Service Worker 注册失败（可能是本地 file:// 协议导致）', err);
-      });
+      try {
+        const swBlob = new Blob([swCode], { type: 'application/javascript' });
+        const swURL = URL.createObjectURL(swBlob);
+        navigator.serviceWorker.register(swURL, { scope: './' }).then(() => {
+          console.log('Edge PWA 核心已就绪');
+        }).catch(err => {
+          console.warn('Service Worker 注册提示:', err);
+        });
+      } catch (e) {
+        console.warn('PWA 初始化跳过');
+      }
     }
   })();
 
@@ -4646,12 +6030,46 @@ window.addEventListener('DOMContentLoaded', async () => {
       currentWmFolderNode = watermarkRoot;
       wmPickerCurrentNode = watermarkRoot;
     }
+
+    /* 检查并保持永久存储保护状态 */
+    checkStoragePersistence();
+
+    /* 读取并恢复全部永久保存的门槛记录（自动复活多张凭证原图） */
+    const savedThresh = await DrizzleDB.getAllThresholds();
+    if (savedThresh && savedThresh.length > 0) {
+      savedThresh.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      thresholdRecords = savedThresh.map(rec => {
+        if (rec.images && Array.isArray(rec.images)) {
+          rec.images.forEach(img => {
+            if (img.blob) img.src = URL.createObjectURL(img.blob);
+          });
+        }
+        if (rec.imageBlob) {
+          rec.imageSrc = URL.createObjectURL(rec.imageBlob);
+        }
+        return rec;
+      });
+    }
+
+    /* 读取并恢复全部联系人分组与联系人数据 */
+    const savedGroups = await DrizzleDB.getContactGroups();
+    if (savedGroups && savedGroups.length > 0) {
+      contactGroups = savedGroups;
+      currentActiveGroupId = contactGroups[0].id;
+    }
+    const savedContacts = await DrizzleDB.getAllContacts();
+    if (savedContacts && savedContacts.length > 0) {
+      savedContacts.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      contactsList = savedContacts;
+    }
   } catch (e) {
     console.error('IndexedDB 初始化失败:', e);
   }
 
   renderRepoView();
   renderWmView();
+  renderThresholdView();
+  renderContactsView();
 });
 </script>
 </body>
