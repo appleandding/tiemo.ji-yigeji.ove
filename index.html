@@ -4397,11 +4397,19 @@ function updateRawThumbDisplay() {
 }
 
 function removeRawImageAt(index) {
-  selectedRawImages.splice(index, 1);
+  const removed = selectedRawImages.splice(index, 1)[0];
+  if (removed && removed.src && removed.src.startsWith('blob:')) {
+    try { URL.revokeObjectURL(removed.src); } catch (e) {}
+  }
   updateRawThumbDisplay();
 }
 
 function resetRawFiles() {
+  selectedRawImages.forEach(item => {
+    if (item && item.src && item.src.startsWith('blob:')) {
+      try { URL.revokeObjectURL(item.src); } catch (e) {}
+    }
+  });
   selectedRawImages = [];
   updateRawThumbDisplay();
 }
@@ -4469,6 +4477,15 @@ async function executeBatchWatermark() {
   btn.disabled = true;
   progressBox.classList.remove('hidden');
   resultsWrapper.classList.add('hidden');
+
+  // 释放上一轮贴膜遗留的 URL 内存
+  if (currentProcessedBatch && currentProcessedBatch.length > 0) {
+    currentProcessedBatch.forEach(it => {
+      if (it.resultUrl && it.resultUrl.startsWith('blob:')) {
+        try { URL.revokeObjectURL(it.resultUrl); } catch (e) {}
+      }
+    });
+  }
   currentProcessedBatch = [];
 
   const opacity = parseFloat(opacityInput.value) / 100;
@@ -4484,14 +4501,16 @@ async function executeBatchWatermark() {
     const item = selectedRawImages[i];
     progressText.innerText = `正在处理 (${i+1}/${selectedRawImages.length})：${item.name}`;
 
-    const baseImg = await loadImage(item.src);
+    // 1. 加载单张原图
+    let baseImg = await loadImage(item.src);
     const naturalW = baseImg.naturalWidth || baseImg.width;
     const naturalH = baseImg.naturalHeight || baseImg.height;
 
-    const wmCanvas = document.createElement('canvas');
+    // 2. 贴膜绘制
+    let wmCanvas = document.createElement('canvas');
     wmCanvas.width = naturalW;
     wmCanvas.height = naturalH;
-    const wmCtx = wmCanvas.getContext('2d');
+    let wmCtx = wmCanvas.getContext('2d');
     wmCtx.imageSmoothingEnabled = true;
     wmCtx.imageSmoothingQuality = 'high';
     wmCtx.drawImage(watermarkImg, 0, 0, naturalW, naturalH);
@@ -4499,10 +4518,11 @@ async function executeBatchWatermark() {
     /* 人脸识别擦除 */
     let detectedFaces = [];
     if (enableFace && faceModel) {
+      let dCanvas = null;
       try {
         const maxDetectDim = 640;
         const scale = Math.min(1.0, maxDetectDim / Math.max(naturalW, naturalH));
-        const dCanvas = document.createElement('canvas');
+        dCanvas = document.createElement('canvas');
         dCanvas.width = Math.round(naturalW * scale);
         dCanvas.height = Math.round(naturalH * scale);
         const dCtx = dCanvas.getContext('2d');
@@ -4517,7 +4537,11 @@ async function executeBatchWatermark() {
             endY: f.bottomRight[1] / scale
           }));
         }
-      } catch (err) { console.error('人脸识别异常:', err); }
+      } catch (err) { 
+        console.error('人脸识别异常:', err); 
+      } finally {
+        if (dCanvas) { dCanvas.width = 0; dCanvas.height = 0; dCanvas = null; }
+      }
     }
 
     if (detectedFaces.length > 0) {
@@ -4542,11 +4566,11 @@ async function executeBatchWatermark() {
       wmCtx.restore();
     }
 
-    /* 合成 */
-    const finalCanvas = document.createElement('canvas');
+    /* 最终无损合成 */
+    let finalCanvas = document.createElement('canvas');
     finalCanvas.width = naturalW;
     finalCanvas.height = naturalH;
-    const fCtx = finalCanvas.getContext('2d');
+    let fCtx = finalCanvas.getContext('2d');
     fCtx.imageSmoothingEnabled = true;
     fCtx.imageSmoothingQuality = 'high';
     fCtx.drawImage(baseImg, 0, 0);
@@ -4557,31 +4581,43 @@ async function executeBatchWatermark() {
     fCtx.globalAlpha = 1.0;
 
     const mimeType = getImageMimeType(item.file, item.name);
+    // 100% 原始最高画质导出 Blob
     const blob = await new Promise(res => finalCanvas.toBlob(res, mimeType, 1.0));
     const url = URL.createObjectURL(blob);
 
-    // 将水印膜当前 Canvas 导出为无损 PNG Blob，用于永久存入 IndexedDB
+    // 将水印膜当前图层导出为无损 PNG Blob，用于永久存储与按需精修
     const wmBlob = await new Promise(res => wmCanvas.toBlob(res, 'image/png'));
-    // 确保提取出原始未贴膜原图的 Blob
     const baseBlob = item.file || item.blob || (await (await fetch(item.src)).blob());
 
+    // 【防闪退核心】：绝不在全局数组常驻 baseImg 和 wmCanvas 显存对象！只存无损 Blob
     currentProcessedBatch.push({
       id: i,
       name: `watermarked_${item.name}`,
       file: item.file,
-      baseBlob: baseBlob,
-      wmBlob: wmBlob,
-      baseImg: baseImg,
-      wmCanvas: wmCanvas,
+      baseBlob: baseBlob,     // 100% 原图文件，磁盘永久存储
+      wmBlob: wmBlob,         // 水印层文件，磁盘永久存储
       blendMode: blendMode,
       mimeType: mimeType,
-      resultBlob: blob,
+      resultBlob: blob,       // 100% 无损结果，磁盘永久存储
       resultUrl: url
     });
+
+    // 【防闪退核心】：手动断开并销毁当前张的 Canvas 与 Image 内存
+    wmCanvas.width = 0;
+    wmCanvas.height = 0;
+    wmCanvas = null;
+    finalCanvas.width = 0;
+    finalCanvas.height = 0;
+    finalCanvas = null;
+    baseImg.src = '';
+    baseImg = null;
 
     const pct = Math.round(((i + 1) / selectedRawImages.length) * 100);
     progressBar.style.width = `${pct}%`;
     progressPct.innerText = `${pct}%`;
+
+    // 【防闪退核心】：每张处理完让出 40 毫秒，促使浏览器触发 GC 垃圾回收显存
+    await new Promise(r => setTimeout(r, 40));
   }
 
   progressBox.classList.add('hidden');
@@ -5262,17 +5298,21 @@ function undoPaintHistory() {
   renderPaint();
 }
 
-/* 打开精修：若图包来自历史归档，自动依据 baseBlob 与 wmBlob 动态复原图层，彻底杜绝报错 */
+/* 打开精修：按需从 Blob 临时唤醒图层，不占常驻显存 */
 async function openEraseModal(id, sourceList) {
   paintSourceList = sourceList;
   paintItem = sourceList.find(i => i.id === id);
   if (!paintItem) return;
 
-  // 核心修复：若内存中丢失 baseImg 或 wmCanvas，尝试通过存储的 Blob 自动恢复
+  // 从永久存储的无损 Blob 中动态拉起该单张原图
   if ((!paintItem.baseImg || !paintItem.wmCanvas) && paintItem.baseBlob && paintItem.wmBlob) {
     try {
-      const bImg = await loadImage(URL.createObjectURL(paintItem.baseBlob));
-      const wImg = await loadImage(URL.createObjectURL(paintItem.wmBlob));
+      const bImgUrl = URL.createObjectURL(paintItem.baseBlob);
+      const wImgUrl = URL.createObjectURL(paintItem.wmBlob);
+      const bImg = await loadImage(bImgUrl);
+      const wImg = await loadImage(wImgUrl);
+      URL.revokeObjectURL(bImgUrl);
+      URL.revokeObjectURL(wImgUrl);
 
       const wCanvas = document.createElement('canvas');
       wCanvas.width = bImg.naturalWidth || bImg.width;
@@ -5313,9 +5353,26 @@ async function openEraseModal(id, sourceList) {
 
 function closeEraseModal() {
   document.getElementById('eraseModal').classList.add('hidden');
-  paintItem = null;
-  tempEditWmCanvas = null;
-  paintHistoryStack = [];
+  
+  // 彻底销毁画板与历史栈显存，防止关闭后依然占用内存
+  if (tempEditWmCanvas) {
+    tempEditWmCanvas.width = 0;
+    tempEditWmCanvas.height = 0;
+    tempEditWmCanvas = null;
+  }
+  if (paintCanvas) {
+    paintCanvas.width = 0;
+    paintCanvas.height = 0;
+  }
+  if (paintHistoryStack && paintHistoryStack.length > 0) {
+    paintHistoryStack.forEach(cvs => { cvs.width = 0; cvs.height = 0; });
+    paintHistoryStack = [];
+  }
+  if (paintItem) {
+    if (paintItem.baseImg) { paintItem.baseImg.src = ''; paintItem.baseImg = null; }
+    if (paintItem.wmCanvas) { paintItem.wmCanvas.width = 0; paintItem.wmCanvas.height = 0; paintItem.wmCanvas = null; }
+    paintItem = null;
+  }
 }
 
 function renderPaint() {
