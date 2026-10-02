@@ -42,6 +42,373 @@
   --text-light: #94A3B8;
   --accent: #64748B;
   --line: rgba(226, 232, 240, 0.9);
+  --theme-tint: transparent;
+}
+
+/* 全局主题配色方案 */
+body[data-theme="blue"] {
+  --bg-base: #EDF4FA;
+  --dot-color: #D3E2F0;
+  --text-main: #1E3A8A;
+  --text-muted: #64748B;
+  --text-light: #93C5FD;
+  --accent: #3B82F6;
+  --line: rgba(219, 234, 254, 0.85);
+  --glass-bg: rgba(245, 250, 255, 0.68);
+  --glass-border: rgba(255, 255, 255, 0.92);
+}
+
+body[data-theme="pink"] {
+  --bg-base: #FDF2F4;
+  --dot-color: #FCE7F3;
+  --text-main: #831843;
+  --text-muted: #9D174D;
+  --text-light: #F472B6;
+  --accent: #EC4899;
+  --line: rgba(252, 231, 243, 0.9);
+  --glass-bg: rgba(255, 245, 247, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.92);
+}
+
+/* 黑白极致极简拟态主题 */
+body[data-theme="dark"] {
+  --bg-base: #121417;
+  --dot-color: #272A30;
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --text-light: #64748B;
+  --accent: #E2E8F0;
+  --line: rgba(255, 255, 255, 0.12);
+  --glass-bg: rgba(26, 29, 35, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --glass-subtle: rgba(38, 42, 50, 0.75);
+  --glass-shine: inset 0 1px 1.5px rgba(255, 255, 255, 0.18), inset 0 -0.5px 1px rgba(0, 0, 0, 0.4);
+}
+body[data-theme="dark"] .status-bar { color: #F8FAFC; }
+body[data-theme="dark"] .app-header { background: rgba(18, 20, 23, 0.88); border-bottom-color: rgba(255,255,255,0.12); }
+body[data-theme="dark"] .card { background: var(--glass-bg); }
+body[data-theme="dark"] .preset-btn { background: rgba(38, 42, 50, 0.85); color: #94A3B8; }
+body[data-theme="dark"] .preset-btn.active { background: rgba(255,255,255,0.15); color: #FFFFFF; border-color: #E2E8F0; }
+body[data-theme="dark"] .primary-btn { background: rgba(255,255,255,0.12); color: #FFFFFF; }
+body[data-theme="dark"] .modal-card { background: rgba(26, 29, 35, 0.95); color: #F8FAFC; }
+body[data-theme="dark"] .btn-solid { background: rgba(255,255,255,0.18); color: #FFF; }
+body[data-theme="dark"] .btn-ghost { background: rgba(255,255,255,0.06); color: #94A3B8; }
+body[data-theme="dark"] .thumb-foot { background: rgba(26,29,35,0.92); }
+body[data-theme="dark"] .batch-toolbar { background: rgba(26,29,35,0.95); }
+body[data-theme="dark"] .num-direct-input { background: rgba(38, 42, 50, 0.9); color: #FFF; border-color: rgba(255,255,255,0.2); }
+
+/* 全局壁纸生效时：背景自动 20% 柔焦毛玻璃，消除任何边缘白边与断层 */
+body.has-custom-wallpaper {
+  background-color: #0F172A !important;
+}
+body.has-custom-wallpaper::before {
+  content: '';
+  position: fixed;
+  inset: -10px;
+  background-image: inherit;
+  background-size: cover;
+  background-position: center;
+  filter: blur(12px) brightness(0.95);
+  -webkit-filter: blur(12px) brightness(0.95);
+  transform: scale(1.04);
+  z-index: -1;
+  pointer-events: none;
+}
+body.has-custom-wallpaper .app-view {
+  background: rgba(245, 247, 250, 0.62) !important;
+  backdrop-filter: blur(26px) saturate(190%);
+  -webkit-backdrop-filter: blur(26px) saturate(190%);
+  border: none !important;
+}
+body.has-custom-wallpaper[data-theme="blue"] .app-view {
+  background: rgba(237, 244, 250, 0.68) !important;
+}
+body.has-custom-wallpaper[data-theme="pink"] .app-view {
+  background: rgba(253, 242, 244, 0.68) !important;
+}
+body.has-custom-wallpaper[data-theme="dark"] .app-view {
+  background: rgba(18, 20, 23, 0.75) !important;
+}
+
+/* 红圈处图层选择下拉条 */
+.layer-select-pill-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 6px 12px;
+  margin-bottom: 8px;
+  box-shadow: var(--glass-shine);
+}
+.layer-select-pill-bar select {
+  flex: 1;
+  background: transparent;
+  border: none;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  outline: none;
+  cursor: pointer;
+}
+
+/* 可手动输入的数字输入微调框 */
+.num-direct-input {
+  width: 46px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 1px 4px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-main);
+  font-family: inherit;
+  box-shadow: var(--glass-shine);
+}
+
+/* 预览机舞台与定位器 */
+.pv-stage-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.pv-stage-box {
+  width: min(84vw, 320px);
+  max-height: 420px;
+  position: relative;
+  background: #E2E8F0;
+  border-radius: 20px;
+  border: 1.5px solid var(--glass-border);
+  box-shadow: 0 8px 24px rgba(51,65,85,0.12), var(--glass-shine);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+}
+.pv-stage-box.ratio-1-1 { aspect-ratio: 1 / 1; }
+.pv-stage-box.ratio-3-4 { aspect-ratio: 3 / 4; }
+.pv-stage-box.ratio-9-16 { aspect-ratio: 9 / 16; height: 380px; }
+.pv-stage-box.ratio-auto { min-height: 260px; }
+
+.pv-canvas-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 预览机微调面板 */
+.pv-control-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  width: 100%;
+  margin-top: 8px;
+}
+.pv-ctrl-btn {
+  padding: 8px 4px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.85);
+  border: 1px solid var(--glass-border);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  box-shadow: var(--glass-shine);
+  font-family: inherit;
+}
+.pv-ctrl-btn:active { transform: scale(0.94); background: #fff; }
+
+/* 多宫格拼图网格容器 */
+.grid9-wrapper {
+  display: grid;
+  gap: 4px;
+  background: #fff;
+  padding: 6px;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  max-width: 340px;
+  margin: 0 auto;
+  width: 100%;
+}
+.grid9-wrapper.grid-2x2 { grid-template-columns: repeat(2, 1fr); }
+.grid9-wrapper.grid-2x3 { grid-template-columns: repeat(2, 1fr); }
+.grid9-wrapper.grid-3x3 { grid-template-columns: repeat(3, 1fr); }
+.grid9-wrapper.grid-3x4 { grid-template-columns: repeat(3, 1fr); }
+.grid9-wrapper.grid-4x4 { grid-template-columns: repeat(4, 1fr); }
+
+.grid9-cell {
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+.grid9-cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* 激活选中的预览框图层 */
+.layer-item-row.active {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.25);
+}
+
+/* 控制模式切换按钮组（微调底图 vs 微调预览框） */
+.target-switch-pill {
+  display: flex;
+  background: var(--glass-subtle);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 2px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+.target-switch-btn {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .16s ease;
+}
+.target-switch-btn.active {
+  background: #FFFFFF;
+  color: var(--text-main);
+  box-shadow: 0 1px 4px rgba(100, 116, 139, 0.18);
+}
+
+/* 画布锁定/解锁悬浮胶囊 */
+.stage-lock-pill {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #FFFFFF;
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transition: all .2s ease;
+  user-select: none;
+}
+.stage-lock-pill.unlocked {
+  background: rgba(34, 197, 94, 0.85);
+}
+.stage-lock-pill:active { transform: scale(0.95); }
+
+/* 多图层列表项 */
+.layer-list-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.layer-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shine);
+}
+.layer-item-preview {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #f1f5f9;
+  border: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+.layer-order-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.icon-tiny-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-main);
+  cursor: pointer;
+}
+.icon-tiny-btn:active { transform: scale(0.92); }
+
+/* 从下往上滑出的 Bottom Sheet 弹窗 */
+.bottom-sheet-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.bottom-sheet-mask.hidden { display: none !important; }
+.bottom-sheet-card {
+  width: 100%;
+  max-width: 480px;
+  max-height: 88vh;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(30px) saturate(190%);
+  -webkit-backdrop-filter: blur(30px) saturate(190%);
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
+  border: 1px solid var(--glass-border);
+  border-bottom: none;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15), var(--glass-shine);
+  padding: 18px 16px max(18px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: sheetSlideUp .28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes sheetSlideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+body[data-theme="dark"] .bottom-sheet-card {
+  background: rgba(26, 29, 35, 0.96);
 }
 
 html, body {
@@ -1571,8 +1938,22 @@ input[type="range"]::-moz-range-thumb {
     </div>
 
     <div class="p2-apps-container">
-      <div class="app-item"><div class="app-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><span class="app-name">先空置</span></div>
-      <div class="app-item"><div class="app-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><span class="app-name">先空置</span></div>
+      <div class="app-item" onclick="openApp('previewer')">
+        <div class="app-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 8l3 3 7-7"/>
+          </svg>
+        </div>
+        <span class="app-name">预览机</span>
+      </div>
+      <div class="app-item" onclick="openApp('preview_gallery')">
+        <div class="app-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/><circle cx="15" cy="15" r="2"/>
+          </svg>
+        </div>
+        <span class="app-name">预览图库</span>
+      </div>
       <div class="app-item"><div class="app-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><span class="app-name">先空置</span></div>
       <div class="app-item"><div class="app-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><span class="app-name">先空置</span></div>
       <div class="app-item"><div class="app-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><span class="app-name">先空置</span></div>
@@ -1758,7 +2139,13 @@ input[type="range"]::-moz-range-thumb {
       </div>
 
       <div class="slider-row">
-        <div class="slider-label"><span class="k">图层不透明度</span><span class="v" id="opacityText">15%</span></div>
+        <div class="slider-label">
+          <span class="k">图层不透明度</span>
+          <div style="display:flex; align-items:center; gap:3px;">
+            <input type="number" id="opacityDirectNum" class="num-direct-input" min="1" max="100" value="15" onchange="syncOpacityFromInput(this.value)">
+            <span class="v" style="font-size:13px;">%</span>
+          </div>
+        </div>
         <input type="range" id="opacityInput" min="5" max="100" value="15">
       </div>
 
@@ -1796,10 +2183,12 @@ input[type="range"]::-moz-range-thumb {
           </h3>
           <div class="sub">100% 保持原图画质与 MB 大小导出 · 点击可手动擦除</div>
         </div>
-        <button class="mini-btn" onclick="openExportZipModal()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="display:inline;vertical-align:-2px;margin-right:3px;"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          打包导出 ZIP
-        </button>
+        <div style="display:flex; gap:6px;">
+          <button class="mini-btn" onclick="openSaveChoiceModal('watermarker')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="display:inline;vertical-align:-2px;margin-right:3px;"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            导出保存
+          </button>
+        </div>
       </div>
       <div class="result-grid" id="currentResultGrid"></div>
     </div>
@@ -1999,6 +2388,21 @@ input[type="range"]::-moz-range-thumb {
     </div>
 
     <div class="card">
+      <div class="card-title-row" style="margin-bottom:12px;">
+        <div class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+          <span>全局主题配色切换</span>
+        </div>
+      </div>
+      <div class="preset-row" style="margin-top:0;">
+        <button type="button" class="preset-btn active" id="themeBtn-default" onclick="switchAppTheme('default')">经典灰白</button>
+        <button type="button" class="preset-btn" id="themeBtn-blue" onclick="switchAppTheme('blue')">冰晶浅蓝</button>
+        <button type="button" class="preset-btn" id="themeBtn-pink" onclick="switchAppTheme('pink')">樱花柔粉</button>
+        <button type="button" class="preset-btn" id="themeBtn-dark" onclick="switchAppTheme('dark')">黑白极简</button>
+      </div>
+    </div>
+
+    <div class="card">
       <div class="card-title" style="margin-bottom:12px;">全局壁纸与数据管理</div>
       <div class="btn-grid">
         <button class="action-btn" onclick="document.getElementById('wallpaperUploadInput').click()">
@@ -2144,7 +2548,49 @@ input[type="range"]::-moz-range-thumb {
   </div>
 </div>
 
-<!-- 导出 ZIP -->
+<!-- 全局导出保存选择弹窗（PNG 批量导出 / ZIP 导出） -->
+<div id="saveChoiceModal" class="modal-mask hidden">
+  <div class="modal-card" style="max-width:340px;">
+    <div class="modal-head">
+      <div>
+        <h3>选择导出保存方式</h3>
+        <p>所有图片均以 100% 最高画质输出</p>
+      </div>
+      <button class="x-btn" onclick="closeSaveChoiceModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:10px; margin-top:4px;">
+      <button class="channel-btn" onclick="handleDirectExportAllPng()">
+        <div class="channel-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+          </svg>
+        </div>
+        <div>
+          <div class="channel-title">PNG 批量导出 <span class="tag-mini">直接存相册</span></div>
+          <div class="channel-sub">单张无损 PNG 连续保存至本地相册/下载</div>
+        </div>
+      </button>
+
+      <button class="channel-btn" onclick="handleChoiceExportZip()">
+        <div class="channel-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+          </svg>
+        </div>
+        <div>
+          <div class="channel-title">ZIP 打包导出</div>
+          <div class="channel-sub">自动打包全部图片并下载压缩包</div>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 导出 ZIP 弹窗 -->
 <div id="exportZipModal" class="modal-mask hidden">
   <div class="modal-card">
     <div class="modal-head">
@@ -2574,8 +3020,584 @@ input[type="range"]::-moz-range-thumb {
 </div>
 
 <!-- ============================================================ -->
-<!-- 应用视图 6：公告（全屏独立 APP，记录所有历史版本更新） -->
+<!-- 应用视图 10：预览图库（独立 APP，归档所有生成的预览图） -->
 <!-- ============================================================ -->
+<section class="app-view" id="app-preview_gallery">
+  <div class="app-header">
+    <button class="back-btn" onclick="closeApp('preview_gallery')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="app-title">预览图库</div>
+    <div class="app-header-right">
+      <button class="text-action-btn" id="pvGallerySelectToggleBtn" onclick="togglePvGallerySelectMode()">多选</button>
+    </div>
+  </div>
+
+  <div class="app-body" id="pvGalleryListView">
+    <div class="search-wrap">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" id="pvGallerySearchInput" oninput="renderPvGallery()" placeholder="搜索预览图包…" class="search-input">
+    </div>
+
+    <div class="sec-head">
+      <h3>已归档预览图包</h3>
+      <span class="sub" id="pvGalleryCountLabel" style="font-size:11px;">0 个图包</span>
+    </div>
+
+    <div class="pkg-grid" id="pvGalleryPackageGrid"></div>
+  </div>
+
+  <div class="app-body hidden" id="pvGalleryDetailView">
+    <div class="card">
+      <div class="card-title-row" style="border-bottom:1px solid var(--line); padding-bottom:10px; margin-bottom:10px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button class="back-btn" onclick="backToPvGalleryList()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <div>
+            <div style="font-size:12.5px; font-weight:800; color:var(--text-main);" id="pvDetailPkgTitle">预览图包</div>
+            <div style="font-size:10px; color:var(--text-muted); margin-top:2px; font-weight:600;" id="pvDetailPkgSub">0 张图</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button class="mini-btn ghost" onclick="downloadActivePvPkgAllPng()">批量存 PNG</button>
+        <button class="mini-btn" onclick="downloadActivePvPkgZip()">重新下载 ZIP</button>
+      </div>
+    </div>
+
+    <div class="sec-head">
+      <div>
+        <h3>图包内容</h3>
+        <div class="sub">点击图片可放大查看或保存</div>
+      </div>
+    </div>
+
+    <div class="result-grid" id="pvDetailImageGrid"></div>
+  </div>
+</section>
+
+<!-- 预览框来源选择弹窗（支持相册与水印库） -->
+<div id="pvFrameChoiceModal" class="modal-mask hidden">
+  <div class="modal-card" style="max-width:320px;">
+    <div class="modal-head">
+      <div>
+        <h3>选择预览框/条来源</h3>
+        <p>支持多图层叠加</p>
+      </div>
+      <button class="x-btn" onclick="closePvFrameChoiceModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:9px; margin-top:4px;">
+      <button class="channel-btn" onclick="choosePvLocalFrame()">
+        <div class="channel-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </div>
+        <div>
+          <div class="channel-title">从本地文件导入</div>
+          <div class="channel-sub">选择透明 PNG 预览框/居中条</div>
+        </div>
+      </button>
+      <button class="channel-btn" onclick="choosePvFrameFromWmLib()">
+        <div class="channel-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+        </div>
+        <div>
+          <div class="channel-title">从水印库选择 <span class="tag-mini">推荐</span></div>
+          <div class="channel-sub">从已保存的水印与边框库中选取</div>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 单张效果精修微调居中大图弹窗 -->
+<div id="pvSingleAdjustModal" class="modal-mask hidden" onclick="closePvSingleAdjustModal(event)">
+  <div class="modal-card" style="max-width: 400px; width: 94%; max-height: 92vh; display: flex; flex-direction: column; gap: 10px;" onclick="event.stopPropagation()">
+    <div class="modal-head" style="border-bottom:1px solid var(--line); padding-bottom:8px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button class="x-btn" onclick="closePvSingleAdjustModalDirect()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <div>
+          <h3 style="font-size:13px; font-weight:800;">单张效果精修微调</h3>
+          <p style="font-size:9.5px; color:var(--text-muted);">方向键微调位置 · 滑杆缩放大小</p>
+        </div>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button class="mini-btn ghost" onclick="undoPvSingleAdjust()">撤销</button>
+        <button class="btn-solid" style="padding:6px 14px; font-size:11px;" onclick="savePvSingleAdjustResult()">保存此张</button>
+      </div>
+    </div>
+
+    <!-- 居中超大预览画布视口 -->
+    <div style="display:flex; justify-content:center; align-items:center; width:100%;">
+      <div id="pvSingleStageBox" class="pv-stage-box ratio-1-1" style="width: min(82vw, 320px); height: min(82vw, 320px); border-radius: 18px; overflow: hidden; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <canvas id="pvSingleCanvas" class="pv-canvas-layer" style="position: absolute; inset: 0; width: 100%; height: 100%; display: block;"></canvas>
+      </div>
+    </div>
+
+    <!-- 缩放与微调操作栏 -->
+    <div class="slider-row" style="margin-top:0;">
+      <div class="slider-label">
+        <span class="k">原图大小缩放</span>
+        <span class="v" id="pvSingleScaleText" style="font-size:12px;">100%</span>
+      </div>
+      <input type="range" id="pvSingleScaleInput" min="30" max="250" value="100" oninput="handlePvSingleScaleChange(this.value)">
+    </div>
+
+    <div class="pv-control-grid" style="margin-top:0;">
+      <button type="button" class="pv-ctrl-btn" onclick="nudgePvSingle(0, -6)"><span>上移</span></button>
+      <button type="button" class="pv-ctrl-btn" onclick="nudgePvSingle(0, 6)"><span>下移</span></button>
+      <button type="button" class="pv-ctrl-btn" onclick="nudgePvSingle(-6, 0)"><span>左移</span></button>
+      <button type="button" class="pv-ctrl-btn" onclick="nudgePvSingle(6, 0)"><span>右移</span></button>
+    </div>
+  </div>
+</div>
+<section class="app-view" id="app-previewer">
+  <div class="app-header">
+    <button class="back-btn" onclick="closeApp('previewer')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="app-title">预览机</div>
+    <div class="app-header-right">
+      <button class="mini-btn" onclick="openGrid9Modal()">九宫格拼图</button>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <!-- 1. 素材导入区：预览框/条 + 批量待预览底图 -->
+    <div class="import-grid">
+      <!-- 预览框/条（支持多框导入与来源选择） -->
+      <div class="dashed-box" onclick="openPvFrameChoiceModal()">
+        <div id="pvFrameEmpty" class="dashed-box-inner">
+          <div class="dashed-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>
+            </svg>
+          </div>
+          <div class="dashed-label">+ 添加预览框/条</div>
+          <div class="dashed-sub">支持多图层 / 水印库选</div>
+        </div>
+        <div id="pvFrameFilled" class="dashed-filled hidden">
+          <img id="pvFramePreviewImg" class="checker" alt="frame">
+          <span class="dashed-tag" id="pvFrameNameTag">已载入 1 个预览框</span>
+        </div>
+      </div>
+
+      <!-- 底图库/相册导入 -->
+      <div class="dashed-box" onclick="openPvSourceChoiceModal()">
+        <div id="pvBaseEmpty" class="dashed-box-inner">
+          <div class="dashed-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <div class="dashed-label">导入待预览底图</div>
+          <div class="dashed-sub">相册 / 图库 / 原图库</div>
+        </div>
+        <div id="pvBaseFilled" class="dashed-filled hidden">
+          <div class="dashed-icon" style="margin-bottom:6px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <div class="dashed-count" id="pvBaseCountLabel">已选 0 张底图</div>
+          <div class="dashed-actions" onclick="event.stopPropagation()">
+            <button class="mini-btn" onclick="openPvSourceChoiceModal()">加图</button>
+            <button class="mini-btn ghost" onclick="resetPvBaseImages()">清空</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 待预览原图列表横向抽屉 -->
+    <div class="card hidden" id="pvSourceImagesDrawer">
+      <div class="card-title-row" style="margin-bottom:10px;">
+        <span class="card-title">待预览原图列表 (<span id="pvSourceTotalCount">0</span>)</span>
+        <button class="mini-btn ghost" onclick="resetPvBaseImages()">清空重选</button>
+      </div>
+      <div class="hscroll" id="pvSourceThumbList"></div>
+    </div>
+
+    <!-- 2. 画布比例与图层配置 -->
+    <div class="card">
+      <div class="card-title-row">
+        <div class="card-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          <span>画布比例与模版定位</span>
+        </div>
+      </div>
+
+      <div class="preset-row" style="flex-wrap:wrap;">
+        <button type="button" class="preset-btn active" id="btnRatio11" onclick="setPreviewRatio('1-1')">1:1 头像</button>
+        <button type="button" class="preset-btn" id="btnRatio34" onclick="setPreviewRatio('3-4')">3:4 比例</button>
+        <button type="button" class="preset-btn" id="btnRatio916" onclick="setPreviewRatio('9-16')">9:16 壁纸</button>
+        <button type="button" class="preset-btn" id="btnRatioCustom" onclick="setPreviewRatio('custom')">自定义</button>
+      </div>
+
+      <!-- 自定义比例输入行 -->
+      <div id="pvCustomRatioRow" class="hidden" style="margin-top:10px; display:flex; align-items:center; gap:8px;">
+        <span style="font-size:11px; font-weight:700; color:var(--text-muted);">宽高比：</span>
+        <input type="number" id="pvCustomW" class="num-direct-input" style="width:60px;" value="1080" placeholder="宽" onchange="applyCustomRatio()">
+        <span style="font-size:12px; font-weight:700;">:</span>
+        <input type="number" id="pvCustomH" class="num-direct-input" style="width:60px;" value="1080" placeholder="高" onchange="applyCustomRatio()">
+        <button class="mini-btn" onclick="applyCustomRatio()">应用比例</button>
+      </div>
+
+      <!-- 多预览框图层层级排序与独立变换管理 -->
+      <div id="pvFrameLayersCard" class="hidden" style="margin-top:10px; border-top:1px solid var(--line); padding-top:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:11.5px; font-weight:700;">预览框图层排序 (点击某层可单独移动/缩放/旋转)</span>
+          <button class="mini-btn ghost" onclick="openPvFrameChoiceModal()">+ 加框</button>
+        </div>
+        <div class="layer-list-box" id="pvFrameLayerList"></div>
+      </div>
+
+      <!-- 智能透明底识别开关 -->
+      <div class="check-row" style="margin-top:10px; padding-top:10px;">
+        <div>
+          <div style="font-size:11.5px; font-weight:700;">自动识别透明底（蓝色框标出并自动安放）</div>
+          <div style="font-size:9.5px; color:var(--text-muted); font-weight:500;">自动探测镂空区域，原图秒级自适应居中嵌入</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="pvAutoDetectHoleCheck" checked onchange="togglePvAutoHoleDetect(this.checked)">
+          <span class="slider-track"></span>
+        </label>
+      </div>
+
+      <!-- 直接在预览机打贴膜水印模块 -->
+      <div class="check-row" style="margin-top:8px; padding-top:8px;">
+        <div>
+          <div style="font-size:11.5px; font-weight:700;">底图同步叠加贴膜水印</div>
+          <div style="font-size:9.5px; color:var(--text-muted); font-weight:500;">覆盖模式仅作用于原图，与顶层预览框互不影响</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="pvWatermarkOverlayCheck" onchange="togglePvWatermarkOverlay(this.checked)">
+          <span class="slider-track"></span>
+        </label>
+      </div>
+
+      <!-- 预览机专属水印膜导入框与自动擦脸开关 -->
+      <div id="pvWmOverlaySettingsBox" class="hidden" style="margin-top:10px; background:var(--glass-subtle); padding:12px; border-radius:18px; border:1px solid var(--glass-border); display:flex; flex-direction:column; gap:10px;">
+        <div class="dashed-box" style="aspect-ratio: auto; height: 76px; border-radius: 16px;" onclick="openPvWmChoice()">
+          <div id="pvWmEmptyBox" class="dashed-box-inner" style="flex-direction:row; gap:10px;">
+            <div class="dashed-icon" style="width:32px; height:32px; border-radius:10px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </div>
+            <div style="text-align:left;">
+              <div class="dashed-label" style="font-size:11px;">点击选择贴膜水印</div>
+              <div class="dashed-sub" style="font-size:9px;">本地相册选 / 水印库选</div>
+            </div>
+          </div>
+          <div id="pvWmFilledBox" class="dashed-filled hidden" style="flex-direction:row; justify-content:flex-start; gap:10px; padding:6px 12px;">
+            <img id="pvWmLoadedPreview" class="checker" style="width:48px; height:48px; border-radius:10px; object-fit:contain;" alt="wm">
+            <div style="flex:1; min-width:0; text-align:left;">
+              <div style="font-size:11px; font-weight:700; color:var(--text-main); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" id="pvWmNameLabel">已载入水印</div>
+              <div style="font-size:9px; color:var(--text-muted);">覆盖混合模式 (仅作用于原图)</div>
+            </div>
+            <button class="mini-btn ghost" style="font-size:9px;" onclick="event.stopPropagation(); openPvWmChoice();">更换</button>
+          </div>
+        </div>
+
+        <div class="slider-row" style="margin-top:0;">
+          <div class="slider-label">
+            <span class="k">贴膜水印浓度 (覆盖)</span>
+            <div style="display:flex; align-items:center; gap:3px;">
+              <input type="number" id="pvWmOpacityDirectNum" class="num-direct-input" min="1" max="100" value="15" onchange="syncPvWmOpacityFromInput(this.value)">
+              <span class="v" style="font-size:12px;">%</span>
+            </div>
+          </div>
+          <input type="range" id="pvWmOpacityInput" min="5" max="100" value="15" oninput="syncPvWmOpacityFromSlider(this.value)">
+        </div>
+
+        <!-- 贴膜水印自动擦脸开关 -->
+        <div class="check-row" style="margin-top:0; padding-top:8px;">
+          <div>
+            <div style="font-size:11px; font-weight:700;">自动擦除脸部水印（擦脸小助手）</div>
+            <div style="font-size:9px; color:var(--text-muted);">自动识别人脸并羽化擦除贴膜</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="pvWmFaceDetectCheck" checked onchange="renderPreviewStage()">
+            <span class="slider-track"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 定位预览舞台（带自动锁图防误触按键） -->
+    <div class="pv-stage-container">
+      <div class="pv-stage-box ratio-1-1" id="pvStageBox">
+        <div class="stage-lock-pill" id="pvStageLockPill" onclick="togglePvStageLock()">
+          <svg id="lockIconLocked" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <svg id="lockIconUnlocked" class="hidden" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+          <span id="pvStageLockText">已锁定</span>
+        </div>
+        <canvas id="pvStageCanvas" class="pv-canvas-layer"></canvas>
+      </div>
+      <div style="font-size:10px; color:var(--text-muted); font-weight:600;">默认锁定防误触 · 解锁后可单指直接拖动原图</div>
+    </div>
+
+    <!-- 4. 放置在舞台正下方的核心微调控制面板 -->
+    <div class="card" id="pvTransformControlPanel">
+      <!-- 红圈位置：当前调节的预览框图层下拉快速选择条 -->
+      <div class="layer-select-pill-bar" id="pvFrameLayerSelectBar">
+        <span style="font-size:11px; font-weight:800; color:var(--text-muted); white-space:nowrap;">当前选择水印框：</span>
+        <select id="pvActiveFrameDropdown" onchange="handleDropdownSelectFrameLayer(this.value)">
+          <option value="0">图层 1 (主预览框)</option>
+        </select>
+      </div>
+
+      <div class="target-switch-pill">
+        <button type="button" class="target-switch-btn active" id="btnTargetBase" onclick="switchPvControlTarget('base')">调整原图位置/大小</button>
+        <button type="button" class="target-switch-btn" id="btnTargetFrame" onclick="switchPvControlTarget('frame')">调整选中水印框</button>
+      </div>
+
+      <!-- 调整底图控制区 -->
+      <div id="pvBaseControlSection">
+        <div class="slider-row" style="margin-top:0;">
+          <div class="slider-label">
+            <span class="k">底图大小缩放</span>
+            <span class="v" id="pvBaseScaleText" style="font-size:13px;">100%</span>
+          </div>
+          <input type="range" id="pvBaseScaleInput" min="30" max="250" value="100" oninput="handlePvBaseScaleChange(this.value)">
+        </div>
+        <div class="pv-control-grid">
+          <button type="button" class="pv-ctrl-btn" onclick="nudgePvBase(0, -8)"><span>上移</span></button>
+          <button type="button" class="pv-ctrl-btn" onclick="nudgePvBase(0, 8)"><span>下移</span></button>
+          <button type="button" class="pv-ctrl-btn" onclick="nudgePvBase(-8, 0)"><span>左移</span></button>
+          <button type="button" class="pv-ctrl-btn" onclick="nudgePvBase(8, 0)"><span>右移</span></button>
+        </div>
+      </div>
+
+      <!-- 调整选中水印框控制区（支持负数旋转与精确数值直填） -->
+      <div id="pvFrameControlSection" class="hidden">
+        <!-- 缩放比例：滑杆 + 数值输入 -->
+        <div class="slider-row" style="margin-top:0;">
+          <div class="slider-label">
+            <span class="k">预览框大小缩放</span>
+            <div style="display:flex; align-items:center; gap:3px;">
+              <input type="number" id="pvActiveFrameScaleDirectNum" class="num-direct-input" min="10" max="300" value="100" onchange="syncPvActiveFrameScaleFromInput(this.value)">
+              <span class="v" style="font-size:12px;">%</span>
+            </div>
+          </div>
+          <input type="range" id="pvActiveFrameScaleInput" min="30" max="250" value="100" oninput="handlePvActiveFrameScaleChange(this.value)">
+        </div>
+
+        <!-- 旋转角度：支持负数 (-180° ~ 180°) -->
+        <div class="slider-row">
+          <div class="slider-label">
+            <span class="k">旋转角度 (-180° ~ 180°)</span>
+            <div style="display:flex; align-items:center; gap:3px;">
+              <input type="number" id="pvActiveFrameRotateDirectNum" class="num-direct-input" min="-180" max="180" value="0" onchange="syncPvActiveFrameRotateFromInput(this.value)">
+              <span class="v" style="font-size:12px;">°</span>
+            </div>
+          </div>
+          <input type="range" id="pvActiveFrameRotateInput" min="-180" max="180" value="0" oninput="handlePvActiveFrameRotateChange(this.value)">
+        </div>
+
+        <!-- 水平与垂直精确坐标数值输入 -->
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; padding:6px 10px; background:var(--glass-subtle); border-radius:12px; border:1px solid var(--glass-border);">
+          <div style="display:flex; align-items:center; gap:4px;">
+            <span style="font-size:11px; font-weight:700; color:var(--text-muted);">水平X:</span>
+            <input type="number" id="pvActiveFrameOffsetXInput" class="num-direct-input" style="width:50px;" value="0" onchange="syncPvActiveFrameOffsetFromInput()">
+            <span style="font-size:9.5px; color:var(--text-muted);">px</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:4px;">
+            <span style="font-size:11px; font-weight:700; color:var(--text-muted);">垂直Y:</span>
+            <input type="number" id="pvActiveFrameOffsetYInput" class="num-direct-input" style="width:50px;" value="0" onchange="syncPvActiveFrameOffsetFromInput()">
+            <span style="font-size:9.5px; color:var(--text-muted);">px</span>
+          </div>
+          <button type="button" class="mini-btn ghost" style="font-size:9.5px;" onclick="resetPvActiveFrameTransform()">归零</button>
+        </div>
+
+        <!-- 方向微调按键 -->
+        <div class="pv-control-grid" style="margin-top:8px;">
+          <button type="button" class="pv-ctrl-btn" onclick="nudgePvActiveFrame(0, -8)"><span>上移</span></button>
+          <button type="button" class="pv-ctrl-btn" onclick="nudgePvActiveFrame(0, 8)"><span>下移</span></button>
+          <button type="button" class="pv-ctrl-btn" onclick="nudgePvActiveFrame(-8, 0)"><span>左移</span></button>
+          <button type="button" class="pv-ctrl-btn" onclick="nudgePvActiveFrame(8, 0)"><span>右移</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. 批量生成预览图按键 -->
+    <button id="pvStartBatchBtn" class="primary-btn" onclick="executeBatchPreviewGeneration()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <span>按当前定位一键批量生成预览图</span>
+    </button>
+
+    <!-- 预览机批量生成进度条 -->
+    <div id="pvProgressBarBox" class="card progress-card hidden">
+      <div class="progress-top">
+        <span id="pvProgressText">正在合成预览图…</span>
+        <span id="pvProgressPct">0%</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="pvProgressBar"></div></div>
+    </div>
+
+    <!-- 批量生成结果网格 -->
+    <div id="pvResultsWrapper" class="hidden" style="display:flex; flex-direction:column; gap:12px;">
+      <div class="sec-head">
+        <div>
+          <h3>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>
+            预览生成完成 · 共 <span id="pvCurrentBatchCount">0</span> 张
+          </h3>
+          <div class="sub">高清预览导出 · 点击单张可手动微调</div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="mini-btn" onclick="openSaveChoiceModal('previewer')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="display:inline;vertical-align:-2px;margin-right:3px;"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            导出保存
+          </button>
+        </div>
+      </div>
+      <div class="result-grid" id="pvResultGrid"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 隐藏的文件输入：预览机专用 -->
+<input type="file" id="pvFrameInput" class="hidden-file-input" accept="image/*" onchange="handlePvFrameFile(event)">
+<input type="file" id="pvBaseLocalInput" multiple class="hidden-file-input" accept="image/*" onchange="handlePvBaseFiles(event)">
+<input type="file" id="pvWmLocalInput" class="hidden-file-input" accept="image/*" onchange="handlePvWmFile(event)">
+
+<!-- 预览机专属水印来源选择弹窗 -->
+<div id="pvWmChoiceModal" class="modal-mask hidden">
+  <div class="modal-card" style="max-width:320px;">
+    <div class="modal-head">
+      <div>
+        <h3>选择预览贴膜水印来源</h3>
+        <p>支持从本地相册或水印库中选择</p>
+      </div>
+      <button class="x-btn" onclick="closePvWmChoice()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:9px; margin-top:4px;">
+      <button class="channel-btn" onclick="choosePvLocalWm()">
+        <div class="channel-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </div>
+        <div>
+          <div class="channel-title">从本地相册/文件导入</div>
+          <div class="channel-sub">支持透明底 PNG / 浮雕图</div>
+        </div>
+      </button>
+      <button class="channel-btn" onclick="choosePvFromWmLib()">
+        <div class="channel-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+        </div>
+        <div>
+          <div class="channel-title">从水印库选择 <span class="tag-mini">推荐</span></div>
+          <div class="channel-sub">浏览已分类管理的水印膜</div>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 预览机底图来源选择弹窗 -->
+<div id="pvSourceChoiceModal" class="modal-mask hidden">
+  <div class="modal-card" style="max-width:320px;">
+    <div class="modal-head">
+      <div>
+        <h3>选择底图导入来源</h3>
+        <p>导入待打预览效果的一组图片</p>
+      </div>
+      <button class="x-btn" onclick="closePvSourceChoiceModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:9px;">
+      <button class="channel-btn" onclick="triggerPvBaseLocal()">
+        <div class="channel-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </div>
+        <div>
+          <div class="channel-title">从本地相册导入</div>
+          <div class="channel-sub">支持多选任意大图</div>
+        </div>
+      </button>
+      <button class="channel-btn" onclick="triggerPvBaseFromGallery()">
+        <div class="channel-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="2"/><path d="m21 15-5-5L5 21"/></svg>
+        </div>
+        <div>
+          <div class="channel-title">从已贴膜图库导入</div>
+          <div class="channel-sub">自动调取贴膜机导出的图包</div>
+        </div>
+      </button>
+      <button class="channel-btn" onclick="triggerPvBaseFromRepo()">
+        <div class="channel-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        </div>
+        <div>
+          <div class="channel-title">从原po原图库导入 <span class="tag-mini">支持文件夹整套选</span></div>
+          <div class="channel-sub">自由进出各级原图相册一键全选导入</div>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 预览机专属原图选择器弹窗 -->
+<div id="pvRepoSelectorModal" class="modal-mask hidden">
+  <div class="modal-card modal-wide" style="height:82vh;">
+    <div class="modal-head">
+      <div>
+        <h3>从原po原图库选择图片导入预览</h3>
+        <div class="crumbs" id="pvModalRepoBreadcrumbs" style="margin-top:4px;"></div>
+      </div>
+      <button class="x-btn" onclick="closePvRepoSelectorModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-scroll">
+      <div class="folder-grid" id="pvModalFolderGrid"></div>
+      <div class="img-grid" id="pvModalImageGrid"></div>
+    </div>
+
+    <div class="modal-actions" style="justify-content:space-between; align-items:center;">
+      <span style="font-size:10.5px; color:var(--text-muted); font-weight:700;" id="pvModalSelectedSummary">当前文件夹 0 张原图</span>
+      <button class="btn-solid" onclick="importAllFromCurrentPvModalFolder()">全选此文件夹并导入</button>
+    </div>
+  </div>
+</div>
+
+<!-- 全能多宫格拼图弹窗（支持 4格、6格、9格、12格、16格 自由切换） -->
+<div id="grid9Modal" class="modal-mask hidden">
+  <div class="modal-card" style="max-width:380px; max-height:90vh;">
+    <div class="modal-head">
+      <div>
+        <h3 id="gridModalTitle">多宫格拼图大图</h3>
+        <p id="gridModalSub">自由选择宫格版式 · 一键无损拼接保存</p>
+      </div>
+      <button class="x-btn" onclick="closeGrid9Modal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- 宫格版式快速切换按钮 -->
+    <div class="preset-row" style="margin-top:0;">
+      <button type="button" class="preset-btn" id="btnGrid2x2" onclick="switchGridMosaicLayout('2x2')">4 宫格</button>
+      <button type="button" class="preset-btn" id="btnGrid2x3" onclick="switchGridMosaicLayout('2x3')">6 宫格</button>
+      <button type="button" class="preset-btn active" id="btnGrid3x3" onclick="switchGridMosaicLayout('3x3')">9 宫格</button>
+      <button type="button" class="preset-btn" id="btnGrid3x4" onclick="switchGridMosaicLayout('3x4')">12 宫格</button>
+      <button type="button" class="preset-btn" id="btnGrid4x4" onclick="switchGridMosaicLayout('4x4')">16 宫格</button>
+    </div>
+
+    <div class="modal-scroll" style="display:flex; flex-direction:column; align-items:center;">
+      <div class="grid9-wrapper grid-3x3" id="grid9BoxPreview"></div>
+    </div>
+
+    <div class="modal-actions" style="margin-top:8px;">
+      <button class="btn-ghost" onclick="closeGrid9Modal()">关闭</button>
+      <button class="btn-solid" onclick="downloadGrid9Image()">保存拼图 PNG</button>
+    </div>
+  </div>
+</div>
 <section class="app-view" id="app-notice">
   <div class="app-header">
     <button class="back-btn" onclick="closeApp('notice')">
@@ -2583,7 +3605,7 @@ input[type="range"]::-moz-range-thumb {
     </button>
     <div class="app-title">更新公告与历史</div>
     <div class="app-header-right">
-      <span class="mini-badge ready"><span class="bdot"></span><span>v1.1.0 最新版</span></span>
+      <span class="mini-badge ready"><span class="bdot"></span><span>v1.2.0 最新版</span></span>
     </div>
   </div>
 
@@ -2608,7 +3630,7 @@ input[type="range"]::-moz-range-thumb {
           <div style="font-size:14px; font-weight:800; color:var(--text-main);">版本更新公告</div>
           <div class="ver-badge">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            <span>v1.1.0 正式上线</span>
+            <span>v1.2.0 正式上线</span>
           </div>
         </div>
       </div>
@@ -2623,39 +3645,83 @@ input[type="range"]::-moz-range-thumb {
         <div class="log-sec-title">
           <span>版本概览</span>
         </div>
-        <div class="log-item-text">本版本对「门槛记录」及「联系」两大核心应用进行系统性优化，涵盖交互修复、功能新增与数据保障三大方向，现已全部完成并上线。</div>
+        <div class="log-item-text">本次版本重点新增两大核心功能：<b>预览机</b>、<b>预览图库</b>，同时对全功能模块进行大量优化升级，修复多项使用问题，具体更新内容如下：</div>
       </div>
 
       <div class="log-section-card">
         <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M12 11v6M9 14h6"/></svg>
-          <span>一、门槛记录 APP</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/><circle cx="15" cy="15" r="2"/></svg>
+          <span>一、新增核心功能</span>
         </div>
-        <div class="log-item-text"><b>1. 交互修复</b><br>· 文件夹重命名 Bug 修复：长按文件夹将弹出同色系弹窗，支持直接修改文件夹名称。<br>· 返回逻辑优化：进入子目录后，点击返回仅跳转至上一个子目录，不再直接跳转至根目录，提升多级浏览体验。</div>
-        <div class="log-item-text"><b>2. 图片导入</b><br>· 格式全面开放：图片导入不再限制格式，支持各类型图片文件。<br>· 大文件支持：MB 级别大图均可正常导入，保存门槛记录时页面不卡顿，保存后即时生效，无需退出应用刷新。<br>· 多图导入：支持一次导入多张图片，在导入框内自动按宫格排列展示。<br>· 图片查看与下载：点击上传的图片凭证可放大查看，并支持下载保存。</div>
-        <div class="log-item-text"><b>3. 主页面结构</b><br>· 顶部新增搜索框，支持按会名搜索。<br>· 搜索框下方为添加门槛功能区，包含加号键（新增门槛）、多选键（批量删除）及总门槛消费金额自动汇总。</div>
-        <div class="log-item-text"><b>4. 添加门槛弹窗（同色系）</b><br>· 第一行：会名<br>· 第二行：lx（负责人联系 / 意向群联系 / 会联系）<br>· 第三行：入会金额<br>· 虚线方框支持点击导入图片并永久保存，底部设保存按键。</div>
-        <div class="log-item-text"><b>5. 卡片展示与编辑</b><br>· 保存后每行展示双卡片，显示会名、lx、金额。<br>· 点击卡片弹窗可查看或修改记录，点击图片可放大查看与重新保存。</div>
-        <div class="log-item-text"><b>6. 数据保障</b><br>· 所有记录数据永久保存，无法被强制清除。<br>· 开启永久保存功能，即使设备本地可用内存低于 3GB，仍强制保留网页 / APK 数据。<br>· 同步完成数据库扩容，提升存储与读取性能。</div>
+        <div class="log-item-text">
+          <b>1. 全新功能：预览机</b><br>
+          1. 支持底图批量导入、水印导入预览，可实现水印覆盖混合效果，适配贴膜水印制作需求<br>
+          2. 新增透明底自动识别功能，识别区域以蓝色边框标注，支持首张图片定位调整，后续图片自动适配填充，可手动关闭识别、自由自定义位置<br>
+          3. 集成贴膜水印效果，可直接在预览机内完成水印贴膜操作<br>
+          4. 支持多预览框导入，可自由调整各水印框层级、上下层级排序，分层排版后批量生成图片<br>
+          5. 新增自定义比例功能，破除固定比例限制，适配头像、壁纸等多场景预览制作
+        </div>
+        <div class="log-item-text">
+          <b>2. 全新页面：预览图库</b><br>
+          1. 独立第二应用页面，专门收纳所有归档、保存的原图与预览成品图<br>
+          2. 统一汇总所有制作记录，无需反复导出查找，素材集中管理更便捷
+        </div>
       </div>
 
       <div class="log-section-card">
         <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          <span>二、联系 APP</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span>二、核心功能优化</span>
         </div>
-        <div class="log-item-text"><b>1. 页面结构</b><br>· 顶部新增搜索栏，支持内容搜索。<br>· 下方新增加号键，点击弹出同色系弹窗。</div>
-        <div class="log-item-text"><b>2. 新增联系弹窗</b><br>· 第一行：负责人 / 原po / 会联系<br>· 第二行：联系<br>· 第三行：风格标签（多个标签逗号隔开，选填）。</div>
-        <div class="log-item-text"><b>3. 数据与删除</b><br>· 点击确认生成卡片并存入，数据永久保留不清除。<br>· 右上角新增多选按键，支持多选批量删除。</div>
-        <div class="log-item-text"><b>4. 分组功能</b><br>· 搜索栏下方分组行，内置四组：原创圈、定制圈、自截会、水印会。<br>· 点击分组行前加号可新增自定义分组，支持单独删除分组内任意内容。</div>
+        <div class="log-item-text">
+          <b>1. 导出保存功能升级</b><br>
+          1. 新增批量导出模式，点击导出弹出双选项：ZIP压缩包导出、全部图片一次性PNG导出至相册<br>
+          2. 单张图片保存默认直接输出PNG格式并保存到手机相册<br>
+          3. 批量生成图片新增实时进度条，精准展示制作进度，同步提示「人脸擦除、位置调整」等操作步骤
+        </div>
+        <div class="log-item-text">
+          <b>2. 预览编辑操作优化</b><br>
+          1. 新增原图锁定功能：导入图片后默认开启锁图，防止误触滑动移位；手动调整图片时可关闭锁定，自由操作<br>
+          2. 支持成品图二次编辑，点击已生成图片，居中弹出大图编辑弹窗，可微调图片位置、大小<br>
+          3. 支持双指放大查看图片细节，新增撤销功能，可撤回误操作<br>
+          4. 优化水印框编辑：支持精准选择指定水印框单独调整，可自由移动、缩放、旋转，旋转支持正负数值调节<br>
+          5. 新增贴膜水印擦脸开关，可自主开启或关闭人脸擦除功能
+        </div>
+        <div class="log-item-text">
+          <b>3. 素材导入与展示优化</b><br>
+          1. 支持完整文件夹批量导入，可直接选取文件夹导入全部图片<br>
+          2. 实时刷新素材列表，新增、删除图片即时生效，无需重启页面即可查看最新素材<br>
+          3. 新增原图列表展示功能，清晰查看所有已导入素材<br>
+          4. 优化操作排版，所有移动、调整类功能按键统一放置在预览框下方，操作更直观<br>
+          5. 实现水印APP与预览机功能互通，预览框可跨功能联动选择使用
+        </div>
       </div>
 
       <div class="log-section-card">
         <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <span>三、我的 APP</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/></svg>
+          <span>三、全局美化与适配优化</span>
         </div>
-        <div class="log-item-text">· 开启永久数据保存功能，低内存设备亦强制保留数据，避免数据丢失。<br>· 完成数据库优化与扩容，提升整体运行稳定性。</div>
+        <div class="log-item-text">
+          1. 新增APP全局黑白配色主题，原有灰白、蓝色、粉色主题保留，丰富自定义风格<br>
+          2. 全局壁纸适配升级，APP内置壁纸自动模糊20%显示，彻底解决界面白边问题<br>
+          3. 全系升级iOS液体玻璃质感UI，所有图标替换为SVG矢量图标，画质高清无失真<br>
+          4. 移除多余自适应选项，精简功能面板，降低操作干扰
+        </div>
+      </div>
+
+      <div class="log-section-card">
+        <div class="log-sec-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>四、问题修复</span>
+        </div>
+        <div class="log-item-text">
+          1. 修复九宫格及多宫格拼图点击无响应的故障<br>
+          2. 修复批量生成预览图后成品图不显示的问题<br>
+          3. 优化页面滑动逻辑，杜绝误触移位、右滑误退出APP的情况<br>
+          4. 优化贴膜机不透明度调节，支持手动输入精准数值设置参数<br>
+          5. 升级图包下载模式，新增单张图片png下载方式，不再仅支持ZIP压缩包下载
+        </div>
       </div>
 
       <div style="font-size:10px; color:var(--text-light); text-align:center; padding: 4px 0;">
@@ -2760,7 +3826,7 @@ async function confirmFolderRename() {
 ================================================================ */
 const DrizzleDB = {
   dbName: 'drizzle_permanent_store',
-  dbVersion: 5,
+  dbVersion: 6,
   db: null,
   async init() {
     return new Promise((resolve, reject) => {
@@ -2768,6 +3834,7 @@ const DrizzleDB = {
       req.onupgradeneeded = (e) => {
         const db = e.target.result;
         if (!db.objectStoreNames.contains('gallery_packages')) db.createObjectStore('gallery_packages', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('preview_packages')) db.createObjectStore('preview_packages', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('raw_repo')) db.createObjectStore('raw_repo', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('watermark_repo')) db.createObjectStore('watermark_repo', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('widget_assets')) db.createObjectStore('widget_assets', { keyPath: 'key' });
@@ -2939,6 +4006,33 @@ const DrizzleDB = {
     return new Promise((resolve, reject) => {
       const tx = this.db.transaction('gallery_packages', 'readonly');
       const req = tx.objectStore('gallery_packages').getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = (e) => reject(e);
+    });
+  },
+  async savePvPackage(pkg) {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('preview_packages', 'readwrite');
+      tx.objectStore('preview_packages').put(pkg);
+      tx.oncomplete = () => resolve();
+      tx.onerror = (e) => reject(e);
+    });
+  },
+  async deletePvPackage(id) {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('preview_packages', 'readwrite');
+      tx.objectStore('preview_packages').delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = (e) => reject(e);
+    });
+  },
+  async getAllPvPackages() {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('preview_packages', 'readonly');
+      const req = tx.objectStore('preview_packages').getAll();
       req.onsuccess = () => resolve(req.result || []);
       req.onerror = (e) => reject(e);
     });
@@ -3208,6 +4302,8 @@ function openApp(name) {
   if (name === 'notice') renderNoticeHistory();
   if (name === 'threshold') renderThresholdView();
   if (name === 'contacts') renderContactsView();
+  if (name === 'previewer') renderPreviewStage();
+  if (name === 'preview_gallery') { backToPvGalleryList(); renderPvGallery(); }
 }
 
 /* ================================================================
@@ -3731,7 +4827,7 @@ function triggerThresholdImgUpload() {
   document.getElementById('thresholdImageInput').click();
 }
 
-/* 选择任意大 MB 图片，异步直出 ObjectURL，0 秒卡顿 */
+/* 选择凭证图片，即选即刻在弹窗内上屏，删除实时生效 */
 function handleThresholdFileSelect(e) {
   const files = Array.from(e.target.files || []);
   if (files.length === 0) return;
@@ -3747,8 +4843,18 @@ function handleThresholdFileSelect(e) {
     });
   });
 
+  // 实时刷新弹窗内的多图宫格
   renderModalThumbsGrid();
   e.target.value = '';
+}
+
+function removeEditingImageAt(index) {
+  const removed = currentEditingImages.splice(index, 1)[0];
+  if (removed && removed.src && removed.src.startsWith('blob:')) {
+    try { URL.revokeObjectURL(removed.src); } catch (e) {}
+  }
+  // 实时刷新弹窗内的多图预览
+  renderModalThumbsGrid();
 }
 
 /* 核心修复：乐观秒级渲染 + 异步静默持久化，彻底杜绝卡顿与弹窗停滞 */
@@ -4244,7 +5350,7 @@ async function promptCreateWmFolder() {
   renderWmView();
 }
 
-/* 上传水印：不限制文件格式，所有格式均允许保存与预览 */
+/* 上传水印：实时立即上屏显示，无需退出刷新 */
 async function handleWmLibraryUpload(e) {
   const files = Array.from(e.target.files);
   if (files.length === 0) return;
@@ -4258,18 +5364,25 @@ async function handleWmLibraryUpload(e) {
       src: URL.createObjectURL(f)
     });
   }
-  try { await DrizzleDB.saveWmRepo(watermarkRoot); } catch (err) { console.error('水印保存失败:', err); }
+  // 立即刷新水印网格
   renderWmView();
   e.target.value = '';
+  DrizzleDB.saveWmRepo(watermarkRoot).catch(err => console.error('水印保存失败:', err));
 }
 
 async function deleteWmItem(id) {
   if (!confirm('确定删除这张水印吗？')) return;
   const arr = currentWmFolderNode.watermarks;
   const idx = arr.findIndex(w => w.id === id);
-  if (idx >= 0) arr.splice(idx, 1);
-  try { await DrizzleDB.saveWmRepo(watermarkRoot); } catch (err) { console.error('删除失败:', err); }
+  if (idx >= 0) {
+    const removed = arr.splice(idx, 1)[0];
+    if (removed && removed.src && removed.src.startsWith('blob:')) {
+      try { URL.revokeObjectURL(removed.src); } catch (e) {}
+    }
+  }
+  // 立即前台刷新，秒级消失
   renderWmView();
+  DrizzleDB.saveWmRepo(watermarkRoot).catch(err => console.error('删除失败:', err));
 }
 
 /* 从水印库跳到贴膜机 */
@@ -4322,7 +5435,15 @@ function renderWmPicker() {
         <img src="${wm.src}" alt="${wm.name}">
         <div class="wm-name">${wm.name}</div>`;
       cell.onclick = () => {
-        applyWatermarkFromSrc(wm.src, wm.name);
+        if (window._pickingWmTarget === 'previewer') {
+          applyPvWatermarkFromSrc(wm.src, wm.name);
+          window._pickingWmTarget = null;
+        } else if (window._pickingWmTarget === 'preview_frame') {
+          addPvFrameLayerFromSrc(wm.src, wm.name);
+          window._pickingWmTarget = null;
+        } else {
+          applyWatermarkFromSrc(wm.src, wm.name);
+        }
         closeWmPickerModal();
       };
       iGrid.appendChild(cell);
@@ -4425,19 +5546,42 @@ function setPreset(type) {
   blendModeSelect.value = 'overlay';
   const btnO = document.getElementById('btnPreOriginal');
   const btnC = document.getElementById('btnPreCustom');
+  const numInput = document.getElementById('opacityDirectNum');
   if (type === 'original') {
     opacityInput.value = 15;
-    opacityText.innerText = '15%';
+    if (numInput) numInput.value = 15;
     btnO.classList.add('active');
     btnC.classList.remove('active');
   } else {
     opacityInput.value = 20;
-    opacityText.innerText = '20%';
+    if (numInput) numInput.value = 20;
     btnC.classList.add('active');
     btnO.classList.remove('active');
   }
 }
-opacityInput.addEventListener('input', (e) => opacityText.innerText = `${e.target.value}%`);
+
+function syncOpacityFromInput(val) {
+  let v = parseInt(val, 10);
+  if (isNaN(v)) v = 15;
+  v = Math.max(1, Math.min(100, v));
+  opacityInput.value = v;
+  document.getElementById('opacityDirectNum').value = v;
+}
+
+opacityInput.addEventListener('input', (e) => {
+  const numInput = document.getElementById('opacityDirectNum');
+  if (numInput) numInput.value = e.target.value;
+});
+
+/* 贴膜机：单张逐张保存到相册 */
+async function downloadCurrentBatchIndividually() {
+  if (!currentProcessedBatch || currentProcessedBatch.length === 0) return;
+  for (let i = 0; i < currentProcessedBatch.length; i++) {
+    const item = currentProcessedBatch[i];
+    saveAs(item.resultBlob, item.name);
+    await new Promise(r => setTimeout(r, 200));
+  }
+}
 
 /* ================================================================
    开始贴膜
@@ -5144,7 +6288,7 @@ async function promptCreateFolder() {
   renderRepoView();
 }
 
-/* 导入原图：不限制任何文件格式，100% 完整原件直存 */
+/* 导入原图：实时秒级呈现在页面上，后台静默持久化 */
 async function handleUploadToCurrentFolder(e) {
   const files = Array.from(e.target.files);
   if (files.length === 0) return;
@@ -5159,9 +6303,11 @@ async function handleUploadToCurrentFolder(e) {
       src: URL.createObjectURL(f)
     });
   }
-  try { await DrizzleDB.saveRepo(rootFolder); } catch (err) { console.error('原图库保存失败:', err); }
+  // 核心：优先立即重绘视图，让用户瞬间看见新导入的照片
   renderRepoView();
   e.target.value = '';
+  // 异步在后台写入数据库
+  DrizzleDB.saveRepo(rootFolder).catch(err => console.error('原图库保存失败:', err));
 }
 
 function openRawRepoSelectorModal() {
@@ -5223,10 +6369,20 @@ function importAllFromCurrentModalFolder() {
     alert('当前文件夹没有图片！请点击进入包含图片的子文件夹。');
     return;
   }
-  modalCurrentFolderNode.images.forEach(img => {
-    selectedRawImages.push({ name: img.name, file: img.file || img.blob, src: img.src });
-  });
-  updateRawThumbDisplay();
+  if (window._pickingRepoTarget === 'previewer') {
+    modalCurrentFolderNode.images.forEach(img => {
+      pvBaseImages.push({ name: img.name, file: img.file || img.blob, blob: img.blob || img.file, src: img.src });
+    });
+    window._pickingRepoTarget = null;
+    updatePvBaseUI();
+    renderPreviewStage();
+    alert(`已成功从「${modalCurrentFolderNode.name}」导入 ${modalCurrentFolderNode.images.length} 张底图！`);
+  } else {
+    modalCurrentFolderNode.images.forEach(img => {
+      selectedRawImages.push({ name: img.name, file: img.file || img.blob, src: img.src });
+    });
+    updateRawThumbDisplay();
+  }
   closeRawRepoSelectorModal();
 }
 
@@ -5636,17 +6792,32 @@ function applyWallpaperStyle(bgUrl) {
   body.style.backgroundSize = 'cover';
   body.style.backgroundPosition = 'center';
   body.style.backgroundAttachment = 'fixed';
+  body.classList.add('has-custom-wallpaper');
 }
 
 function restoreDefaultWallpaper() {
   localStorage.removeItem('custom_wallpaper');
   const body = document.body;
   body.style.backgroundImage = '';
+  body.classList.remove('has-custom-wallpaper');
 }
 
 function loadCustomWallpaper() {
   const savedWp = localStorage.getItem('custom_wallpaper');
   if (savedWp) applyWallpaperStyle(savedWp);
+  const savedTheme = localStorage.getItem('drizzle_app_theme') || 'default';
+  switchAppTheme(savedTheme);
+}
+
+/* 全局主题切换：default(经典灰白) | blue(冰晶浅蓝) | pink(樱花柔粉) | dark(黑白极简) */
+function switchAppTheme(theme) {
+  document.body.setAttribute('data-theme', theme);
+  localStorage.setItem('drizzle_app_theme', theme);
+
+  ['default', 'blue', 'pink', 'dark'].forEach(t => {
+    const btn = document.getElementById(`themeBtn-${t}`);
+    if (btn) btn.classList.toggle('active', t === theme);
+  });
 }
 
 /* ============ 永久存储（持久化锁）============ */
@@ -5794,6 +6965,1587 @@ function handleImportDataBackup(e) {
 }
 
 /* ================================================================
+   导出弹窗与直接导出全部 PNG 逻辑（默认保存为无损 PNG 放置相册）
+================================================================ */
+let activeSaveCaller = 'watermarker'; // 'watermarker' | 'previewer'
+
+function openSaveChoiceModal(caller) {
+  activeSaveCaller = caller || 'watermarker';
+  document.getElementById('saveChoiceModal').classList.remove('hidden');
+}
+
+function closeSaveChoiceModal() {
+  document.getElementById('saveChoiceModal').classList.add('hidden');
+}
+
+function handleChoiceExportZip() {
+  closeSaveChoiceModal();
+  if (activeSaveCaller === 'watermarker') {
+    openExportZipModal();
+  } else if (activeSaveCaller === 'previewer') {
+    downloadPvBatchZip();
+  }
+}
+
+async function handleDirectExportAllPng() {
+  closeSaveChoiceModal();
+  if (activeSaveCaller === 'watermarker') {
+    if (!currentProcessedBatch || currentProcessedBatch.length === 0) return;
+    for (let i = 0; i < currentProcessedBatch.length; i++) {
+      const item = currentProcessedBatch[i];
+      const safeName = item.name.replace(/\.[^.]+$/, '') + '.png';
+      saveAs(item.resultBlob, safeName);
+      await new Promise(r => setTimeout(r, 220));
+    }
+    alert(`已一次性导出 ${currentProcessedBatch.length} 张无损 PNG 到相册！`);
+  } else if (activeSaveCaller === 'previewer') {
+    if (!pvProcessedBatch || pvProcessedBatch.length === 0) return;
+    for (let i = 0; i < pvProcessedBatch.length; i++) {
+      const item = pvProcessedBatch[i];
+      const safeName = item.name.replace(/\.[^.]+$/, '') + '.png';
+      saveAs(item.blob, safeName);
+      await new Promise(r => setTimeout(r, 220));
+    }
+    alert(`已一次性导出 ${pvProcessedBatch.length} 张预览图 PNG 到相册！`);
+  }
+}
+
+/* ================================================================
+   全新「预览机」核心引擎（多图层排序、自定义比例、防误触锁、单张精修、图库归档）
+================================================================ */
+let pvFrameLayers = []; // [{ id, img, name, opacity }] 多图层预览框
+let pvBaseImages = [];  // [{ file, blob, src, name }]
+let pvRatio = '1-1';    // '1-1' | '3-4' | '9-16' | 'auto' | 'custom'
+let pvCustomRatioVal = { w: 1080, h: 1080 };
+let pvBaseOffsetX = 0, pvBaseOffsetY = 0;
+let pvBaseScale = 1.0;
+let pvProcessedBatch = [];
+let pvIsStageLocked = true; // 默认开启画布锁定，防止用户滑动页面时误触拔动底图
+
+let pvDetectedHoleRect = null;
+let pvIsAutoHoleEnabled = true;
+let pvIsWmOverlayEnabled = false;
+
+/* 预览图库状态 */
+let previewPackages = [];
+let activePvDetailPkg = null;
+let isPvGallerySelectMode = false;
+let pvGallerySelectedPkgIds = new Set();
+
+/* 锁定/解锁切换 */
+function togglePvStageLock() {
+  pvIsStageLocked = !pvIsStageLocked;
+  const pill = document.getElementById('pvStageLockPill');
+  const txt = document.getElementById('pvStageLockText');
+  const iconLocked = document.getElementById('lockIconLocked');
+  const iconUnlocked = document.getElementById('lockIconUnlocked');
+
+  if (pvIsStageLocked) {
+    if (pill) pill.classList.remove('unlocked');
+    if (txt) txt.innerText = '已锁定';
+    if (iconLocked) iconLocked.classList.remove('hidden');
+    if (iconUnlocked) iconUnlocked.classList.add('hidden');
+  } else {
+    if (pill) pill.classList.add('unlocked');
+    if (txt) txt.innerText = '可移动';
+    if (iconLocked) iconLocked.classList.add('hidden');
+    if (iconUnlocked) iconUnlocked.classList.remove('hidden');
+  }
+}
+
+/* 预览框来源选择（本地 / 水印库） */
+function openPvFrameChoiceModal() {
+  document.getElementById('pvFrameChoiceModal').classList.remove('hidden');
+}
+function closePvFrameChoiceModal() {
+  document.getElementById('pvFrameChoiceModal').classList.add('hidden');
+}
+function choosePvLocalFrame() {
+  closePvFrameChoiceModal();
+  document.getElementById('pvFrameInput').click();
+}
+function choosePvFrameFromWmLib() {
+  closePvFrameChoiceModal();
+  wmPickerCurrentNode = watermarkRoot;
+  renderWmPicker();
+  window._pickingWmTarget = 'preview_frame';
+  document.getElementById('wmPickerModal').classList.remove('hidden');
+}
+
+function openPvSourceChoiceModal() {
+  document.getElementById('pvSourceChoiceModal').classList.remove('hidden');
+}
+function closePvSourceChoiceModal() {
+  document.getElementById('pvSourceChoiceModal').classList.add('hidden');
+}
+function triggerPvBaseLocal() {
+  closePvSourceChoiceModal();
+  document.getElementById('pvBaseLocalInput').click();
+}
+function triggerPvBaseFromGallery() {
+  closePvSourceChoiceModal();
+  if (galleryPackages.length === 0) {
+    alert('图库目前暂无图包，请先从相册选择或去贴膜机生成图包！');
+    return;
+  }
+  const latestPkg = galleryPackages[0];
+  latestPkg.items.forEach(it => {
+    pvBaseImages.push({
+      name: it.name,
+      blob: it.resultBlob,
+      src: it.resultUrl || URL.createObjectURL(it.resultBlob)
+    });
+  });
+  pvFirstBaseImgObj = null;
+  updatePvBaseUI();
+  renderPreviewStage();
+  alert(`已载入图包「${latestPkg.author}」中的 ${latestPkg.items.length} 张图片！`);
+}
+
+/* 触发从原po原图库选择底图 */
+function triggerPvBaseFromRepo() {
+  closePvSourceChoiceModal();
+  openPvRepoSelectorModal();
+}
+
+/* 本地相册多选底图导入 */
+function handlePvBaseFiles(e) {
+  const files = Array.from(e.target.files || []);
+  if (files.length === 0) return;
+  const imgFiles = files.filter(f => f.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp|avif)$/i.test(f.name));
+  if (imgFiles.length === 0) { alert('未检测到有效图片文件，请重新选择！'); return; }
+
+  imgFiles.forEach(f => {
+    pvBaseImages.push({ name: f.name, file: f, blob: f, src: URL.createObjectURL(f) });
+  });
+  pvFirstBaseImgObj = null;
+  updatePvBaseUI();
+  renderPreviewStage();
+  e.target.value = '';
+}
+
+/* 刷新预览机底图列表与缩略图抽屉 */
+function updatePvBaseUI() {
+  const emptyBox = document.getElementById('pvBaseEmpty');
+  const filledBox = document.getElementById('pvBaseFilled');
+  const drawer = document.getElementById('pvSourceImagesDrawer');
+  const list = document.getElementById('pvSourceThumbList');
+  const countLabel = document.getElementById('pvBaseCountLabel');
+  const totalCount = document.getElementById('pvSourceTotalCount');
+
+  if (pvBaseImages.length === 0) {
+    if (emptyBox) emptyBox.classList.remove('hidden');
+    if (filledBox) filledBox.classList.add('hidden');
+    if (drawer) drawer.classList.add('hidden');
+    return;
+  }
+
+  if (emptyBox) emptyBox.classList.add('hidden');
+  if (filledBox) filledBox.classList.remove('hidden');
+  if (countLabel) countLabel.innerText = `已选 ${pvBaseImages.length} 张底图`;
+  if (totalCount) totalCount.innerText = pvBaseImages.length;
+
+  if (drawer) drawer.classList.remove('hidden');
+  if (list) {
+    list.innerHTML = '';
+    pvBaseImages.forEach((item, idx) => {
+      const card = document.createElement('div');
+      card.className = 'hthumb';
+      card.innerHTML = `
+        <img src="${item.src}">
+        <button class="rm" onclick="removePvBaseImageAt(${idx})">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>`;
+      list.appendChild(card);
+    });
+  }
+}
+
+function removePvBaseImageAt(index) {
+  const removed = pvBaseImages.splice(index, 1)[0];
+  if (removed && removed.src && removed.src.startsWith('blob:')) {
+    try { URL.revokeObjectURL(removed.src); } catch (e) {}
+  }
+  pvFirstBaseImgObj = null;
+  updatePvBaseUI();
+  renderPreviewStage();
+}
+
+function resetPvBaseImages() {
+  pvBaseImages.forEach(item => {
+    if (item && item.src && item.src.startsWith('blob:')) {
+      try { URL.revokeObjectURL(item.src); } catch (e) {}
+    }
+  });
+  pvBaseImages = [];
+  pvFirstBaseImgObj = null;
+  updatePvBaseUI();
+  renderPreviewStage();
+}
+
+/* 预览机专属原po原图库选择弹窗逻辑 */
+let pvModalCurrentFolderNode = rootFolder;
+let pvModalRepoPathStack = [rootFolder];
+
+function openPvRepoSelectorModal() {
+  pvModalCurrentFolderNode = rootFolder;
+  pvModalRepoPathStack = [rootFolder];
+  renderPvModalRepo();
+  document.getElementById('pvRepoSelectorModal').classList.remove('hidden');
+}
+
+function closePvRepoSelectorModal() {
+  document.getElementById('pvRepoSelectorModal').classList.add('hidden');
+}
+
+function renderPvModalRepo() {
+  const bc = document.getElementById('pvModalRepoBreadcrumbs');
+  if (bc) {
+    let crumbsHtml = '';
+    pvModalRepoPathStack.forEach((node, index) => {
+      const isLast = index === pvModalRepoPathStack.length - 1;
+      if (isLast) {
+        crumbsHtml += `<span class="c active">${node.name}</span>`;
+      } else {
+        crumbsHtml += `<span class="c" onclick="popPvModalRepoPathToIndex(${index})">${node.name}</span><span class="sep">/</span>`;
+      }
+    });
+    bc.innerHTML = crumbsHtml;
+  }
+
+  const fGrid = document.getElementById('pvModalFolderGrid');
+  if (fGrid) {
+    fGrid.innerHTML = '';
+    pvModalCurrentFolderNode.subFolders.forEach(sub => {
+      const cnt = countRepoTreeImages(sub);
+      const item = document.createElement('div');
+      item.className = 'folder-card';
+      item.innerHTML = `
+        <svg class="fi" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+        <div style="min-width:0;">
+          <div class="fn">${sub.name}</div>
+          <div class="fc">含 ${cnt} 张原图</div>
+        </div>`;
+      item.onclick = () => pvModalNavFolder(sub);
+      fGrid.appendChild(item);
+    });
+  }
+
+  const iGrid = document.getElementById('pvModalImageGrid');
+  if (iGrid) {
+    iGrid.innerHTML = '';
+    pvModalCurrentFolderNode.images.forEach(img => {
+      if (!img.src && (img.blob || img.file)) {
+        img.src = URL.createObjectURL(img.blob || img.file);
+      }
+      const sizeStr = formatFileSize(img.size || (img.blob ? img.blob.size : (img.file ? img.file.size : 0)));
+      const box = document.createElement('div');
+      box.className = 'img-cell';
+      box.innerHTML = `
+        <img src="${img.src}" loading="lazy" decoding="async">
+        ${sizeStr ? `<span class="img-size-tag">${sizeStr}</span>` : ''}
+      `;
+      iGrid.appendChild(box);
+    });
+  }
+
+  const summary = document.getElementById('pvModalSelectedSummary');
+  if (summary) {
+    summary.innerText = `当前文件夹共 ${pvModalCurrentFolderNode.images.length} 张原图`;
+  }
+}
+
+function pvModalNavFolder(node) {
+  pvModalRepoPathStack.push(node);
+  pvModalCurrentFolderNode = node;
+  renderPvModalRepo();
+}
+
+function popPvModalRepoPathToIndex(index) {
+  pvModalRepoPathStack = pvModalRepoPathStack.slice(0, index + 1);
+  pvModalCurrentFolderNode = pvModalRepoPathStack[pvModalRepoPathStack.length - 1];
+  renderPvModalRepo();
+}
+
+function importAllFromCurrentPvModalFolder() {
+  if (pvModalCurrentFolderNode.images.length === 0) {
+    alert('当前文件夹没有图片！请点击进入包含图片的子文件夹。');
+    return;
+  }
+  pvModalCurrentFolderNode.images.forEach(img => {
+    pvBaseImages.push({
+      name: img.name,
+      file: img.file || img.blob,
+      blob: img.blob || img.file,
+      src: img.src || (img.blob ? URL.createObjectURL(img.blob) : '')
+    });
+  });
+  pvFirstBaseImgObj = null;
+  updatePvBaseUI();
+  renderPreviewStage();
+  closePvRepoSelectorModal();
+  alert(`已成功从「${pvModalCurrentFolderNode.name}」导入 ${pvModalCurrentFolderNode.images.length} 张底图！`);
+}
+
+function handlePvFrameFile(e) {
+  const files = Array.from(e.target.files || []);
+  if (files.length === 0) return;
+
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      addPvFrameLayerFromSrc(ev.target.result, file.name);
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+let activePvFrameLayerIndex = 0; // 当前选中的预览框图层索引
+let pvControlTarget = 'base';    // 'base' 控制底图 | 'frame' 控制选中的预览框
+
+function switchPvControlTarget(target) {
+  pvControlTarget = target;
+  const btnB = document.getElementById('btnTargetBase');
+  const btnF = document.getElementById('btnTargetFrame');
+  const secB = document.getElementById('pvBaseControlSection');
+  const secF = document.getElementById('pvFrameControlSection');
+
+  if (btnB) btnB.classList.toggle('active', target === 'base');
+  if (btnF) btnF.classList.toggle('active', target === 'frame');
+  if (secB) secB.classList.toggle('hidden', target !== 'base');
+  if (secF) secF.classList.toggle('hidden', target !== 'frame');
+
+  syncActiveFrameControls();
+}
+
+function selectActiveFrameLayer(idx) {
+  activePvFrameLayerIndex = idx;
+  switchPvControlTarget('frame');
+  updatePvFrameLayersUI();
+  syncActiveFrameControls();
+  renderPreviewStage();
+}
+
+function syncActiveFrameControls() {
+  const cur = pvFrameLayers[activePvFrameLayerIndex];
+  if (!cur) return;
+  const sInput = document.getElementById('pvActiveFrameScaleInput');
+  const sNum = document.getElementById('pvActiveFrameScaleDirectNum');
+  const rInput = document.getElementById('pvActiveFrameRotateInput');
+  const rNum = document.getElementById('pvActiveFrameRotateDirectNum');
+  const oxInput = document.getElementById('pvActiveFrameOffsetXInput');
+  const oyInput = document.getElementById('pvActiveFrameOffsetYInput');
+
+  const scalePct = Math.round((cur.scale || 1.0) * 100);
+  if (sInput) sInput.value = scalePct;
+  if (sNum) sNum.value = scalePct;
+
+  const rotVal = cur.rotate || 0;
+  if (rInput) rInput.value = rotVal;
+  if (rNum) rNum.value = rotVal;
+
+  if (oxInput) oxInput.value = cur.offsetX || 0;
+  if (oyInput) oyInput.value = cur.offsetY || 0;
+}
+
+function handlePvActiveFrameScaleChange(val) {
+  const cur = pvFrameLayers[activePvFrameLayerIndex];
+  if (!cur) return;
+  cur.scale = parseFloat(val) / 100;
+  const sNum = document.getElementById('pvActiveFrameScaleDirectNum');
+  if (sNum) sNum.value = val;
+  renderPreviewStage();
+}
+
+function syncPvActiveFrameScaleFromInput(val) {
+  const cur = pvFrameLayers[activePvFrameLayerIndex];
+  if (!cur) return;
+  let v = parseInt(val, 10);
+  if (isNaN(v)) v = 100;
+  v = Math.max(10, Math.min(300, v));
+  cur.scale = v / 100;
+  document.getElementById('pvActiveFrameScaleInput').value = v;
+  document.getElementById('pvActiveFrameScaleDirectNum').value = v;
+  renderPreviewStage();
+}
+
+function handlePvActiveFrameRotateChange(val) {
+  const cur = pvFrameLayers[activePvFrameLayerIndex];
+  if (!cur) return;
+  cur.rotate = parseInt(val, 10) || 0;
+  const rNum = document.getElementById('pvActiveFrameRotateDirectNum');
+  if (rNum) rNum.value = cur.rotate;
+  renderPreviewStage();
+}
+
+function syncPvActiveFrameRotateFromInput(val) {
+  const cur = pvFrameLayers[activePvFrameLayerIndex];
+  if (!cur) return;
+  let v = parseInt(val, 10);
+  if (isNaN(v)) v = 0;
+  v = Math.max(-180, Math.min(180, v));
+  cur.rotate = v;
+  const rSlider = document.getElementById('pvActiveFrameRotateInput');
+  const rNum = document.getElementById('pvActiveFrameRotateDirectNum');
+  if (rSlider) rSlider.value = v;
+  if (rNum) rNum.value = v;
+  renderPreviewStage();
+}
+
+function syncPvActiveFrameOffsetFromInput() {
+  const cur = pvFrameLayers[activePvFrameLayerIndex];
+  if (!cur) return;
+  const ox = parseInt(document.getElementById('pvActiveFrameOffsetXInput').value, 10) || 0;
+  const oy = parseInt(document.getElementById('pvActiveFrameOffsetYInput').value, 10) || 0;
+  cur.offsetX = ox;
+  cur.offsetY = oy;
+  renderPreviewStage();
+}
+
+function resetPvActiveFrameTransform() {
+  const cur = pvFrameLayers[activePvFrameLayerIndex];
+  if (!cur) return;
+  cur.scale = 1.0;
+  cur.rotate = 0;
+  cur.offsetX = 0;
+  cur.offsetY = 0;
+  syncActiveFrameControls();
+  renderPreviewStage();
+}
+
+function nudgePvActiveFrame(dx, dy) {
+  const cur = pvFrameLayers[activePvFrameLayerIndex];
+  if (!cur) return;
+  cur.offsetX = (cur.offsetX || 0) + dx;
+  cur.offsetY = (cur.offsetY || 0) + dy;
+  const oxInput = document.getElementById('pvActiveFrameOffsetXInput');
+  const oyInput = document.getElementById('pvActiveFrameOffsetYInput');
+  if (oxInput) oxInput.value = cur.offsetX;
+  if (oyInput) oyInput.value = cur.offsetY;
+  renderPreviewStage();
+}
+
+function addPvFrameLayerFromSrc(src, name) {
+  const img = new Image();
+  img.onload = () => {
+    pvFrameLayers.push({
+      id: `layer_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      img: img,
+      src: src,
+      name: name || '预览框',
+      opacity: 100,
+      scale: 1.0,
+      offsetX: 0,
+      offsetY: 0,
+      rotate: 0
+    });
+    activePvFrameLayerIndex = pvFrameLayers.length - 1;
+    updatePvFrameLayersUI();
+    if (pvIsAutoHoleEnabled) {
+      detectTransparentHoleFromFrame();
+    }
+    renderPreviewStage();
+  };
+  img.src = src;
+}
+
+function updatePvFrameLayersUI() {
+  const empty = document.getElementById('pvFrameEmpty');
+  const filled = document.getElementById('pvFrameFilled');
+  const card = document.getElementById('pvFrameLayersCard');
+  const list = document.getElementById('pvFrameLayerList');
+  const nameTag = document.getElementById('pvFrameNameTag');
+  const previewImg = document.getElementById('pvFramePreviewImg');
+  const dropdown = document.getElementById('pvActiveFrameDropdown');
+
+  if (pvFrameLayers.length === 0) {
+    if (empty) empty.classList.remove('hidden');
+    if (filled) filled.classList.add('hidden');
+    if (card) card.classList.add('hidden');
+    if (dropdown) dropdown.innerHTML = '<option value="0">暂无水印框</option>';
+    return;
+  }
+
+  // 同步更新红圈处的下拉选择框
+  if (dropdown) {
+    dropdown.innerHTML = '';
+    pvFrameLayers.forEach((layer, idx) => {
+      const opt = document.createElement('option');
+      opt.value = idx;
+      opt.innerText = `图层 ${idx + 1} · ${layer.name}`;
+      if (idx === activePvFrameLayerIndex) opt.selected = true;
+      dropdown.appendChild(opt);
+    });
+  }
+
+  if (empty) empty.classList.add('hidden');
+  if (filled) filled.classList.remove('hidden');
+  if (nameTag) nameTag.innerText = `已载入 ${pvFrameLayers.length} 个预览框/图层`;
+  if (previewImg) previewImg.src = pvFrameLayers[0].src;
+  if (card) card.classList.remove('hidden');
+
+  if (list) {
+    list.innerHTML = '';
+    pvFrameLayers.forEach((layer, idx) => {
+      const isCur = idx === activePvFrameLayerIndex;
+      const row = document.createElement('div');
+      row.className = `layer-item-row ${isCur ? 'active' : ''}`;
+      row.onclick = () => selectActiveFrameLayer(idx);
+      row.innerHTML = `
+        <div style="display:flex; align-items:center; gap:8px; min-width:0; cursor:pointer;">
+          <img src="${layer.src}" class="layer-item-preview">
+          <div style="min-width:0;">
+            <div style="font-size:11px; font-weight:700; color:var(--text-main); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${layer.name}</div>
+            <div style="font-size:9.5px; color:var(--text-muted);">图层 ${idx + 1} · 缩放: ${Math.round((layer.scale||1)*100)}% · 旋转: ${layer.rotate||0}°</div>
+          </div>
+        </div>
+        <div class="layer-order-actions" onclick="event.stopPropagation()">
+          <button type="button" class="icon-tiny-btn" onclick="movePvLayer(${idx}, -1)" title="上移图层">▲</button>
+          <button type="button" class="icon-tiny-btn" onclick="movePvLayer(${idx}, 1)" title="下移图层">▼</button>
+          <button type="button" class="icon-tiny-btn" style="color:#ef4444;" onclick="removePvLayer(${idx})" title="删除图层">✕</button>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+  }
+}
+
+function movePvLayer(index, direction) {
+  const targetIndex = index + direction;
+  if (targetIndex < 0 || targetIndex >= pvFrameLayers.length) return;
+  const temp = pvFrameLayers[index];
+  pvFrameLayers[index] = pvFrameLayers[targetIndex];
+  pvFrameLayers[targetIndex] = temp;
+  activePvFrameLayerIndex = targetIndex;
+  updatePvFrameLayersUI();
+  if (pvIsAutoHoleEnabled) detectTransparentHoleFromFrame();
+  renderPreviewStage();
+}
+
+function removePvLayer(index) {
+  pvFrameLayers.splice(index, 1);
+  if (activePvFrameLayerIndex >= pvFrameLayers.length) {
+    activePvFrameLayerIndex = Math.max(0, pvFrameLayers.length - 1);
+  }
+  updatePvFrameLayersUI();
+  if (pvIsAutoHoleEnabled) detectTransparentHoleFromFrame();
+  renderPreviewStage();
+}
+
+function setPreviewRatio(ratio) {
+  pvRatio = ratio;
+  ['1-1', '3-4', '9-16', 'custom'].forEach(r => {
+    const btn = document.getElementById(`btnRatio${r.replace('-', '')}`);
+    if (btn) btn.classList.toggle('active', r === ratio);
+  });
+  const customRow = document.getElementById('pvCustomRatioRow');
+  if (customRow) customRow.classList.toggle('hidden', ratio !== 'custom');
+
+  const stageBox = document.getElementById('pvStageBox');
+  stageBox.className = `pv-stage-box ratio-${ratio}`;
+  if (ratio === 'custom') applyCustomRatio();
+  else renderPreviewStage();
+}
+
+function handleDropdownSelectFrameLayer(val) {
+  selectActiveFrameLayer(parseInt(val, 10) || 0);
+}
+
+function applyCustomRatio() {
+  const w = parseInt(document.getElementById('pvCustomW').value, 10) || 1080;
+  const h = parseInt(document.getElementById('pvCustomH').value, 10) || 1080;
+  pvCustomRatioVal = { w, h };
+  const stageBox = document.getElementById('pvStageBox');
+  if (stageBox) stageBox.style.aspectRatio = `${w} / ${h}`;
+  renderPreviewStage();
+}
+
+function syncPvOpacityFromSlider(val) {
+  const numInput = document.getElementById('pvOpacityDirectNum');
+  if (numInput) numInput.value = val;
+  renderPreviewStage();
+}
+
+function syncPvOpacityFromInput(val) {
+  let v = parseInt(val, 10);
+  if (isNaN(v)) v = 100;
+  v = Math.max(1, Math.min(100, v));
+  document.getElementById('pvOpacityInput').value = v;
+  document.getElementById('pvOpacityDirectNum').value = v;
+  renderPreviewStage();
+}
+
+function handlePvBaseScaleChange(val) {
+  pvBaseScale = parseFloat(val) / 100;
+  const txt = document.getElementById('pvBaseScaleText');
+  if (txt) txt.innerText = `${val}%`;
+  renderPreviewStage();
+}
+
+function nudgePvBase(dx, dy) {
+  pvBaseOffsetX += dx;
+  pvBaseOffsetY += dy;
+  renderPreviewStage();
+}
+
+function togglePvAutoHoleDetect(enabled) {
+  pvIsAutoHoleEnabled = enabled;
+  if (enabled && pvFrameImg) {
+    detectTransparentHoleFromFrame();
+  }
+  renderPreviewStage();
+}
+
+let pvWatermarkImg = null;
+let pvWatermarkName = '';
+
+function togglePvWatermarkOverlay(enabled) {
+  pvIsWmOverlayEnabled = enabled;
+  const box = document.getElementById('pvWmOverlaySettingsBox');
+  if (box) box.classList.toggle('hidden', !enabled);
+  // 如果默认没有专属水印但主贴膜机有载入水印，则默认继承使用
+  if (enabled && !pvWatermarkImg && watermarkImg) {
+    pvWatermarkImg = watermarkImg;
+    pvWatermarkName = watermarkSourceName || '当前贴膜水印';
+    updatePvWmUI();
+  }
+  renderPreviewStage();
+}
+
+function openPvWmChoice() {
+  document.getElementById('pvWmChoiceModal').classList.remove('hidden');
+}
+function closePvWmChoice() {
+  document.getElementById('pvWmChoiceModal').classList.add('hidden');
+}
+function choosePvLocalWm() {
+  closePvWmChoice();
+  document.getElementById('pvWmLocalInput').click();
+}
+function choosePvFromWmLib() {
+  closePvWmChoice();
+  // 复用水印库选择器，选择后设置给预览机
+  wmPickerCurrentNode = watermarkRoot;
+  renderWmPicker();
+  // 临时记录选用水印的目标为预览机
+  window._pickingWmTarget = 'previewer';
+  document.getElementById('wmPickerModal').classList.remove('hidden');
+}
+
+function handlePvWmFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    applyPvWatermarkFromSrc(ev.target.result, file.name);
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function applyPvWatermarkFromSrc(src, name) {
+  const img = new Image();
+  img.onload = () => {
+    pvWatermarkImg = img;
+    pvWatermarkName = name || '已选水印';
+    updatePvWmUI();
+    renderPreviewStage();
+  };
+  img.src = src;
+}
+
+function updatePvWmUI() {
+  const empty = document.getElementById('pvWmEmptyBox');
+  const filled = document.getElementById('pvWmFilledBox');
+  const preview = document.getElementById('pvWmLoadedPreview');
+  const nameLabel = document.getElementById('pvWmNameLabel');
+
+  if (pvWatermarkImg) {
+    if (empty) empty.classList.add('hidden');
+    if (filled) filled.classList.remove('hidden');
+    if (preview) preview.src = pvWatermarkImg.src;
+    if (nameLabel) nameLabel.innerText = pvWatermarkName || '已载入水印';
+  } else {
+    if (empty) empty.classList.remove('hidden');
+    if (filled) filled.classList.add('hidden');
+  }
+}
+
+function syncPvWmOpacityFromSlider(val) {
+  document.getElementById('pvWmOpacityDirectNum').value = val;
+  renderPreviewStage();
+}
+
+function syncPvWmOpacityFromInput(val) {
+  let v = parseInt(val, 10);
+  if (isNaN(v)) v = 15;
+  v = Math.max(1, Math.min(100, v));
+  document.getElementById('pvWmOpacityInput').value = v;
+  document.getElementById('pvWmOpacityDirectNum').value = v;
+  renderPreviewStage();
+}
+
+/* 逐像素扫描预览框的 Alpha 透明度，自动探测透明镂空孔 */
+function detectTransparentHoleFromFrame() {
+  if (pvFrameLayers.length === 0) return;
+  const mainFrame = pvFrameLayers[0].img;
+  if (!mainFrame) return;
+
+  const scanW = 320, scanH = 320;
+  const c = document.createElement('canvas');
+  c.width = scanW; c.height = scanH;
+  const ctx = c.getContext('2d');
+  ctx.drawImage(mainFrame, 0, 0, scanW, scanH);
+
+  const imgData = ctx.getImageData(0, 0, scanW, scanH).data;
+  let minX = scanW, minY = scanH, maxX = 0, maxY = 0;
+  let transparentPixelCount = 0;
+
+  for (let y = 0; y < scanH; y++) {
+    for (let x = 0; x < scanW; x++) {
+      const idx = (y * scanW + x) * 4;
+      const alpha = imgData[idx + 3];
+      if (alpha < 35) {
+        transparentPixelCount++;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+
+  if (transparentPixelCount > 400 && maxX > minX && maxY > minY) {
+    pvDetectedHoleRect = {
+      x: minX / scanW,
+      y: minY / scanH,
+      width: (maxX - minX) / scanW,
+      height: (maxY - minY) / scanH
+    };
+  } else {
+    pvDetectedHoleRect = null;
+  }
+}
+
+let pvFirstBaseImgObj = null;
+
+async function renderPreviewStage() {
+  const canvas = document.getElementById('pvStageCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  let W = 1080, H = 1080;
+  if (pvRatio === '3-4') { W = 1080; H = 1440; }
+  else if (pvRatio === '9-16') { W = 1080; H = 1920; }
+  else if (pvRatio === 'auto' && pvBaseImages.length > 0) {
+    if (!pvFirstBaseImgObj && pvBaseImages[0]) {
+      pvFirstBaseImgObj = await loadImage(pvBaseImages[0].src);
+    }
+    if (pvFirstBaseImgObj) {
+      W = pvFirstBaseImgObj.naturalWidth || 1080;
+      H = pvFirstBaseImgObj.naturalHeight || 1080;
+    }
+  }
+
+  canvas.width = W;
+  canvas.height = H;
+  ctx.clearRect(0, 0, W, H);
+
+  // 1. 底图绘制
+  if (pvBaseImages.length > 0) {
+    if (!pvFirstBaseImgObj) {
+      pvFirstBaseImgObj = await loadImage(pvBaseImages[0].src);
+    }
+    if (pvFirstBaseImgObj) {
+      ctx.save();
+      let bx = 0, by = 0, bw = W, bh = H;
+
+      if (pvIsAutoHoleEnabled && pvDetectedHoleRect) {
+        const holeX = pvDetectedHoleRect.x * W;
+        const holeY = pvDetectedHoleRect.y * H;
+        const holeW = pvDetectedHoleRect.width * W;
+        const holeH = pvDetectedHoleRect.height * H;
+
+        const imgRatio = pvFirstBaseImgObj.naturalWidth / pvFirstBaseImgObj.naturalHeight;
+        const holeRatio = holeW / holeH;
+
+        if (imgRatio > holeRatio) {
+          bh = holeH * pvBaseScale;
+          bw = bh * imgRatio;
+        } else {
+          bw = holeW * pvBaseScale;
+          bh = bw / imgRatio;
+        }
+
+        bx = holeX + (holeW - bw) / 2 + pvBaseOffsetX * (W / 320);
+        by = holeY + (holeH - bh) / 2 + pvBaseOffsetY * (H / 320);
+      } else {
+        bw = W * pvBaseScale;
+        bh = (pvFirstBaseImgObj.height / pvFirstBaseImgObj.width) * bw;
+        bx = (W - bw) / 2 + pvBaseOffsetX * (W / 320);
+        by = (H - bh) / 2 + pvBaseOffsetY * (H / 320);
+      }
+
+      ctx.drawImage(pvFirstBaseImgObj, bx, by, bw, bh);
+
+ // 贴膜水印叠加（支持 AI 人脸擦除与覆盖模式）
+      const activeWm = pvWatermarkImg || watermarkImg;
+      if (pvIsWmOverlayEnabled && activeWm) {
+        const wmOp = parseFloat(document.getElementById('pvWmOpacityInput')?.value || 15) / 100;
+        const enableFace = document.getElementById('pvWmFaceDetectCheck')?.checked;
+
+        // 生成水印临时图层
+        const wmLayerCanvas = document.createElement('canvas');
+        wmLayerCanvas.width = Math.round(bw);
+        wmLayerCanvas.height = Math.round(bh);
+        const wctx = wmLayerCanvas.getContext('2d');
+        wctx.drawImage(activeWm, 0, 0, bw, bh);
+
+        // 如果开启了自动擦脸
+        if (enableFace && faceModel) {
+          try {
+            const maxDetectDim = 640;
+            const scale = Math.min(1.0, maxDetectDim / Math.max(bw, bh));
+            const dCanvas = document.createElement('canvas');
+            dCanvas.width = Math.round(bw * scale);
+            dCanvas.height = Math.round(bh * scale);
+            dCanvas.getContext('2d').drawImage(pvFirstBaseImgObj, 0, 0, dCanvas.width, dCanvas.height);
+            const faces = await faceModel.estimateFaces(dCanvas, false);
+
+            if (faces && faces.length > 0) {
+              wctx.save();
+              wctx.globalCompositeOperation = 'destination-out';
+              faces.forEach(f => {
+                const fw = (f.bottomRight[0] - f.topLeft[0]) / scale;
+                const fh = (f.bottomRight[1] - f.topLeft[1]) / scale;
+                const cx = (f.topLeft[0] / scale) + fw / 2;
+                const cy = (f.topLeft[1] / scale) + fh / 2;
+                const r = (Math.max(fw, fh) / 2) * 1.45;
+                const g = wctx.createRadialGradient(cx, cy, r * 0.25, cx, cy, r);
+                g.addColorStop(0, 'rgba(0,0,0,1)');
+                g.addColorStop(0.85, 'rgba(0,0,0,0.85)');
+                g.addColorStop(1, 'rgba(0,0,0,0)');
+                wctx.fillStyle = g;
+                wctx.beginPath();
+                wctx.arc(cx, cy, r, 0, Math.PI * 2);
+                wctx.fill();
+              });
+              wctx.restore();
+            }
+          } catch (e) {}
+        }
+
+        ctx.save();
+        ctx.globalAlpha = wmOp;
+        ctx.globalCompositeOperation = 'overlay';
+        ctx.drawImage(wmLayerCanvas, bx, by, bw, bh);
+        ctx.restore();
+      }
+
+      ctx.restore();
+    }
+  } else {
+    ctx.fillStyle = '#CBD5E1';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // 2. 绘制多层预览框/条（各自独立应用位移、缩放与旋转）
+  if (pvFrameLayers.length > 0) {
+    const globalOp = parseFloat(document.getElementById('pvOpacityInput')?.value || 100) / 100;
+    pvFrameLayers.forEach(layer => {
+      if (layer.img) {
+        ctx.save();
+        ctx.globalAlpha = (layer.opacity / 100) * globalOp;
+        ctx.globalCompositeOperation = 'source-over';
+
+        const scale = layer.scale || 1.0;
+        const ox = (layer.offsetX || 0) * (W / 320);
+        const oy = (layer.offsetY || 0) * (H / 320);
+        const rot = ((layer.rotate || 0) * Math.PI) / 180;
+
+        ctx.translate(W / 2 + ox, H / 2 + oy);
+        if (rot !== 0) ctx.rotate(rot);
+        ctx.scale(scale, scale);
+        ctx.drawImage(layer.img, -W / 2, -H / 2, W, H);
+
+        ctx.restore();
+      }
+    });
+  }
+
+  // 3. 蓝色虚线高亮识别框
+  if (pvIsAutoHoleEnabled && pvDetectedHoleRect) {
+    ctx.save();
+    const hx = pvDetectedHoleRect.x * W;
+    const hy = pvDetectedHoleRect.y * H;
+    const hw = pvDetectedHoleRect.width * W;
+    const hh = pvDetectedHoleRect.height * H;
+
+    ctx.strokeStyle = '#38BDF8';
+    ctx.lineWidth = Math.max(3, W * 0.005);
+    ctx.setLineDash([12, 8]);
+    ctx.strokeRect(hx, hy, hw, hh);
+
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.9)';
+    ctx.fillRect(hx + 6, hy + 6, 140, 26);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.fillText('已识别透明孔', hx + 14, hy + 24);
+    ctx.restore();
+  }
+}
+
+/* 舞台触摸拖动微调（开启锁定时禁止拖动，防止页面滑动误触） */
+(function initPvStageTouch() {
+  const box = document.getElementById('pvStageBox');
+  if (!box) return;
+  let isDragging = false;
+  let startX = 0, startY = 0;
+
+  box.addEventListener('touchstart', (e) => {
+    if (pvIsStageLocked) return; // 锁定状态下不拦截滚动
+    if (e.touches.length === 1) {
+      isDragging = true;
+      startX = e.touches[0].clientX - pvBaseOffsetX;
+      startY = e.touches[0].clientY - pvBaseOffsetY;
+    }
+  }, { passive: true });
+
+  box.addEventListener('touchmove', (e) => {
+    if (pvIsStageLocked || !isDragging || e.touches.length !== 1) return;
+    e.preventDefault();
+    pvBaseOffsetX = e.touches[0].clientX - startX;
+    pvBaseOffsetY = e.touches[0].clientY - startY;
+    renderPreviewStage();
+  }, { passive: false });
+
+  box.addEventListener('touchend', () => { isDragging = false; });
+})();
+
+/* 批量生成预览图（全流程动态进度文案 + 结果列表必显） */
+async function executeBatchPreviewGeneration() {
+  if (pvBaseImages.length === 0) {
+    alert('请先导入待预览的底图！');
+    return;
+  }
+  const btn = document.getElementById('pvStartBatchBtn');
+  const progressBox = document.getElementById('pvProgressBarBox');
+  const progressBar = document.getElementById('pvProgressBar');
+  const progressPct = document.getElementById('pvProgressPct');
+  const progressText = document.getElementById('pvProgressText');
+  const resultsWrapper = document.getElementById('pvResultsWrapper');
+
+  btn.disabled = true;
+  if (progressBox) progressBox.classList.remove('hidden');
+  if (resultsWrapper) resultsWrapper.classList.add('hidden');
+  if (progressBar) progressBar.style.width = '0%';
+  if (progressPct) progressPct.innerText = '0%';
+
+  pvProcessedBatch = [];
+  const globalOp = parseFloat(document.getElementById('pvOpacityInput')?.value || 100) / 100;
+  const wmOp = parseFloat(document.getElementById('pvWmOpacityInput')?.value || 15) / 100;
+
+  let W = 1080, H = 1080;
+  if (pvRatio === '3-4') { W = 1080; H = 1440; }
+  else if (pvRatio === '9-16') { W = 1080; H = 1920; }
+  else if (pvRatio === 'custom') { W = pvCustomRatioVal.w; H = pvCustomRatioVal.h; }
+
+  for (let i = 0; i < pvBaseImages.length; i++) {
+    const item = pvBaseImages[i];
+    if (progressText) progressText.innerText = `正在处理 (${i + 1}/${pvBaseImages.length})：正在定位原图…`;
+    await new Promise(r => setTimeout(r, 20));
+
+    const bImg = await loadImage(item.src);
+    let curW = W, curH = H;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = curW;
+    canvas.height = curH;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    // 1. 底图定位
+    let bx = 0, by = 0, bw = curW, bh = curH;
+    if (pvIsAutoHoleEnabled && pvDetectedHoleRect) {
+      const holeX = pvDetectedHoleRect.x * curW;
+      const holeY = pvDetectedHoleRect.y * curH;
+      const holeW = pvDetectedHoleRect.width * curW;
+      const holeH = pvDetectedHoleRect.height * curH;
+
+      const imgRatio = bImg.naturalWidth / bImg.naturalHeight;
+      const holeRatio = holeW / holeH;
+
+      if (imgRatio > holeRatio) {
+        bh = holeH * pvBaseScale;
+        bw = bh * imgRatio;
+      } else {
+        bw = holeW * pvBaseScale;
+        bh = bw / imgRatio;
+      }
+
+      bx = holeX + (holeW - bw) / 2 + pvBaseOffsetX * (curW / 320);
+      by = holeY + (holeH - bh) / 2 + pvBaseOffsetY * (curH / 320);
+    } else {
+      bw = curW * pvBaseScale;
+      bh = (bImg.naturalHeight / bImg.naturalWidth) * bw;
+      bx = (curW - bw) / 2 + pvBaseOffsetX * (curW / 320);
+      by = (curH - bh) / 2 + pvBaseOffsetY * (curH / 320);
+    }
+
+    ctx.drawImage(bImg, bx, by, bw, bh);
+
+    // 2. 贴膜水印叠加（支持 AI 人脸擦除）
+    const activeWm = pvWatermarkImg || watermarkImg;
+    let erasedFaceCount = 0;
+    if (pvIsWmOverlayEnabled && activeWm) {
+      const enableFace = document.getElementById('pvWmFaceDetectCheck')?.checked;
+      const wmLayerCanvas = document.createElement('canvas');
+      wmLayerCanvas.width = Math.round(bw);
+      wmLayerCanvas.height = Math.round(bh);
+      const wctx = wmLayerCanvas.getContext('2d');
+      wctx.drawImage(activeWm, 0, 0, bw, bh);
+
+      if (enableFace && faceModel) {
+        try {
+          if (progressText) progressText.innerText = `(${i + 1}/${pvBaseImages.length})：正在识别人脸…`;
+          const maxDetectDim = 640;
+          const scale = Math.min(1.0, maxDetectDim / Math.max(bw, bh));
+          const dCanvas = document.createElement('canvas');
+          dCanvas.width = Math.round(bw * scale);
+          dCanvas.height = Math.round(bh * scale);
+          dCanvas.getContext('2d').drawImage(bImg, 0, 0, dCanvas.width, dCanvas.height);
+          const faces = await faceModel.estimateFaces(dCanvas, false);
+
+          if (faces && faces.length > 0) {
+            erasedFaceCount = faces.length;
+            wctx.save();
+            wctx.globalCompositeOperation = 'destination-out';
+            faces.forEach(f => {
+              const fw = (f.bottomRight[0] - f.topLeft[0]) / scale;
+              const fh = (f.bottomRight[1] - f.topLeft[1]) / scale;
+              const cx = (f.topLeft[0] / scale) + fw / 2;
+              const cy = (f.topLeft[1] / scale) + fh / 2;
+              const r = (Math.max(fw, fh) / 2) * 1.45;
+              const g = wctx.createRadialGradient(cx, cy, r * 0.25, cx, cy, r);
+              g.addColorStop(0, 'rgba(0,0,0,1)');
+              g.addColorStop(0.85, 'rgba(0,0,0,0.85)');
+              g.addColorStop(1, 'rgba(0,0,0,0)');
+              wctx.fillStyle = g;
+              wctx.beginPath();
+              wctx.arc(cx, cy, r, 0, Math.PI * 2);
+              wctx.fill();
+            });
+            wctx.restore();
+          }
+        } catch (e) {}
+      }
+
+      ctx.save();
+      ctx.globalAlpha = wmOp;
+      ctx.globalCompositeOperation = 'overlay';
+      ctx.drawImage(wmLayerCanvas, bx, by, bw, bh);
+      ctx.restore();
+    }
+
+    // 3. 多预览框图层依次置顶绘制
+    if (pvFrameLayers.length > 0) {
+      pvFrameLayers.forEach(layer => {
+        if (layer.img) {
+          ctx.save();
+          ctx.globalAlpha = (layer.opacity / 100) * globalOp;
+          ctx.globalCompositeOperation = 'source-over';
+
+          const scale = layer.scale || 1.0;
+          const ox = (layer.offsetX || 0) * (curW / 320);
+          const oy = (layer.offsetY || 0) * (curH / 320);
+          const rot = ((layer.rotate || 0) * Math.PI) / 180;
+
+          ctx.translate(curW / 2 + ox, curH / 2 + oy);
+          if (rot !== 0) ctx.rotate(rot);
+          ctx.scale(scale, scale);
+          ctx.drawImage(layer.img, -curW / 2, -curH / 2, curW, curH);
+
+          ctx.restore();
+        }
+      });
+    }
+
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    const url = URL.createObjectURL(blob);
+
+    pvProcessedBatch.push({
+      id: i,
+      name: `preview_${item.name.replace(/\.[^.]+$/, '')}.png`,
+      baseSrc: item.src,
+      blob: blob,
+      url: url,
+      scale: pvBaseScale,
+      offsetX: pvBaseOffsetX,
+      offsetY: pvBaseOffsetY,
+      curW: curW,
+      curH: curH
+    });
+
+    canvas.width = 0; canvas.height = 0;
+
+    // 进度条文案阶段反馈
+    const pct = Math.round(((i + 1) / pvBaseImages.length) * 100);
+    if (progressBar) progressBar.style.width = `${pct}%`;
+    if (progressPct) progressPct.innerText = `${pct}%`;
+
+    const faceMsg = erasedFaceCount > 0 ? `已擦除 ${erasedFaceCount} 处人脸，` : '';
+    if (progressText) progressText.innerText = `(${i + 1}/${pvBaseImages.length})：${faceMsg}已完成对齐，正在进入下一张…`;
+
+    await new Promise(r => setTimeout(r, 45));
+  }
+
+  // 自动归档至「预览图库」
+  const pvPkg = {
+    id: `pvpkg_${Date.now()}`,
+    timestamp: Date.now(),
+    name: `预览图包_${new Date().toLocaleDateString()}`,
+    coverUrl: pvProcessedBatch[0].url,
+    items: pvProcessedBatch.map(it => ({ id: it.id, name: it.name, blob: it.blob, url: it.url }))
+  };
+  previewPackages.unshift(pvPkg);
+  DrizzleDB.savePvPackage(pvPkg).catch(() => {});
+
+  // 展开并平滑滚动至结果列表
+  if (progressBox) progressBox.classList.add('hidden');
+  document.getElementById('pvCurrentBatchCount').innerText = pvProcessedBatch.length;
+  renderPvBatchResults();
+  if (resultsWrapper) {
+    resultsWrapper.classList.remove('hidden');
+    setTimeout(() => { resultsWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg><span>重新批量生成</span>`;
+}
+
+function renderPvBatchResults() {
+  const grid = document.getElementById('pvResultGrid');
+  grid.innerHTML = '';
+  pvProcessedBatch.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'thumb-card';
+    card.style.cursor = 'pointer';
+    card.innerHTML = `
+      <div class="thumb-box">
+        <img id="pv-thumb-${item.id}" src="${item.url}">
+        <button class="thumb-edit" onclick="event.stopPropagation(); openPvSingleAdjustModal(${item.id})">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+          <span>手动调整</span>
+        </button>
+      </div>
+      <div class="thumb-foot">
+        <span class="thumb-name" title="${item.name}">${item.name}</span>
+        <a href="${item.url}" download="${item.name}" class="thumb-dl" onclick="event.stopPropagation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        </a>
+      </div>`;
+    card.onclick = () => openPvSingleAdjustModal(item.id);
+    grid.appendChild(card);
+  });
+}
+
+/* ================================================================
+   单张从下往上滑出的精修微调逻辑（支持撤销、微调、双指缩放）
+================================================================ */
+let activeSingleAdjustItem = null;
+let singleAdjustHistory = [];
+let singleScale = 1.0, singleOffsetX = 0, singleOffsetY = 0;
+
+function openPvSingleAdjustModal(itemId) {
+  activeSingleAdjustItem = pvProcessedBatch.find(it => it.id === itemId);
+  if (!activeSingleAdjustItem) return;
+
+  singleScale = activeSingleAdjustItem.scale || pvBaseScale;
+  singleOffsetX = activeSingleAdjustItem.offsetX || pvBaseOffsetX;
+  singleOffsetY = activeSingleAdjustItem.offsetY || pvBaseOffsetY;
+  singleAdjustHistory = [];
+
+  // 根据当前画布比例自适应居中大图容器
+  const stageBox = document.getElementById('pvSingleStageBox');
+  if (stageBox) {
+    stageBox.className = `pv-stage-box ratio-${pvRatio}`;
+    if (pvRatio === 'custom') {
+      stageBox.style.aspectRatio = `${pvCustomRatioVal.w} / ${pvCustomRatioVal.h}`;
+    } else {
+      stageBox.style.aspectRatio = '';
+    }
+  }
+
+  document.getElementById('pvSingleScaleInput').value = Math.round(singleScale * 100);
+  document.getElementById('pvSingleScaleText').innerText = `${Math.round(singleScale * 100)}%`;
+
+  renderSingleAdjustCanvas();
+  document.getElementById('pvSingleAdjustModal').classList.remove('hidden');
+}
+
+function closePvSingleAdjustModal(e) {
+  if (e && e.target && e.target.closest('.modal-card')) return;
+  document.getElementById('pvSingleAdjustModal').classList.add('hidden');
+}
+function closePvSingleAdjustModalDirect() {
+  document.getElementById('pvSingleAdjustModal').classList.add('hidden');
+}
+
+function pushSingleHistory() {
+  singleAdjustHistory.push({ scale: singleScale, ox: singleOffsetX, oy: singleOffsetY });
+  if (singleAdjustHistory.length > 20) singleAdjustHistory.shift();
+}
+
+function undoPvSingleAdjust() {
+  if (singleAdjustHistory.length === 0) { alert('没有可以撤销的操作了'); return; }
+  const last = singleAdjustHistory.pop();
+  singleScale = last.scale;
+  singleOffsetX = last.ox;
+  singleOffsetY = last.oy;
+  document.getElementById('pvSingleScaleInput').value = Math.round(singleScale * 100);
+  document.getElementById('pvSingleScaleText').innerText = `${Math.round(singleScale * 100)}%`;
+  renderSingleAdjustCanvas();
+}
+
+function handlePvSingleScaleChange(val) {
+  pushSingleHistory();
+  singleScale = parseFloat(val) / 100;
+  document.getElementById('pvSingleScaleText').innerText = `${val}%`;
+  renderSingleAdjustCanvas();
+}
+
+function nudgePvSingle(dx, dy) {
+  pushSingleHistory();
+  singleOffsetX += dx;
+  singleOffsetY += dy;
+  renderSingleAdjustCanvas();
+}
+
+async function renderSingleAdjustCanvas() {
+  if (!activeSingleAdjustItem) return;
+  const canvas = document.getElementById('pvSingleCanvas');
+  const ctx = canvas.getContext('2d');
+  const curW = activeSingleAdjustItem.curW || 1080;
+  const curH = activeSingleAdjustItem.curH || 1080;
+  canvas.width = curW;
+  canvas.height = curH;
+
+  const bImg = await loadImage(activeSingleAdjustItem.baseSrc);
+
+  // 1. 底图
+  let bx = 0, by = 0, bw = curW, bh = curH;
+  if (pvIsAutoHoleEnabled && pvDetectedHoleRect) {
+    const holeX = pvDetectedHoleRect.x * curW;
+    const holeY = pvDetectedHoleRect.y * curH;
+    const holeW = pvDetectedHoleRect.width * curW;
+    const holeH = pvDetectedHoleRect.height * curH;
+    const imgRatio = bImg.naturalWidth / bImg.naturalHeight;
+    const holeRatio = holeW / holeH;
+
+    if (imgRatio > holeRatio) {
+      bh = holeH * singleScale;
+      bw = bh * imgRatio;
+    } else {
+      bw = holeW * singleScale;
+      bh = bw / imgRatio;
+    }
+    bx = holeX + (holeW - bw) / 2 + singleOffsetX * (curW / 320);
+    by = holeY + (holeH - bh) / 2 + singleOffsetY * (curH / 320);
+  } else {
+    bw = curW * singleScale;
+    bh = (bImg.naturalHeight / bImg.naturalWidth) * bw;
+    bx = (curW - bw) / 2 + singleOffsetX * (curW / 320);
+    by = (curH - bh) / 2 + singleOffsetY * (curH / 320);
+  }
+  ctx.drawImage(bImg, bx, by, bw, bh);
+
+  // 2. 贴膜
+  const activeWm = pvWatermarkImg || watermarkImg;
+  if (pvIsWmOverlayEnabled && activeWm) {
+    const wmOp = parseFloat(document.getElementById('pvWmOpacityInput')?.value || 15) / 100;
+    ctx.save();
+    ctx.globalAlpha = wmOp;
+    ctx.globalCompositeOperation = 'overlay';
+    ctx.drawImage(activeWm, bx, by, bw, bh);
+    ctx.restore();
+  }
+
+  // 3. 预览框图层
+  const globalOp = parseFloat(document.getElementById('pvOpacityInput')?.value || 100) / 100;
+  pvFrameLayers.forEach(layer => {
+    if (layer.img) {
+      ctx.save();
+      ctx.globalAlpha = (layer.opacity / 100) * globalOp;
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.drawImage(layer.img, 0, 0, curW, curH);
+      ctx.restore();
+    }
+  });
+}
+
+async function savePvSingleAdjustResult() {
+  if (!activeSingleAdjustItem) return;
+  const canvas = document.getElementById('pvSingleCanvas');
+  const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+  const url = URL.createObjectURL(blob);
+
+  activeSingleAdjustItem.blob = blob;
+  activeSingleAdjustItem.url = url;
+  activeSingleAdjustItem.scale = singleScale;
+  activeSingleAdjustItem.offsetX = singleOffsetX;
+  activeSingleAdjustItem.offsetY = singleOffsetY;
+
+  const thumbImg = document.getElementById(`pv-thumb-${activeSingleAdjustItem.id}`);
+  if (thumbImg) thumbImg.src = url;
+
+  closePvSingleAdjustModalDirect();
+  alert('已成功保存单张微调效果！');
+}
+
+/* ================================================================
+   预览图库（独立 APP：归档管理、多选批量删除、打包/单张下载）
+================================================================ */
+function renderPvGallery() {
+  const grid = document.getElementById('pvGalleryPackageGrid');
+  const search = (document.getElementById('pvGallerySearchInput')?.value || '').trim().toLowerCase();
+  grid.innerHTML = '';
+
+  const filtered = previewPackages.filter(p => (p.name || '').toLowerCase().includes(search));
+  document.getElementById('pvGalleryCountLabel').innerText = `${filtered.length} 个图包`;
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty-hint">暂无归档的预览图包<br>在「预览机」批量生成后将自动存入此处</div>`;
+  } else {
+    filtered.forEach(pkg => {
+      const isSelected = pvGallerySelectedPkgIds.has(pkg.id);
+      const card = document.createElement('div');
+      card.className = `pkg-card selectable-item ${isSelected ? 'is-selected' : ''}`;
+      card.innerHTML = `
+        <div class="select-check-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <img src="${pkg.coverUrl}">
+        <div class="pkg-overlay">
+          <div class="pkg-author">${pkg.name}</div>
+          <div class="pkg-meta"><span>${pkg.items.length} 张图</span></div>
+        </div>`;
+
+      card.onclick = () => {
+        if (isPvGallerySelectMode) {
+          if (pvGallerySelectedPkgIds.has(pkg.id)) pvGallerySelectedPkgIds.delete(pkg.id);
+          else pvGallerySelectedPkgIds.add(pkg.id);
+          renderPvGallery();
+        } else {
+          openPvPackageDetail(pkg);
+        }
+      };
+      grid.appendChild(card);
+    });
+  }
+
+  const oldBar = document.getElementById('pvGalleryBatchBar');
+  if (oldBar) oldBar.remove();
+
+  if (isPvGallerySelectMode) {
+    const bar = document.createElement('div');
+    bar.id = 'pvGalleryBatchBar';
+    bar.className = 'batch-toolbar';
+    const isAll = filtered.length > 0 && pvGallerySelectedPkgIds.size === filtered.length;
+    bar.innerHTML = `
+      <div style="font-size:11.5px; font-weight:700; color:var(--text-main);">已选 ${pvGallerySelectedPkgIds.size} 个图包</div>
+      <div style="display:flex; gap:6px;">
+        <button class="mini-btn ghost" onclick="toggleSelectAllPvGalleryPkgs()">${isAll ? '取消全选' : '一键全选'}</button>
+        <button class="mini-btn ghost" style="color:#ef4444;" onclick="executeDeletePvGallerySelected()">删除图包</button>
+      </div>`;
+    document.getElementById('pvGalleryListView').appendChild(bar);
+  }
+}
+
+function togglePvGallerySelectMode() {
+  isPvGallerySelectMode = !isPvGallerySelectMode;
+  pvGallerySelectedPkgIds.clear();
+  const btn = document.getElementById('pvGallerySelectToggleBtn');
+  if (btn) btn.innerText = isPvGallerySelectMode ? '取消多选' : '多选';
+  renderPvGallery();
+}
+
+function toggleSelectAllPvGalleryPkgs() {
+  const search = (document.getElementById('pvGallerySearchInput')?.value || '').trim().toLowerCase();
+  const filtered = previewPackages.filter(p => (p.name || '').toLowerCase().includes(search));
+  if (pvGallerySelectedPkgIds.size === filtered.length) {
+    pvGallerySelectedPkgIds.clear();
+  } else {
+    filtered.forEach(p => pvGallerySelectedPkgIds.add(p.id));
+  }
+  renderPvGallery();
+}
+
+async function executeDeletePvGallerySelected() {
+  if (pvGallerySelectedPkgIds.size === 0) { alert('请先选择要删除的图包'); return; }
+  if (!confirm(`确定要永久删除选中的 ${pvGallerySelectedPkgIds.size} 个预览图包吗？`)) return;
+  for (const id of pvGallerySelectedPkgIds) {
+    await DrizzleDB.deletePvPackage(id);
+  }
+  previewPackages = previewPackages.filter(p => !pvGallerySelectedPkgIds.has(p.id));
+  pvGallerySelectedPkgIds.clear();
+  renderPvGallery();
+}
+
+function backToPvGalleryList() {
+  document.getElementById('pvGalleryListView').classList.remove('hidden');
+  document.getElementById('pvGalleryDetailView').classList.add('hidden');
+  activePvDetailPkg = null;
+}
+
+function openPvPackageDetail(pkg) {
+  activePvDetailPkg = pkg;
+  document.getElementById('pvDetailPkgTitle').innerText = pkg.name;
+  document.getElementById('pvDetailPkgSub').innerText = `共 ${pkg.items.length} 张高清预览图`;
+
+  const grid = document.getElementById('pvDetailImageGrid');
+  grid.innerHTML = '';
+  pkg.items.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'thumb-card';
+    card.innerHTML = `
+      <div class="thumb-box"><img src="${item.url}"></div>
+      <div class="thumb-foot">
+        <span class="thumb-name">${item.name}</span>
+        <a href="${item.url}" download="${item.name}" class="thumb-dl">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        </a>
+      </div>`;
+    grid.appendChild(card);
+  });
+
+  document.getElementById('pvGalleryListView').classList.add('hidden');
+  document.getElementById('pvGalleryDetailView').classList.remove('hidden');
+}
+
+async function downloadActivePvPkgAllPng() {
+  if (!activePvDetailPkg) return;
+  for (let it of activePvDetailPkg.items) {
+    saveAs(it.blob, it.name);
+    await new Promise(r => setTimeout(r, 200));
+  }
+}
+
+async function downloadActivePvPkgZip() {
+  if (!activePvDetailPkg) return;
+  const zip = new JSZip();
+  activePvDetailPkg.items.forEach(it => zip.file(it.name, it.blob));
+  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  saveAs(zipBlob, `${activePvDetailPkg.name}.zip`);
+}
+
+/* 批量将所有预览图以无损 PNG 保存到本地相册 */
+async function downloadPvBatchIndividually() {
+  if (!pvProcessedBatch || pvProcessedBatch.length === 0) return;
+  for (let i = 0; i < pvProcessedBatch.length; i++) {
+    const it = pvProcessedBatch[i];
+    saveAs(it.blob, it.name);
+    await new Promise(r => setTimeout(r, 220));
+  }
+}
+
+async function downloadPvBatchZip() {
+  if (!pvProcessedBatch || pvProcessedBatch.length === 0) return;
+  const zip = new JSZip();
+  pvProcessedBatch.forEach(it => zip.file(it.name, it.blob));
+  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  saveAs(zipBlob, `预览图集合_${Date.now()}.zip`);
+}
+
+/* ================================================================
+   全能多宫格拼图系统（支持 2x2, 2x3, 3x3, 3x4, 4x4 自由排版无损导出）
+================================================================ */
+let activeGridLayout = '3x3';
+let currentGridMosaicBlob = null;
+
+const GRID_LAYOUT_CONFIGS = {
+  '2x2': { cols: 2, rows: 2, count: 4, name: '4 宫格拼图' },
+  '2x3': { cols: 2, rows: 3, count: 6, name: '6 宫格拼图' },
+  '3x3': { cols: 3, rows: 3, count: 9, name: '9 宫格拼图' },
+  '3x4': { cols: 3, rows: 4, count: 12, name: '12 宫格拼图' },
+  '4x4': { cols: 4, rows: 4, count: 16, name: '16 宫格拼图' }
+};
+
+function switchGridMosaicLayout(layout) {
+  activeGridLayout = layout;
+  ['2x2', '2x3', '3x3', '3x4', '4x4'].forEach(l => {
+    const btn = document.getElementById(`btnGrid${l}`);
+    if (btn) btn.classList.toggle('active', l === layout);
+  });
+  renderGridMosaicModal();
+}
+
+async function openGrid9Modal() {
+  const sourceList = pvProcessedBatch.length > 0 ? pvProcessedBatch : pvBaseImages;
+  if (sourceList.length === 0) {
+    alert('宝宝，还没有导入底图或生成预览图哦！\n请先导入底图再开启拼图~');
+    return;
+  }
+  document.getElementById('grid9Modal').classList.remove('hidden');
+  renderGridMosaicModal();
+}
+
+function closeGrid9Modal() {
+  document.getElementById('grid9Modal').classList.add('hidden');
+}
+
+async function renderGridMosaicModal() {
+  const sourceList = pvProcessedBatch.length > 0 ? pvProcessedBatch : pvBaseImages;
+  const cfg = GRID_LAYOUT_CONFIGS[activeGridLayout] || GRID_LAYOUT_CONFIGS['3x3'];
+  const targetItems = sourceList.slice(0, cfg.count);
+
+  const container = document.getElementById('grid9BoxPreview');
+  container.className = `grid9-wrapper grid-${activeGridLayout}`;
+  container.innerHTML = '';
+
+  targetItems.forEach(item => {
+    const cell = document.createElement('div');
+    cell.className = 'grid9-cell';
+    cell.innerHTML = `<img src="${item.url || item.src}">`;
+    container.appendChild(cell);
+  });
+
+  // 无损拼接大图
+  const gap = 16;
+  const cellSize = 400;
+  const canvasW = cfg.cols * cellSize + (cfg.cols + 1) * gap;
+  const canvasH = cfg.rows * cellSize + (cfg.rows + 1) * gap;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = canvasW;
+  canvas.height = canvasH;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, canvasW, canvasH);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  for (let idx = 0; idx < targetItems.length; idx++) {
+    const row = Math.floor(idx / cfg.cols);
+    const col = idx % cfg.cols;
+    const x = gap + col * (cellSize + gap);
+    const y = gap + row * (cellSize + gap);
+    const imgObj = await loadImage(targetItems[idx].url || targetItems[idx].src);
+    ctx.drawImage(imgObj, x, y, cellSize, cellSize);
+  }
+
+  currentGridMosaicBlob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+}
+
+function downloadGrid9Image() {
+  if (currentGridMosaicBlob) {
+    const cfg = GRID_LAYOUT_CONFIGS[activeGridLayout] || GRID_LAYOUT_CONFIGS['3x3'];
+    saveAs(currentGridMosaicBlob, `${cfg.name}_${Date.now()}.png`);
+  }
+}
+
+/* ================================================================
    启动
 ================================================================ */
 let deferredPrompt = null;
@@ -5839,12 +8591,59 @@ async function triggerPwaInstall() {
 /* ================================================================
    更新公告版本管理与历史更新归档
 ================================================================ */
-const CURRENT_APP_VERSION = 'v1.1.0';
+const CURRENT_APP_VERSION = 'v1.2.0';
 
 const APP_UPDATE_HISTORY = [
   {
-    version: 'v1.1.0',
+    version: 'v1.2.0',
     tag: '最新版本',
+    date: '2026/10/02',
+    sections: [
+      {
+        title: '版本概览',
+        items: [
+          '本次版本重点新增两大核心功能：预览机、预览图库，同时对全功能模块进行大量优化升级，修复多项使用问题，具体更新内容如下：'
+        ]
+      },
+      {
+        title: '一、新增核心功能',
+        items: [
+          '【全新功能：预览机】1. 支持底图批量导入、水印导入预览，可实现水印覆盖混合效果，适配贴膜水印制作需求；2. 新增透明底自动识别功能，识别区域以蓝色边框标注，支持首张图片定位调整，后续图片自动适配填充，可手动关闭识别、自由自定义位置；3. 集成贴膜水印效果，可直接在预览机内完成水印贴膜操作；4. 支持多预览框导入，可自由调整各水印框层级、上下层级排序，分层排版后批量生成图片；5. 新增自定义比例功能，破除固定比例限制，适配头像、壁纸等多场景预览制作。',
+          '【全新页面：预览图库】1. 独立第二应用页面，专门收纳所有归档、保存的原图与预览成品图；2. 统一汇总所有制作记录，无需反复导出查找，素材集中管理更便捷。'
+        ]
+      },
+      {
+        title: '二、核心功能优化',
+        items: [
+          '【导出保存功能升级】1. 新增批量导出模式，点击导出弹出双选项：ZIP压缩包导出、全部图片一次性PNG导出至相册；2. 单张图片保存默认直接输出PNG格式并保存到手机相册；3. 批量生成图片新增实时进度条，精准展示制作进度，同步提示「人脸擦除、位置调整」等操作步骤。',
+          '【预览编辑操作优化】1. 新增原图锁定功能：导入图片后默认开启锁图，防止误触滑动移位；手动调整图片时可关闭锁定，自由操作；2. 支持成品图二次编辑，点击已生成图片，居中弹出大图编辑弹窗，可微调图片位置、大小；3. 支持双指放大查看图片细节，新增撤销功能，可撤回误操作；4. 优化水印框编辑：支持精准选择指定水印框单独调整，可自由移动、缩放、旋转，旋转支持正负数值调节；5. 新增贴膜水印擦脸开关，可自主开启或关闭人脸擦除功能。',
+          '【素材导入与展示优化】1. 支持完整文件夹批量导入，可直接选取文件夹导入全部图片；2. 实时刷新素材列表，新增、删除图片即时生效，无需重启页面即可查看最新素材；3. 新增原图列表展示功能，清晰查看所有已导入素材；4. 优化操作排版，所有移动、调整类功能按键统一放置在预览框下方，操作更直观；5. 实现水印APP与预览机功能互通，预览框可跨功能联动选择使用。'
+        ]
+      },
+      {
+        title: '三、全局美化与适配优化',
+        items: [
+          '1. 新增APP全局黑白配色主题，原有灰白、蓝色、粉色主题保留，丰富自定义风格；',
+          '2. 全局壁纸适配升级，APP内置壁纸自动模糊20%显示，彻底解决界面白边问题；',
+          '3. 全系升级iOS液体玻璃质感UI，所有图标替换为SVG矢量图标，画质高清无失真；',
+          '4. 移除多余自适应选项，精简功能面板，降低操作干扰。'
+        ]
+      },
+      {
+        title: '四、问题修复',
+        items: [
+          '1. 修复九宫格及多宫格拼图点击无响应的故障；',
+          '2. 修复批量生成预览图后成品图不显示的问题；',
+          '3. 优化页面滑动逻辑，杜绝误触移位、右滑误退出APP的情况；',
+          '4. 优化贴膜机不透明度调节，支持手动输入精准数值设置参数；',
+          '5. 升级图包下载模式，新增单张图片png下载方式，不再仅支持ZIP压缩包下载。'
+        ]
+      }
+    ]
+  },
+  {
+    version: 'v1.1.0',
+    tag: '历史版本',
     date: '2026/09/29',
     sections: [
       {
@@ -6097,6 +8896,21 @@ window.addEventListener('DOMContentLoaded', async () => {
           });
         }
         if (pkg.items && pkg.items[0]) pkg.coverUrl = pkg.items[0].resultUrl;
+        return pkg;
+      });
+    }
+
+    /* 恢复持久化保存的预览图库 */
+    const savedPvPkgs = await DrizzleDB.getAllPvPackages();
+    if (savedPvPkgs && savedPvPkgs.length > 0) {
+      savedPvPkgs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      previewPackages = savedPvPkgs.map(pkg => {
+        if (pkg.items) {
+          pkg.items.forEach(it => {
+            if (it.blob) it.url = URL.createObjectURL(it.blob);
+          });
+        }
+        if (pkg.items && pkg.items[0]) pkg.coverUrl = pkg.items[0].url;
         return pkg;
       });
     }
