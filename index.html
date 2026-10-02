@@ -1723,7 +1723,7 @@ input[type="range"]::-moz-range-thumb {
 <input type="file" id="sysAvatarFileInput" class="hidden-file-input">
 <input type="file" id="profileAvatarInput" class="hidden-file-input" onchange="handleAvatarChange(event)">
 <input type="file" id="wallpaperUploadInput" class="hidden-file-input" onchange="handleWallpaperChange(event)">
-<input type="file" id="dataImportInput" class="hidden-file-input" accept=".json" onchange="handleImportDataBackup(event)">
+<input type="file" id="dataImportInput" class="hidden-file-input" accept=".zip,application/zip" onchange="handleImportDataBackup(event)">
 <input type="file" id="thresholdImageInput" class="hidden-file-input" multiple accept="image/*" onchange="handleThresholdFileSelect(event)">
 
 <!-- ============ 开场雨滴遮罩（新增详细文件与模块加载实时展示） ============ -->
@@ -2419,7 +2419,7 @@ input[type="range"]::-moz-range-thumb {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
           <span>恢复原壁纸</span>
         </button>
-        <button class="action-btn" onclick="exportAllDataBackup()">
+        <button class="action-btn" onclick="openBackupPasswordModal()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
           <span>保存数据备份</span>
         </button>
@@ -2846,6 +2846,51 @@ input[type="range"]::-moz-range-thumb {
     <div class="modal-actions" style="margin-top:8px;">
       <button class="btn-ghost" onclick="closeFolderRenameModal()">取消</button>
       <button class="btn-solid" onclick="confirmFolderRename()">确认修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- 数据备份导出密码弹窗 -->
+<div id="backupPasswordModal" class="modal-mask hidden">
+  <div class="modal-card" style="max-width:340px;">
+    <div class="modal-head">
+      <div>
+        <h3 style="font-size:13px; font-weight:800;">导出数据保护</h3>
+        <p style="font-size:11px; color:var(--text-muted); margin-top:6px; line-height:1.6; text-align:justify;">为了防止有宝宝会以导出数据的格式去给朋友二传<br>所以请找@耳机 获取数据保存密码</p>
+      </div>
+      <button class="x-btn" onclick="closeBackupPasswordModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="field" style="margin-top:6px;">
+      <label>数据保存密码</label>
+      <input type="text" id="backupPasswordInput" placeholder="请输入专属保存密码…" autocomplete="off">
+    </div>
+    <div class="modal-actions" style="margin-top:8px;">
+      <button class="btn-ghost" onclick="closeBackupPasswordModal()">取消</button>
+      <button class="btn-solid" onclick="confirmBackupPassword()">验证并导出ZIP</button>
+    </div>
+  </div>
+</div>
+
+<!-- 数据备份打包实时进度弹窗 -->
+<div id="backupProgressModal" class="modal-mask hidden">
+  <div class="modal-card" style="max-width:340px; gap:14px;">
+    <div class="modal-head">
+      <div>
+        <h3 style="font-size:13px; font-weight:800; color:var(--text-main);">正在全量打包数据</h3>
+        <p id="backupProgressStage" style="font-size:10px; color:var(--text-muted); margin-top:3px;">正在准备导出环境…</p>
+      </div>
+    </div>
+    <div style="font-size:11px; color:var(--text-main); font-weight:600; min-height:20px; line-height:1.5;" id="backupProgressDetail">
+      正在读取数据库配置…
+    </div>
+    <div class="progress-card" style="padding:0; background:transparent; border:none; box-shadow:none;">
+      <div class="progress-top" style="margin-bottom:6px;">
+        <span style="font-size:10.5px; color:var(--text-muted); font-weight:700;">打包总进度</span>
+        <span id="backupProgressPct" style="font-size:12px; font-weight:800; color:var(--text-main);">0%</span>
+      </div>
+      <div class="progress-track" style="height:7px; border-radius:7px;"><div class="progress-fill" id="backupProgressBar" style="width:0%;"></div></div>
     </div>
   </div>
 </div>
@@ -6869,105 +6914,493 @@ async function togglePersistentStorage(enable) {
   }
 }
 
-async function exportAllDataBackup() {
-  // 将水印库的 Blob 转为 Base64，以便保存在 JSON 中
-  const processWmNode = async (node) => {
-    const newNode = { id: node.id, name: node.name, watermarks: [], subFolders: [] };
-    for (let w of (node.watermarks || [])) {
-      let base64 = '';
-      if (w.blob) {
-        base64 = await new Promise(r => {
-          const reader = new FileReader();
-          reader.onload = e => r(e.target.result);
-          reader.readAsDataURL(w.blob);
-        });
-      }
-      newNode.watermarks.push({ id: w.id, name: w.name, base64 });
-    }
-    for (let sub of (node.subFolders || [])) {
-      newNode.subFolders.push(await processWmNode(sub));
-    }
-    return newNode;
-  };
+/* ================= 密码验证（仅需验证一次）与全量 ZIP 数据备份导出/恢复 ================= */
+const BACKUP_EXPORT_PASSWORD = 'YHZZ-174YG-zZl';
 
-  const wmData = await processWmNode(watermarkRoot);
-
-  const backupData = {
-    version: '1.0',
-    timestamp: Date.now(),
-    userName: localStorage.getItem('user_name') || '用户',
-    userQQ: localStorage.getItem('user_qq') || '',
-    userAvatar: localStorage.getItem('user_avatar') || '',
-    customWallpaper: localStorage.getItem('custom_wallpaper') || '',
-    rootFolder: rootFolder,
-    galleryPackages: galleryPackages.map(p => ({
-      id: p.id, author: p.author, qq: p.qq, date: p.date,
-      opacity: p.opacity, blendMode: p.blendMode, coverUrl: p.coverUrl
-    })),
-    watermarkRoot: wmData // 加入水印库
-  };
-
-  const jsonStr = JSON.stringify(backupData, null, 2);
-  const blob = new Blob([jsonStr], { type: 'application/json' });
-  saveAs(blob, `贴膜机数据备份_${Date.now()}.json`);
+function openBackupPasswordModal() {
+  // 检查是否已经验证通过过，如果已验证过则直接执行导出，无需再次输入
+  const isUnlocked = localStorage.getItem('drizzle_backup_unlocked') === 'true';
+  if (isUnlocked) {
+    executeExportAllDataZip();
+    return;
+  }
+  const input = document.getElementById('backupPasswordInput');
+  if (input) input.value = '';
+  document.getElementById('backupPasswordModal').classList.remove('hidden');
+  setTimeout(() => { if (input) input.focus(); }, 80);
 }
 
-function handleImportDataBackup(e) {
+function closeBackupPasswordModal() {
+  document.getElementById('backupPasswordModal').classList.add('hidden');
+}
+
+function confirmBackupPassword() {
+  const pwd = (document.getElementById('backupPasswordInput')?.value || '').trim();
+  if (pwd !== BACKUP_EXPORT_PASSWORD) {
+    alert('密码错误！\n请找@耳机 获取正确的数据保存密码。');
+    return;
+  }
+  // 验证成功后永久记录，之后永久无需再弹窗验证
+  localStorage.setItem('drizzle_backup_unlocked', 'true');
+  closeBackupPasswordModal();
+  executeExportAllDataZip();
+}
+
+function getBackupZipFileName() {
+  const now = new Date();
+  const Y = now.getFullYear();
+  const M = String(now.getMonth() + 1).padStart(2, '0');
+  const D = String(now.getDate()).padStart(2, '0');
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  return `drizzle_${Y}${M}${D}_${h}${m}.zip`;
+}
+
+// 通用安全获取 Blob 辅助函数（兼容易读类型与 blob url）
+async function safeResolveBlob(srcOrBlob) {
+  if (!srcOrBlob) return null;
+  if (srcOrBlob instanceof Blob || srcOrBlob instanceof File) return srcOrBlob;
+  if (srcOrBlob.blob instanceof Blob || srcOrBlob.blob instanceof File) return srcOrBlob.blob;
+  if (srcOrBlob.file instanceof Blob || srcOrBlob.file instanceof File) return srcOrBlob.file;
+  if (typeof srcOrBlob.src === 'string' && srcOrBlob.src.startsWith('blob:')) {
+    try {
+      const resp = await fetch(srcOrBlob.src);
+      return await resp.blob();
+    } catch (e) { return null; }
+  }
+  if (typeof srcOrBlob === 'string' && srcOrBlob.startsWith('blob:')) {
+    try {
+      const resp = await fetch(srcOrBlob);
+      return await resp.blob();
+    } catch (e) { return null; }
+  }
+  return null;
+}
+
+function updateBackupProgressUI(pct, stage, detail) {
+  const modal = document.getElementById('backupProgressModal');
+  if (modal && modal.classList.contains('hidden')) modal.classList.remove('hidden');
+  const bar = document.getElementById('backupProgressBar');
+  const pctEl = document.getElementById('backupProgressPct');
+  const stageEl = document.getElementById('backupProgressStage');
+  const detailEl = document.getElementById('backupProgressDetail');
+  if (bar) bar.style.width = `${pct}%`;
+  if (pctEl) pctEl.innerText = `${Math.round(pct)}%`;
+  if (stageEl && stage) stageEl.innerText = stage;
+  if (detailEl && detail) detailEl.innerText = detail;
+}
+
+function closeBackupProgressModal() {
+  const modal = document.getElementById('backupProgressModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function executeExportAllDataZip() {
+  updateBackupProgressUI(5, '正在初始化…', '正在准备读取全站数据与存储空间…');
+  await new Promise(r => setTimeout(r, 60));
+
+  try {
+    const zip = new JSZip();
+
+    // 1. 本地基础设置
+    updateBackupProgressUI(10, '区域 1/8：本地设置', '正在打包个性化壁纸、主屏资料与主题配置…');
+    const localConfig = {
+      user_name: localStorage.getItem('user_name') || '用户',
+      user_qq: localStorage.getItem('user_qq') || '',
+      user_avatar: localStorage.getItem('user_avatar') || '',
+      custom_wallpaper: localStorage.getItem('custom_wallpaper') || '',
+      drizzle_app_theme: localStorage.getItem('drizzle_app_theme') || 'default',
+      drizzle_last_read_version: localStorage.getItem('drizzle_last_read_version') || ''
+    };
+
+    // 2. 主屏小组件文字与图片资产
+    updateBackupProgressUI(20, '区域 2/8：桌面小组件', '正在打包台词卡、拍立得、唱片与头像资产…');
+    let widgetTexts = {};
+    try { widgetTexts = await DrizzleDB.getAllWidgetTexts(); } catch(e) {}
+    const widgetKeys = ['main_avatar', 'quote_pic', 'music_art', 'pol_left', 'pol_center', 'pol_right', 'sys_audio_avatar'];
+    for (const key of widgetKeys) {
+      try {
+        const b = await DrizzleDB.getWidgetAsset(key);
+        if (b) zip.file(`widget_assets/${key}.bin`, b);
+      } catch(e) {}
+    }
+
+    // 3. 原图库全部文件夹与原图
+    updateBackupProgressUI(35, '区域 3/8：原po原图库', '正在打包原图分类相册与全部高清原片…');
+    const processRepoNodeForExport = async (node) => {
+      const outNode = { id: node.id, name: node.name, subFolders: [], images: [] };
+      for (const img of (node.images || [])) {
+        const b = await safeResolveBlob(img);
+        if (b) {
+          zip.file(`raw_images/${img.id}.bin`, b);
+          outNode.images.push({ id: img.id, name: img.name, size: img.size || b.size || 0 });
+        }
+      }
+      for (const sub of (node.subFolders || [])) {
+        outNode.subFolders.push(await processRepoNodeForExport(sub));
+      }
+      return outNode;
+    };
+    const repoTreeMeta = await processRepoNodeForExport(rootFolder);
+
+    // 4. 水印库全部文件夹与水印素材
+    updateBackupProgressUI(50, '区域 4/8：水印素材库', '正在打包各分类水印膜与浮雕边框…');
+    const processWmNodeForExport = async (node) => {
+      const outNode = { id: node.id, name: node.name, subFolders: [], watermarks: [] };
+      for (const wm of (node.watermarks || [])) {
+        const b = await safeResolveBlob(wm);
+        if (b) {
+          zip.file(`watermark_images/${wm.id}.bin`, b);
+          outNode.watermarks.push({ id: wm.id, name: wm.name, size: wm.size || b.size || 0 });
+        }
+      }
+      for (const sub of (node.subFolders || [])) {
+        outNode.subFolders.push(await processWmNodeForExport(sub));
+      }
+      return outNode;
+    };
+    const wmTreeMeta = await processWmNodeForExport(watermarkRoot);
+
+    // 5. 贴膜图库全部图包
+    updateBackupProgressUI(65, '区域 5/8：贴膜完成图库', '正在打包归档的各期贴膜图包与无损图层…');
+    let dbGalleryPkgs = [];
+    try { dbGalleryPkgs = await DrizzleDB.getAllPackages(); } catch(e) { dbGalleryPkgs = galleryPackages; }
+    const galleryMeta = [];
+    for (const pkg of (dbGalleryPkgs || [])) {
+      const pkgMeta = {
+        id: pkg.id,
+        timestamp: pkg.timestamp || Date.now(),
+        author: pkg.author,
+        qq: pkg.qq,
+        packName: pkg.packName || '',
+        date: pkg.date,
+        opacity: pkg.opacity,
+        blendMode: pkg.blendMode,
+        items: []
+      };
+      for (const it of (pkg.items || [])) {
+        const resBlob = await safeResolveBlob(it.resultBlob || it.resultUrl);
+        const baseBlob = await safeResolveBlob(it.baseBlob);
+        const wmBlob = await safeResolveBlob(it.wmBlob);
+        if (resBlob) zip.file(`gallery_images/${pkg.id}_${it.id}_res.bin`, resBlob);
+        if (baseBlob) zip.file(`gallery_images/${pkg.id}_${it.id}_base.bin`, baseBlob);
+        if (wmBlob) zip.file(`gallery_images/${pkg.id}_${it.id}_wm.bin`, wmBlob);
+        pkgMeta.items.push({ id: it.id, name: it.name, blendMode: it.blendMode, mimeType: it.mimeType });
+      }
+      galleryMeta.push(pkgMeta);
+    }
+
+    // 6. 预览图库全部图包
+    updateBackupProgressUI(78, '区域 6/8：预览图库', '正在打包预览机生成的各期预览图包…');
+    let dbPvPkgs = [];
+    try { dbPvPkgs = await DrizzleDB.getAllPvPackages(); } catch(e) { dbPvPkgs = previewPackages; }
+    const pvMeta = [];
+    for (const pkg of (dbPvPkgs || [])) {
+      const pkgMeta = {
+        id: pkg.id,
+        timestamp: pkg.timestamp || Date.now(),
+        name: pkg.name,
+        items: []
+      };
+      for (const it of (pkg.items || [])) {
+        const b = await safeResolveBlob(it.blob || it.url);
+        if (b) zip.file(`preview_images/${pkg.id}_${it.id}.bin`, b);
+        pkgMeta.items.push({ id: it.id, name: it.name });
+      }
+      pvMeta.push(pkgMeta);
+    }
+
+    // 7. 门槛记录与多图凭证
+    updateBackupProgressUI(88, '区域 7/8：门槛记录', '正在打包各会籍门槛账目与多图凭证…');
+    let dbThresh = [];
+    try { dbThresh = await DrizzleDB.getAllThresholds(); } catch(e) { dbThresh = thresholdRecords; }
+    const threshMeta = [];
+    for (const rec of (dbThresh || [])) {
+      const recMeta = {
+        id: rec.id,
+        clubName: rec.clubName,
+        contact: rec.contact,
+        amount: rec.amount,
+        timestamp: rec.timestamp || Date.now(),
+        images: []
+      };
+      const imgs = rec.images || (rec.imageBlob ? [{ id: 'legacy', name: '凭证.jpg', blob: rec.imageBlob }] : []);
+      for (const img of imgs) {
+        const b = await safeResolveBlob(img);
+        if (b) {
+          zip.file(`threshold_images/${rec.id}_${img.id}.bin`, b);
+          recMeta.images.push({ id: img.id, name: img.name, size: img.size || b.size || 0 });
+        }
+      }
+      threshMeta.push(recMeta);
+    }
+
+    // 8. 联系人分组与联系人
+    updateBackupProgressUI(93, '区域 8/8：联系人名册', '正在打包所有圈子分组、联系方式与风格标签…');
+    let contactGroupsMeta = [];
+    try { contactGroupsMeta = await DrizzleDB.getContactGroups(); } catch(e) { contactGroupsMeta = contactGroups; }
+    let contactsMeta = [];
+    try { contactsMeta = await DrizzleDB.getAllContacts(); } catch(e) { contactsMeta = contactsList; }
+
+    const manifest = {
+      version: '1.2.5',
+      exportTime: Date.now(),
+      localConfig,
+      widgetTexts,
+      repoTreeMeta,
+      wmTreeMeta,
+      galleryMeta,
+      pvMeta,
+      threshMeta,
+      contactGroupsMeta: contactGroupsMeta.length > 0 ? contactGroupsMeta : contactGroups,
+      contactsMeta: contactsMeta.length > 0 ? contactsMeta : contactsList
+    };
+    zip.file('drizzle_manifest.json', JSON.stringify(manifest, null, 2));
+
+    // 生成并压缩为 ZIP 文件
+    updateBackupProgressUI(96, '生成压缩包', '正在将全部数据写入 ZIP 压缩包…');
+    const zipBlob = await zip.generateAsync({ type: 'blob' }, (metadata) => {
+      const p = 95 + Math.round((metadata.percent / 100) * 5);
+      updateBackupProgressUI(p, '正在压缩数据流…', `正在写入压缩包数据：${Math.round(metadata.percent)}%`);
+    });
+
+    const fileName = getBackupZipFileName();
+    updateBackupProgressUI(100, '打包完成', `已成功生成 ${fileName}，正在调起下载…`);
+    await new Promise(r => setTimeout(r, 200));
+
+    saveAs(zipBlob, fileName);
+    closeBackupProgressModal();
+    alert(`数据备份已完整打包！\n已成功导出为：${fileName}\n已记住验证状态，之后可直接免密极速导出。`);
+  } catch (err) {
+    console.error('ZIP 导出异常:', err);
+    closeBackupProgressModal();
+    alert('导出备份出现异常，请稍后重试。');
+  }
+}
+
+async function handleImportDataBackup(e) {
   const file = e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async (ev) => {
-    try {
-      const data = JSON.parse(ev.target.result);
-      if (data.userName) localStorage.setItem('user_name', data.userName);
-      if (data.userQQ) localStorage.setItem('user_qq', data.userQQ);
-      if (data.userAvatar) localStorage.setItem('user_avatar', data.userAvatar);
-      if (data.customWallpaper) {
-        localStorage.setItem('custom_wallpaper', data.customWallpaper);
-        applyWallpaperStyle(data.customWallpaper);
-      }
-      if (data.rootFolder) {
-        rootFolder = data.rootFolder;
-        reviveRepoNodeUrls(rootFolder);
-        currentFolderNode = rootFolder;
-      }
 
-      // 恢复水印库
-      if (data.watermarkRoot) {
-        const reviveWmNode = (node) => {
-          const newNode = { id: node.id, name: node.name, subFolders: [], watermarks: [] };
-          for (let w of (node.watermarks || [])) {
-            if (w.base64) {
-              const arr = w.base64.split(',');
-              const mime = arr[0].match(/:(.*?);/)[1];
-              const bstr = atob(arr[1]);
-              let n = bstr.length;
-              const u8arr = new Uint8Array(n);
-              while (n--) u8arr[n] = bstr.charCodeAt(n);
-              const blob = new Blob([u8arr], { type: mime });
-              newNode.watermarks.push({ id: w.id, name: w.name, blob, src: URL.createObjectURL(blob) });
-            }
-          }
-          for (let sub of (node.subFolders || [])) {
-            newNode.subFolders.push(reviveWmNode(sub));
-          }
-          return newNode;
-        };
-        watermarkRoot = reviveWmNode(data.watermarkRoot);
-        currentWmFolderNode = watermarkRoot;
-        await DrizzleDB.saveWmRepo(watermarkRoot);
-        renderWmView();
-      }
-
-      initUserProfile();
-      renderRepoView();
-      alert('数据备份已成功恢复！');
-    } catch (err) {
-      console.error(err);
-      alert('数据解析失败，请确保导入了正确的备份文件。');
+  try {
+    const zip = await JSZip.loadAsync(file);
+    const manifestFile = zip.file('drizzle_manifest.json');
+    if (!manifestFile) {
+      alert('导入失败：未找到有效 drizzle 数据结构清单，请确认选择的是正确的备份 ZIP 文件。');
+      e.target.value = '';
+      return;
     }
-  };
-  reader.readAsText(file);
+
+    const manifestText = await manifestFile.async('text');
+    const manifest = JSON.parse(manifestText);
+
+    // 1. 恢复本地设置
+    if (manifest.localConfig) {
+      const cfg = manifest.localConfig;
+      if (cfg.user_name) localStorage.setItem('user_name', cfg.user_name);
+      if (cfg.user_qq) localStorage.setItem('user_qq', cfg.user_qq);
+      if (cfg.user_avatar) localStorage.setItem('user_avatar', cfg.user_avatar);
+      if (cfg.custom_wallpaper) {
+        localStorage.setItem('custom_wallpaper', cfg.custom_wallpaper);
+        applyWallpaperStyle(cfg.custom_wallpaper);
+      } else {
+        restoreDefaultWallpaper();
+      }
+      if (cfg.drizzle_app_theme) switchAppTheme(cfg.drizzle_app_theme);
+      if (cfg.drizzle_last_read_version) localStorage.setItem('drizzle_last_read_version', cfg.drizzle_last_read_version);
+    }
+
+    // 2. 恢复小组件文字与资产
+    if (manifest.widgetTexts) {
+      for (const [key, text] of Object.entries(manifest.widgetTexts)) {
+        await DrizzleDB.saveWidgetText(key, text);
+        const el = document.querySelector(`[data-wkey="${key}"]`);
+        if (el) el.innerHTML = text;
+      }
+    }
+    const widgetKeys = ['main_avatar', 'quote_pic', 'music_art', 'pol_left', 'pol_center', 'pol_right', 'sys_audio_avatar'];
+    for (const key of widgetKeys) {
+      const zFile = zip.file(`widget_assets/${key}.bin`);
+      if (zFile) {
+        const b = await zFile.async('blob');
+        await DrizzleDB.saveWidgetAsset(key, b);
+      }
+    }
+    await restoreAllWidgetData();
+
+    // 3. 恢复原图库
+    if (manifest.repoTreeMeta) {
+      const rebuildRepoTree = async (node) => {
+        const out = { id: node.id, name: node.name, subFolders: [], images: [] };
+        for (const img of (node.images || [])) {
+          const zFile = zip.file(`raw_images/${img.id}.bin`);
+          if (zFile) {
+            const b = await zFile.async('blob');
+            out.images.push({
+              id: img.id,
+              name: img.name,
+              blob: b,
+              size: img.size || b.size,
+              src: URL.createObjectURL(b)
+            });
+          }
+        }
+        for (const sub of (node.subFolders || [])) {
+          out.subFolders.push(await rebuildRepoTree(sub));
+        }
+        return out;
+      };
+      rootFolder = await rebuildRepoTree(manifest.repoTreeMeta);
+      currentFolderNode = rootFolder;
+      modalCurrentFolderNode = rootFolder;
+      repoPathStack = [rootFolder];
+      await DrizzleDB.saveRepo(rootFolder);
+      renderRepoView();
+    }
+
+    // 4. 恢复水印库
+    if (manifest.wmTreeMeta) {
+      const rebuildWmTree = async (node) => {
+        const out = { id: node.id, name: node.name, subFolders: [], watermarks: [] };
+        for (const wm of (node.watermarks || [])) {
+          const zFile = zip.file(`watermark_images/${wm.id}.bin`);
+          if (zFile) {
+            const b = await zFile.async('blob');
+            out.watermarks.push({
+              id: wm.id,
+              name: wm.name,
+              blob: b,
+              size: wm.size || b.size,
+              src: URL.createObjectURL(b)
+            });
+          }
+        }
+        for (const sub of (node.subFolders || [])) {
+          out.subFolders.push(await rebuildWmTree(sub));
+        }
+        return out;
+      };
+      watermarkRoot = await rebuildWmTree(manifest.wmTreeMeta);
+      currentWmFolderNode = watermarkRoot;
+      wmPickerCurrentNode = watermarkRoot;
+      wmPathStack = [watermarkRoot];
+      await DrizzleDB.saveWmRepo(watermarkRoot);
+      renderWmView();
+    }
+
+    // 5. 恢复贴膜图库
+    if (manifest.galleryMeta && Array.isArray(manifest.galleryMeta)) {
+      galleryPackages = [];
+      for (const pkg of manifest.galleryMeta) {
+        const restoredItems = [];
+        for (const it of (pkg.items || [])) {
+          const resF = zip.file(`gallery_images/${pkg.id}_${it.id}_res.bin`);
+          const baseF = zip.file(`gallery_images/${pkg.id}_${it.id}_base.bin`);
+          const wmF = zip.file(`gallery_images/${pkg.id}_${it.id}_wm.bin`);
+          const resBlob = resF ? await resF.async('blob') : null;
+          const baseBlob = baseF ? await baseF.async('blob') : null;
+          const wmBlob = wmF ? await wmF.async('blob') : null;
+          restoredItems.push({
+            id: it.id,
+            name: it.name,
+            blendMode: it.blendMode,
+            mimeType: it.mimeType,
+            resultBlob: resBlob,
+            baseBlob: baseBlob,
+            wmBlob: wmBlob,
+            resultUrl: resBlob ? URL.createObjectURL(resBlob) : ''
+          });
+        }
+        const fullPkg = {
+          ...pkg,
+          coverUrl: restoredItems[0] ? restoredItems[0].resultUrl : '',
+          items: restoredItems
+        };
+        galleryPackages.push(fullPkg);
+        await DrizzleDB.savePackage(fullPkg);
+      }
+      renderGallery();
+    }
+
+    // 6. 恢复预览图库
+    if (manifest.pvMeta && Array.isArray(manifest.pvMeta)) {
+      previewPackages = [];
+      for (const pkg of manifest.pvMeta) {
+        const restoredItems = [];
+        for (const it of (pkg.items || [])) {
+          const zFile = zip.file(`preview_images/${pkg.id}_${it.id}.bin`);
+          if (zFile) {
+            const b = await zFile.async('blob');
+            restoredItems.push({
+              id: it.id,
+              name: it.name,
+              blob: b,
+              url: URL.createObjectURL(b)
+            });
+          }
+        }
+        const fullPvPkg = {
+          ...pkg,
+          coverUrl: restoredItems[0] ? restoredItems[0].url : '',
+          items: restoredItems
+        };
+        previewPackages.push(fullPvPkg);
+        await DrizzleDB.savePvPackage(fullPvPkg);
+      }
+      renderPvGallery();
+    }
+
+    // 7. 恢复门槛记录
+    if (manifest.threshMeta && Array.isArray(manifest.threshMeta)) {
+      thresholdRecords = [];
+      for (const rec of manifest.threshMeta) {
+        const restoredImgs = [];
+        for (const img of (rec.images || [])) {
+          const zFile = zip.file(`threshold_images/${rec.id}_${img.id}.bin`);
+          if (zFile) {
+            const b = await zFile.async('blob');
+            restoredImgs.push({
+              id: img.id,
+              name: img.name,
+              blob: b,
+              size: img.size || b.size,
+              src: URL.createObjectURL(b)
+            });
+          }
+        }
+        const fullRec = {
+          ...rec,
+          images: restoredImgs,
+          imageBlob: restoredImgs[0] ? restoredImgs[0].blob : null,
+          imageSrc: restoredImgs[0] ? restoredImgs[0].src : ''
+        };
+        thresholdRecords.push(fullRec);
+        await DrizzleDB.saveThreshold(fullRec);
+      }
+      renderThresholdView();
+    }
+
+    // 8. 恢复联系人与分组
+    if (manifest.contactGroupsMeta && Array.isArray(manifest.contactGroupsMeta) && manifest.contactGroupsMeta.length > 0) {
+      contactGroups = manifest.contactGroupsMeta;
+      currentActiveGroupId = contactGroups[0].id;
+      await DrizzleDB.saveContactGroups(contactGroups);
+    }
+    if (manifest.contactsMeta && Array.isArray(manifest.contactsMeta)) {
+      contactsList = manifest.contactsMeta;
+      for (const c of contactsList) {
+        await DrizzleDB.saveContact(c);
+      }
+      renderContactsView();
+    }
+
+    initUserProfile();
+    alert('全量 ZIP 数据已成功完好恢复！所有图库、原图、门槛记录与联系人已全部就绪。');
+  } catch (err) {
+    console.error('ZIP 导入恢复失败:', err);
+    alert('ZIP 数据解析恢复失败，请确认文件完整性。');
+  }
+  e.target.value = '';
 }
 
 /* ================================================================
@@ -7963,18 +8396,33 @@ async function executeBatchPreviewGeneration() {
   const globalOp = parseFloat(document.getElementById('pvOpacityInput')?.value || 100) / 100;
   const wmOp = parseFloat(document.getElementById('pvWmOpacityInput')?.value || 15) / 100;
 
-  let W = 1080, H = 1080;
-  if (pvRatio === '3-4') { W = 1080; H = 1440; }
-  else if (pvRatio === '9-16') { W = 1080; H = 1920; }
-  else if (pvRatio === 'custom') { W = pvCustomRatioVal.w; H = pvCustomRatioVal.h; }
-
   for (let i = 0; i < pvBaseImages.length; i++) {
     const item = pvBaseImages[i];
     if (progressText) progressText.innerText = `正在处理 (${i + 1}/${pvBaseImages.length})：正在定位原图…`;
     await new Promise(r => setTimeout(r, 20));
 
     const bImg = await loadImage(item.src);
-    let curW = W, curH = H;
+
+    // 动态计算无损高清输出分辨率：以底图与边框中的最大原始分辨率为基准，彻底杜绝画质压缩
+    let aspect = 1;
+    if (pvRatio === '3-4') aspect = 3 / 4;
+    else if (pvRatio === '9-16') aspect = 9 / 16;
+    else if (pvRatio === 'custom') aspect = (pvCustomRatioVal.w || 1080) / (pvCustomRatioVal.h || 1080);
+
+    let maxFrameDim = 0;
+    pvFrameLayers.forEach(l => {
+      if (l.img) maxFrameDim = Math.max(maxFrameDim, l.img.naturalWidth || 0, l.img.naturalHeight || 0);
+    });
+    const maxSourceDim = Math.max(bImg.naturalWidth || 0, bImg.naturalHeight || 0, maxFrameDim, 2048);
+
+    let curW = 2048, curH = 2048;
+    if (aspect <= 1) {
+      curH = maxSourceDim;
+      curW = Math.round(curH * aspect);
+    } else {
+      curW = maxSourceDim;
+      curH = Math.round(curW / aspect);
+    }
 
     const canvas = document.createElement('canvas');
     canvas.width = curW;
@@ -8032,6 +8480,8 @@ async function executeBatchPreviewGeneration() {
       wmLayerCanvas.width = Math.round(bw);
       wmLayerCanvas.height = Math.round(bh);
       const wctx = wmLayerCanvas.getContext('2d');
+      wctx.imageSmoothingEnabled = true;
+      wctx.imageSmoothingQuality = 'high';
       wctx.drawImage(activeWm, 0, 0, bw, bh);
 
       if (enableFace && faceModel) {
@@ -8258,6 +8708,8 @@ async function renderSingleAdjustCanvas() {
   const curH = activeSingleAdjustItem.curH || 1080;
   canvas.width = curW;
   canvas.height = curH;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
 
   const bImg = await loadImage(activeSingleAdjustItem.baseSrc);
 
@@ -8303,10 +8755,18 @@ async function renderSingleAdjustCanvas() {
   const activeWm = pvWatermarkImg || watermarkImg;
   if (pvIsWmOverlayEnabled && activeWm) {
     const wmOp = parseFloat(document.getElementById('pvWmOpacityInput')?.value || 15) / 100;
+    const wmLayerCanvas = document.createElement('canvas');
+    wmLayerCanvas.width = Math.round(bw);
+    wmLayerCanvas.height = Math.round(bh);
+    const wctx = wmLayerCanvas.getContext('2d');
+    wctx.imageSmoothingEnabled = true;
+    wctx.imageSmoothingQuality = 'high';
+    wctx.drawImage(activeWm, 0, 0, bw, bh);
+
     ctx.save();
     ctx.globalAlpha = wmOp;
     ctx.globalCompositeOperation = 'overlay';
-    ctx.drawImage(activeWm, bx, by, bw, bh);
+    ctx.drawImage(wmLayerCanvas, bx, by, bw, bh);
     ctx.restore();
   }
 
