@@ -1726,12 +1726,18 @@ input[type="range"]::-moz-range-thumb {
 <input type="file" id="dataImportInput" class="hidden-file-input" accept=".json" onchange="handleImportDataBackup(event)">
 <input type="file" id="thresholdImageInput" class="hidden-file-input" multiple accept="image/*" onchange="handleThresholdFileSelect(event)">
 
-<!-- ============ 开场雨滴遮罩 ============ -->
+<!-- ============ 开场雨滴遮罩（新增详细文件与模块加载实时展示） ============ -->
 <div id="bootOverlay">
   <canvas id="rainCanvas"></canvas>
-  <div class="boot-content">
+  <div class="boot-content" style="width: min(320px, 82vw); gap: 14px;">
     <div class="boot-dot" id="bootDot"></div>
-    <div class="boot-text" id="bootText">正在加载细雨小助手…</div>
+    <div class="boot-text" id="bootText">正在启动 drizzle 引擎…</div>
+    
+    <!-- 详细文件与资源模块实时描述 -->
+    <div id="bootDetailText" style="font-size: 11px; color: #94A3B8; font-weight: 500; text-align: center; min-height: 18px; letter-spacing: 0.5px; opacity: 0.9; transition: all .2s ease;">
+      正在检查本地 IndexedDB 存储环境…
+    </div>
+
     <div class="boot-bar-track"><div class="boot-bar-fill" id="bootBarFill"></div></div>
     <div class="boot-pct" id="bootPct">0%</div>
   </div>
@@ -7762,20 +7768,31 @@ async function renderPreviewStage() {
       let bx = 0, by = 0, bw = W, bh = H;
 
       if (pvIsAutoHoleEnabled && pvDetectedHoleRect) {
-        const holeX = pvDetectedHoleRect.x * W;
-        const holeY = pvDetectedHoleRect.y * H;
-        const holeW = pvDetectedHoleRect.width * W;
-        const holeH = pvDetectedHoleRect.height * H;
+        const holeExpand = 15;
+        const holeX = pvDetectedHoleRect.x * W - holeExpand;
+        const holeY = pvDetectedHoleRect.y * H - holeExpand;
+        const holeW = pvDetectedHoleRect.width * W + holeExpand * 2;
+        const holeH = pvDetectedHoleRect.height * H + holeExpand * 2;
 
         const imgRatio = pvFirstBaseImgObj.naturalWidth / pvFirstBaseImgObj.naturalHeight;
         const holeRatio = holeW / holeH;
 
+        // 采用 Cover 完全覆盖算法：确保长宽均不小于镂空区域，彻底杜绝黑边
         if (imgRatio > holeRatio) {
           bh = holeH * pvBaseScale;
           bw = bh * imgRatio;
         } else {
           bw = holeW * pvBaseScale;
           bh = bw / imgRatio;
+        }
+        // 若计算后的某一边依然小于镂空区域，强制拉伸等比覆盖
+        if (bw < holeW * pvBaseScale) {
+          bw = holeW * pvBaseScale;
+          bh = bw / imgRatio;
+        }
+        if (bh < holeH * pvBaseScale) {
+          bh = holeH * pvBaseScale;
+          bw = bh * imgRatio;
         }
 
         bx = holeX + (holeW - bw) / 2 + pvBaseOffsetX * (W / 320);
@@ -7969,20 +7986,30 @@ async function executeBatchPreviewGeneration() {
     // 1. 底图定位
     let bx = 0, by = 0, bw = curW, bh = curH;
     if (pvIsAutoHoleEnabled && pvDetectedHoleRect) {
-      const holeX = pvDetectedHoleRect.x * curW;
-      const holeY = pvDetectedHoleRect.y * curH;
-      const holeW = pvDetectedHoleRect.width * curW;
-      const holeH = pvDetectedHoleRect.height * curH;
+      const holeExpand = 15;
+      const holeX = pvDetectedHoleRect.x * curW - holeExpand;
+      const holeY = pvDetectedHoleRect.y * curH - holeExpand;
+      const holeW = pvDetectedHoleRect.width * curW + holeExpand * 2;
+      const holeH = pvDetectedHoleRect.height * curH + holeExpand * 2;
 
       const imgRatio = bImg.naturalWidth / bImg.naturalHeight;
       const holeRatio = holeW / holeH;
 
+      // 采用 Cover 完全覆盖算法：确保长宽均不小于镂空区域，彻底杜绝黑边
       if (imgRatio > holeRatio) {
         bh = holeH * pvBaseScale;
         bw = bh * imgRatio;
       } else {
         bw = holeW * pvBaseScale;
         bh = bw / imgRatio;
+      }
+      if (bw < holeW * pvBaseScale) {
+        bw = holeW * pvBaseScale;
+        bh = bw / imgRatio;
+      }
+      if (bh < holeH * pvBaseScale) {
+        bh = holeH * pvBaseScale;
+        bw = bh * imgRatio;
       }
 
       bx = holeX + (holeW - bw) / 2 + pvBaseOffsetX * (curW / 320);
@@ -8237,13 +8264,15 @@ async function renderSingleAdjustCanvas() {
   // 1. 底图
   let bx = 0, by = 0, bw = curW, bh = curH;
   if (pvIsAutoHoleEnabled && pvDetectedHoleRect) {
-    const holeX = pvDetectedHoleRect.x * curW;
-    const holeY = pvDetectedHoleRect.y * curH;
-    const holeW = pvDetectedHoleRect.width * curW;
-    const holeH = pvDetectedHoleRect.height * curH;
+    const holeExpand = 15;
+    const holeX = pvDetectedHoleRect.x * curW - holeExpand;
+    const holeY = pvDetectedHoleRect.y * curH - holeExpand;
+    const holeW = pvDetectedHoleRect.width * curW + holeExpand * 2;
+    const holeH = pvDetectedHoleRect.height * curH + holeExpand * 2;
     const imgRatio = bImg.naturalWidth / bImg.naturalHeight;
     const holeRatio = holeW / holeH;
 
+    // 采用 Cover 完全覆盖算法：确保长宽均不小于镂空区域，彻底杜绝黑边
     if (imgRatio > holeRatio) {
       bh = holeH * singleScale;
       bw = bh * imgRatio;
@@ -8251,6 +8280,15 @@ async function renderSingleAdjustCanvas() {
       bw = holeW * singleScale;
       bh = bw / imgRatio;
     }
+    if (bw < holeW * singleScale) {
+      bw = holeW * singleScale;
+      bh = bw / imgRatio;
+    }
+    if (bh < holeH * singleScale) {
+      bh = holeH * singleScale;
+      bw = bh * imgRatio;
+    }
+
     bx = holeX + (holeW - bw) / 2 + singleOffsetX * (curW / 320);
     by = holeY + (holeH - bh) / 2 + singleOffsetY * (curH / 320);
   } else {
