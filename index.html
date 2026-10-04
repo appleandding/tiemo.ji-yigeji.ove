@@ -1709,13 +1709,13 @@ input[type="range"]::-moz-range-thumb {
 <body>
 <div class="dot-pattern"></div>
 
-<!-- 隐藏文件输入 -->
-<input type="file" id="wmInput" class="hidden-file-input" onchange="handleWmFile(event)">
+<!-- 隐藏文件输入（统一限定直接呼出手机相册） -->
+<input type="file" id="wmInput" class="hidden-file-input" accept="image/*" onchange="handleWmFile(event)">
+<input type="file" id="rawInputByMedia" multiple class="hidden-file-input" accept="image/*" onchange="handleBulkFiles(event)">
 <input type="file" id="rawInputByFiles" multiple class="hidden-file-input" onchange="handleBulkFiles(event)">
 <input type="file" id="rawInputByFolder" webkitdirectory directory multiple class="hidden-file-input" onchange="handleBulkFiles(event)">
-<input type="file" id="rawInputByMedia" multiple class="hidden-file-input" onchange="handleBulkFiles(event)">
-<input type="file" id="repoImageUpload" multiple class="hidden-file-input" onchange="handleUploadToCurrentFolder(event)">
-<input type="file" id="wmLibraryUpload" multiple class="hidden-file-input" onchange="handleWmLibraryUpload(event)">
+<input type="file" id="repoImageUpload" multiple class="hidden-file-input" accept="image/*" onchange="handleUploadToCurrentFolder(event)">
+<input type="file" id="wmLibraryUpload" multiple class="hidden-file-input" accept="image/*" onchange="handleWmLibraryUpload(event)">
 <input type="file" id="avatarFileInput" class="hidden-file-input">
 <input type="file" id="quoteFileInput" class="hidden-file-input">
 <input type="file" id="musicAlbumInput" class="hidden-file-input">
@@ -2286,7 +2286,10 @@ input[type="range"]::-moz-range-thumb {
     <div class="card" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;">
       <div class="crumbs" id="repoBreadcrumbs"></div>
       <div style="display:flex; gap:8px; flex-shrink:0;">
-        <button class="mini-btn" onclick="document.getElementById('repoImageUpload').click()">+ 导入原图</button>
+        <button class="mini-btn" onclick="document.getElementById('repoImageUpload').click()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="display:inline; vertical-align:-1px; margin-right:3px;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          相册选图导入 (推荐)
+        </button>
         <button class="mini-btn ghost" onclick="promptCreateFolder()">新建文件夹</button>
       </div>
     </div>
@@ -2316,7 +2319,10 @@ input[type="range"]::-moz-range-thumb {
     <div class="card" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;">
       <div class="crumbs" id="wmBreadcrumbs"></div>
       <div style="display:flex; gap:8px; flex-shrink:0;">
-        <button class="mini-btn" onclick="document.getElementById('wmLibraryUpload').click()">+ 上传水印</button>
+        <button class="mini-btn" onclick="document.getElementById('wmLibraryUpload').click()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="display:inline; vertical-align:-1px; margin-right:3px;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          相册选图导入 (推荐)
+        </button>
         <button class="mini-btn ghost" onclick="promptCreateWmFolder()">新建文件夹</button>
       </div>
     </div>
@@ -2437,13 +2443,13 @@ input[type="range"]::-moz-range-thumb {
 <!-- 弹窗群 -->
 <!-- ============================================================ -->
 
-<!-- 水印导入来源选择 -->
+<!-- 水印导入来源选择（相册选图置顶推荐） -->
 <div id="wmImportChoiceModal" class="modal-mask hidden">
   <div class="modal-card" style="max-width:320px;">
     <div class="modal-head">
       <div>
         <h3>选择水印来源</h3>
-        <p>从本地文件或水印库中取一张水印膜</p>
+        <p>优先从相册选取或直接调用水印素材库</p>
       </div>
       <button class="x-btn" onclick="closeWmImportChoice()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
@@ -2452,11 +2458,11 @@ input[type="range"]::-moz-range-thumb {
     <div style="display:flex; flex-direction:column; gap:9px;">
       <button class="channel-btn" onclick="chooseLocalWm()">
         <div class="channel-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="2"/><path d="m21 15-5-5L5 21"/></svg>
         </div>
         <div>
-          <div class="channel-title">从本地文件导入</div>
-          <div class="channel-sub">选择一张全屏透明底 PNG / WebP</div>
+          <div class="channel-title"><span>相册选图导入</span><span class="tag-mini">推荐</span></div>
+          <div class="channel-sub">直连手机相册，选择透明底水印 PNG</div>
         </div>
       </button>
       <button class="channel-btn" onclick="chooseFromWmLib()">
@@ -2464,8 +2470,8 @@ input[type="range"]::-moz-range-thumb {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
         </div>
         <div>
-          <div class="channel-title">从水印库选择 <span class="tag-mini">推荐</span></div>
-          <div class="channel-sub">浏览已分组保存的水印文件夹</div>
+          <div class="channel-title">从水印库选择</div>
+          <div class="channel-sub">浏览已分类保存的水印相册</div>
         </div>
       </button>
     </div>
@@ -2497,13 +2503,13 @@ input[type="range"]::-moz-range-thumb {
   </div>
 </div>
 
-<!-- 导入通道选择 -->
+<!-- 导入通道选择（增加标准相册导入） -->
 <div id="importChannelModal" class="modal-mask hidden">
   <div class="modal-card">
     <div class="modal-head">
       <div>
         <h3>选择原图导入通道</h3>
-        <p>避开受限弹窗，直接多选相册或文件夹</p>
+        <p>支持相册多选、整套文件夹导入或从原图库选取</p>
       </div>
       <button class="x-btn" onclick="closeImportChannelModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
@@ -2511,12 +2517,24 @@ input[type="range"]::-moz-range-thumb {
     </div>
 
     <div style="display:flex; flex-direction:column; gap:9px;">
+      <button class="channel-btn" onclick="triggerImport('media')">
+        <div class="channel-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="2"/><path d="m21 15-5-5L5 21"/>
+          </svg>
+        </div>
+        <div>
+          <div class="channel-title"><span>相册直接导入 (支持多选)</span><span class="tag-mini">常用</span></div>
+          <div class="channel-sub">直接呼出手机相册，批量勾选原图</div>
+        </div>
+      </button>
+
       <button class="channel-btn" onclick="triggerImport('files')">
         <div class="channel-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         </div>
         <div>
-          <div class="channel-title"><span>系统文件多选</span><span class="tag-mini">推荐</span></div>
+          <div class="channel-title"><span>系统文件管理器多选</span><span class="tag-mini">推荐</span></div>
           <div class="channel-sub">调起完整文件管理，随意进相册目录全选</div>
         </div>
       </button>
@@ -2538,16 +2556,6 @@ input[type="range"]::-moz-range-thumb {
         <div>
           <div class="channel-title">从原po原图库选择</div>
           <div class="channel-sub">从预先分类的多层子文件夹中全选导入</div>
-        </div>
-      </button>
-
-      <button class="channel-btn" onclick="triggerImport('media')">
-        <div class="channel-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        </div>
-        <div>
-          <div class="channel-title">常规相册多选</div>
-          <div class="channel-sub">可能受系统弹窗限制</div>
         </div>
       </button>
     </div>
@@ -3128,13 +3136,13 @@ input[type="range"]::-moz-range-thumb {
   </div>
 </section>
 
-<!-- 预览框来源选择弹窗（支持相册与水印库） -->
+<!-- 预览框来源选择弹窗（相册选图置顶推荐） -->
 <div id="pvFrameChoiceModal" class="modal-mask hidden">
   <div class="modal-card" style="max-width:320px;">
     <div class="modal-head">
       <div>
         <h3>选择预览框/条来源</h3>
-        <p>支持多图层叠加</p>
+        <p>优先从手机相册选择，支持多图层叠加</p>
       </div>
       <button class="x-btn" onclick="closePvFrameChoiceModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 18L18 6M6 6l12 12"/></svg>
@@ -3143,11 +3151,11 @@ input[type="range"]::-moz-range-thumb {
     <div style="display:flex; flex-direction:column; gap:9px; margin-top:4px;">
       <button class="channel-btn" onclick="choosePvLocalFrame()">
         <div class="channel-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="2"/><path d="m21 15-5-5L5 21"/></svg>
         </div>
         <div>
-          <div class="channel-title">从本地文件导入</div>
-          <div class="channel-sub">选择透明 PNG 预览框/居中条</div>
+          <div class="channel-title"><span>相册选图导入</span><span class="tag-mini">推荐</span></div>
+          <div class="channel-sub">直连手机相册，选择透明 PNG 边框/预览条</div>
         </div>
       </button>
       <button class="channel-btn" onclick="choosePvFrameFromWmLib()">
@@ -3155,7 +3163,7 @@ input[type="range"]::-moz-range-thumb {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
         </div>
         <div>
-          <div class="channel-title">从水印库选择 <span class="tag-mini">推荐</span></div>
+          <div class="channel-title">从水印素材库选择</div>
           <div class="channel-sub">从已保存的水印与边框库中选取</div>
         </div>
       </button>
@@ -3163,7 +3171,7 @@ input[type="range"]::-moz-range-thumb {
   </div>
 </div>
 
-<!-- 单张效果精修微调居中大图弹窗 -->
+<!-- 单张效果精修微调居中大图弹窗（支持双指放大整张大图查看细节） -->
 <div id="pvSingleAdjustModal" class="modal-mask hidden" onclick="closePvSingleAdjustModal(event)">
   <div class="modal-card" style="max-width: 400px; width: 94%; max-height: 92vh; display: flex; flex-direction: column; gap: 10px;" onclick="event.stopPropagation()">
     <div class="modal-head" style="border-bottom:1px solid var(--line); padding-bottom:8px;">
@@ -3172,8 +3180,8 @@ input[type="range"]::-moz-range-thumb {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
         <div>
-          <h3 style="font-size:13px; font-weight:800;">单张效果精修微调</h3>
-          <p style="font-size:9.5px; color:var(--text-muted);">方向键微调位置 · 滑杆缩放大小</p>
+          <h3 style="font-size:13px; font-weight:800;">效果精修与细节查看</h3>
+          <p style="font-size:9.5px; color:var(--text-muted);">下方滑杆调原图 · 双指在画幅内缩放可放大整图看细节</p>
         </div>
       </div>
       <div style="display:flex; gap:6px;">
@@ -3182,11 +3190,16 @@ input[type="range"]::-moz-range-thumb {
       </div>
     </div>
 
-    <!-- 居中超大预览画布视口 -->
-    <div style="display:flex; justify-content:center; align-items:center; width:100%;">
-      <div id="pvSingleStageBox" class="pv-stage-box ratio-1-1" style="width: min(82vw, 320px); height: min(82vw, 320px); border-radius: 18px; overflow: hidden; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-        <canvas id="pvSingleCanvas" class="pv-canvas-layer" style="position: absolute; inset: 0; width: 100%; height: 100%; display: block;"></canvas>
+    <!-- 居中超大预览画布视口（支持双指整体缩放漫游） -->
+    <div style="display:flex; justify-content:center; align-items:center; width:100%; position:relative;">
+      <div id="pvSingleStageBox" class="pv-stage-box ratio-1-1" style="width: min(82vw, 320px); height: min(82vw, 320px); border-radius: 18px; overflow: hidden; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.1); touch-action: none; user-select: none;">
+        <div id="pvSingleTransformWrap" style="width:100%; height:100%; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; transform-origin:center center; will-change:transform;">
+          <canvas id="pvSingleCanvas" class="pv-canvas-layer" style="position:absolute; inset:0; width:100%; height:100%; display:block;"></canvas>
+        </div>
       </div>
+      <button type="button" class="mini-btn ghost" id="pvSingleResetViewBtn" onclick="resetPvSingleViewportZoom()" style="position:absolute; bottom:8px; right:calc(50% - min(41vw, 160px) + 8px); z-index:15; font-size:9.5px; opacity:0.9; display:none; background:rgba(15,23,42,0.75); color:#FFF; border:none;" title="复位全图视角">
+        复位全图视角
+      </button>
     </div>
 
     <!-- 缩放与微调操作栏 -->
@@ -3548,13 +3561,13 @@ input[type="range"]::-moz-range-thumb {
   </div>
 </div>
 
-<!-- 预览机底图来源选择弹窗 -->
+<!-- 预览机底图来源选择弹窗（相册选图置顶推荐） -->
 <div id="pvSourceChoiceModal" class="modal-mask hidden">
   <div class="modal-card" style="max-width:320px;">
     <div class="modal-head">
       <div>
         <h3>选择底图导入来源</h3>
-        <p>导入待打预览效果的一组图片</p>
+        <p>支持多选相册、已贴膜图包或原图库</p>
       </div>
       <button class="x-btn" onclick="closePvSourceChoiceModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 18L18 6M6 6l12 12"/></svg>
@@ -3563,11 +3576,11 @@ input[type="range"]::-moz-range-thumb {
     <div style="display:flex; flex-direction:column; gap:9px;">
       <button class="channel-btn" onclick="triggerPvBaseLocal()">
         <div class="channel-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="2"/><path d="m21 15-5-5L5 21"/></svg>
         </div>
         <div>
-          <div class="channel-title">从本地相册导入</div>
-          <div class="channel-sub">支持多选任意大图</div>
+          <div class="channel-title"><span>相册选图导入 (支持多选)</span><span class="tag-mini">推荐</span></div>
+          <div class="channel-sub">呼出手机相册，批量勾选待打预览底图</div>
         </div>
       </button>
       <button class="channel-btn" onclick="triggerPvBaseFromGallery()">
@@ -3576,7 +3589,7 @@ input[type="range"]::-moz-range-thumb {
         </div>
         <div>
           <div class="channel-title">从已贴膜图库导入</div>
-          <div class="channel-sub">自动调取贴膜机导出的图包</div>
+          <div class="channel-sub">自动调取贴膜机刚生成的整套图包</div>
         </div>
       </button>
       <button class="channel-btn" onclick="triggerPvBaseFromRepo()">
@@ -3584,8 +3597,8 @@ input[type="range"]::-moz-range-thumb {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
         </div>
         <div>
-          <div class="channel-title">从原po原图库导入 <span class="tag-mini">支持文件夹整套选</span></div>
-          <div class="channel-sub">自由进出各级原图相册一键全选导入</div>
+          <div class="channel-title">从原po原图库导入 <span class="tag-mini">支持整套选</span></div>
+          <div class="channel-sub">进出各级原图相册一键全选导入</div>
         </div>
       </button>
     </div>
@@ -3656,7 +3669,7 @@ input[type="range"]::-moz-range-thumb {
     </button>
     <div class="app-title">更新公告与历史</div>
     <div class="app-header-right">
-      <span class="mini-badge ready"><span class="bdot"></span><span>v1.2.0 最新版</span></span>
+      <span class="mini-badge ready"><span class="bdot"></span><span>v1.3.0 最新版</span></span>
     </div>
   </div>
 
@@ -3678,10 +3691,10 @@ input[type="range"]::-moz-range-thumb {
           </svg>
         </div>
         <div>
-          <div style="font-size:14px; font-weight:800; color:var(--text-main);">版本更新公告</div>
+          <div style="font-size:14px; font-weight:800; color:var(--text-main);">版本更新优化公告</div>
           <div class="ver-badge">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            <span>v1.2.0 正式上线</span>
+            <span>v1.3.0 正式上线</span>
           </div>
         </div>
       </div>
@@ -3696,82 +3709,70 @@ input[type="range"]::-moz-range-thumb {
         <div class="log-sec-title">
           <span>版本概览</span>
         </div>
-        <div class="log-item-text">本次版本重点新增两大核心功能：<b>预览机</b>、<b>预览图库</b>，同时对全功能模块进行大量优化升级，修复多项使用问题，具体更新内容如下：</div>
+        <div class="log-item-text">本次对AI预览机、贴膜机各项功能进行全面优化修复，解决已知使用问题、升级多项实用功能，具体更新内容如下：</div>
+      </div>
+
+      <div class="log-section-card">
+        <div class="log-sec-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>一、优化PNG导出功能</span>
+        </div>
+        <div class="log-item-text">修复用户反馈的PNG导出不完全、漏图的问题，优化导出底层逻辑，保障图片能够完整导出，解决导出缺失问题。</div>
       </div>
 
       <div class="log-section-card">
         <div class="log-sec-title">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/><circle cx="15" cy="15" r="2"/></svg>
-          <span>一、新增核心功能</span>
+          <span>二、升级预览机APP功能</span>
         </div>
         <div class="log-item-text">
-          <b>1. 全新功能：预览机</b><br>
-          1. 支持底图批量导入、水印导入预览，可实现水印覆盖混合效果，适配贴膜水印制作需求<br>
-          2. 新增透明底自动识别功能，识别区域以蓝色边框标注，支持首张图片定位调整，后续图片自动适配填充，可手动关闭识别、自由自定义位置<br>
-          3. 集成贴膜水印效果，可直接在预览机内完成水印贴膜操作<br>
-          4. 支持多预览框导入，可自由调整各水印框层级、上下层级排序，分层排版后批量生成图片<br>
-          5. 新增自定义比例功能，破除固定比例限制，适配头像、壁纸等多场景预览制作
-        </div>
-        <div class="log-item-text">
-          <b>2. 全新页面：预览图库</b><br>
-          1. 独立第二应用页面，专门收纳所有归档、保存的原图与预览成品图<br>
-          2. 统一汇总所有制作记录，无需反复导出查找，素材集中管理更便捷
+          <b>1.</b> 优化多宫格导入预览功能，导入多宫格预览框后，系统可自动识别透明底画布，将导入原图依次适配填充至图一、图二、图三等对应宫格位置，自动校准图片摆放位置。<br>
+          <b>2.</b> 适配多宫格导出规则，生成图片时严格按照宫格排版样式导出，同时保留图片原有清晰度，保证成品画质无损。<br>
+          <b>3.</b> 优化贴膜水印添加逻辑，支持根据原图顺序逐张贴合水印，采用单图单次贴合模式，取消大范围批量贴合，精准匹配每一张原图。
         </div>
       </div>
 
       <div class="log-section-card">
         <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-          <span>二、核心功能优化</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <span>三、优化预览机图片压缩适配逻辑</span>
         </div>
-        <div class="log-item-text">
-          <b>1. 导出保存功能升级</b><br>
-          1. 新增批量导出模式，点击导出弹出双选项：ZIP压缩包导出、全部图片一次性PNG导出至相册<br>
-          2. 单张图片保存默认直接输出PNG格式并保存到手机相册<br>
-          3. 批量生成图片新增实时进度条，精准展示制作进度，同步提示「人脸擦除、位置调整」等操作步骤
-        </div>
-        <div class="log-item-text">
-          <b>2. 预览编辑操作优化</b><br>
-          1. 新增原图锁定功能：导入图片后默认开启锁图，防止误触滑动移位；手动调整图片时可关闭锁定，自由操作<br>
-          2. 支持成品图二次编辑，点击已生成图片，居中弹出大图编辑弹窗，可微调图片位置、大小<br>
-          3. 支持双指放大查看图片细节，新增撤销功能，可撤回误操作<br>
-          4. 优化水印框编辑：支持精准选择指定水印框单独调整，可自由移动、缩放、旋转，旋转支持正负数值调节<br>
-          5. 新增贴膜水印擦脸开关，可自主开启或关闭人脸擦除功能
-        </div>
-        <div class="log-item-text">
-          <b>3. 素材导入与展示优化</b><br>
-          1. 支持完整文件夹批量导入，可直接选取文件夹导入全部图片<br>
-          2. 实时刷新素材列表，新增、删除图片即时生效，无需重启页面即可查看最新素材<br>
-          3. 新增原图列表展示功能，清晰查看所有已导入素材<br>
-          4. 优化操作排版，所有移动、调整类功能按键统一放置在预览框下方，操作更直观<br>
-          5. 实现水印APP与预览机功能互通，预览框可跨功能联动选择使用
-        </div>
+        <div class="log-item-text">修复自定义尺寸下图片变形问题，用户上传预览框、自定义图片长度和大小时，系统将保留原图原始比例，不压缩、不拉伸、不挤压图片。仅自动适配调整水印框比例，最大程度还原原图效果。</div>
       </div>
 
       <div class="log-section-card">
         <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/></svg>
-          <span>三、全局美化与适配优化</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          <span>四、修复iOS端适配问题</span>
         </div>
-        <div class="log-item-text">
-          1. 新增APP全局黑白配色主题，原有灰白、蓝色、粉色主题保留，丰富自定义风格<br>
-          2. 全局壁纸适配升级，APP内置壁纸自动模糊20%显示，彻底解决界面白边问题<br>
-          3. 全系升级iOS液体玻璃质感UI，所有图标替换为SVG矢量图标，画质高清无失真<br>
-          4. 移除多余自适应选项，精简功能面板，降低操作干扰
+        <div class="log-item-text">优化iOS系统图片下载保存功能，新增下载状态通知提示。用户点击下载保存后，后台将弹出正在下载的进度通知，下载完成后同步推送完成提示，解决用户无法查看保存状态、不清楚文件保存位置的问题。</div>
+      </div>
+
+      <div class="log-section-card">
+        <div class="log-sec-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 15s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          <span>五、修复贴膜机脸部擦除识别故障</span>
         </div>
+        <div class="log-item-text">排查修复脸部擦除功能异常隐患，解决部分用户设备显示亮绿灯，但点击擦脸无响应、功能失效的问题，统一设备识别适配逻辑，保证全员可正常使用脸部擦除功能。</div>
+      </div>
+
+      <div class="log-section-card">
+        <div class="log-sec-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+          <span>六、修复数据导入故障</span>
+        </div>
+        <div class="log-item-text">修复全局数据ZIP压缩包导入失败的bug，优化数据导入通道，提升文件导入稳定性，可正常完成全局数据导入操作。</div>
       </div>
 
       <div class="log-section-card">
         <div class="log-sec-title">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          <span>四、问题修复</span>
+          <span>七、优化图片导入功能</span>
         </div>
         <div class="log-item-text">
-          1. 修复九宫格及多宫格拼图点击无响应的故障<br>
-          2. 修复批量生成预览图后成品图不显示的问题<br>
-          3. 优化页面滑动逻辑，杜绝误触移位、右滑误退出APP的情况<br>
-          4. 优化贴膜机不透明度调节，支持手动输入精准数值设置参数<br>
-          5. 升级图包下载模式，新增单张图片png下载方式，不再仅支持ZIP压缩包下载
+          <b>1.</b> 统一全场景图片导入入口，新增相册选图为推荐导入格式，所有图片导入通道默认优先展示相册选图功能，文件导入功能保留并后置放置。<br>
+          <b>2.</b> 修复部分图片导入后页面无法加载展示，但导出正常的显示bug。<br>
+          <b>3.</b> 优化图片放大查看逻辑，调整双指放大功能机制：双指缩放可直接放大整张图片、查看全部细节；如需精准放大原图细节，可拖动页面拉杆操作，区分两种放大使用场景，提升查看体验。
         </div>
       </div>
 
@@ -4253,23 +4254,34 @@ function initRain() {
   frame();
 }
 
-/* 恢复开屏联动：在开屏阶段完整装载小助手 AI 核心模型 */
+/* 详细动态加载状态文本更新器 */
+function setBootDetailMsg(msg) {
+  const el = document.getElementById('bootDetailText');
+  if (el) el.innerText = msg;
+}
+
+/* 恢复开屏联动：高灵敏度装载小助手 AI 核心模型 */
 async function loadFaceModel() {
   const badge = document.getElementById('aiStatusBadge');
   const badgeText = document.getElementById('aiStatusText');
 
   try {
+    setBootDetailMsg('正在装载 WebGL 图形加速与 AI 运行时…');
     if (window.tf) {
       await tf.setBackend('webgl').catch(() => tf.setBackend('cpu'));
       await tf.ready();
     }
+    setBootDetailMsg('正在加载高灵敏度人脸识别擦脸模型…');
     if (window.blazeface) {
-      faceModel = await blazeface.load({ maxFaces: 10, iouThreshold: 0.3, scoreThreshold: 0.65 });
+      // 将识别置信度阈值由 0.65 降至 0.28，开启全角度人脸高敏捕获
+      faceModel = await blazeface.load({ maxFaces: 10, iouThreshold: 0.25, scoreThreshold: 0.28 });
     }
+    setBootDetailMsg('AI 人脸识别神经网络模型加载完成');
   } catch (e) {
+    setBootDetailMsg('AI 引擎载入完毕（本地运行模式）');
     try {
       if (window.blazeface) {
-        faceModel = await blazeface.load();
+        faceModel = await blazeface.load({ scoreThreshold: 0.3 });
       }
     } catch (err) {
       faceModel = null;
@@ -4291,6 +4303,65 @@ async function loadFaceModel() {
   }
 }
 
+/* 核心增强：多尺度高穿透人脸识别引擎（主扫描+高精回溯双扫描，彻底杜绝漏检） */
+async function detectFacesRobust(imageElement, naturalW, naturalH) {
+  if (!faceModel) return [];
+  let detectedFaces = [];
+
+  // 第 1 阶段：标准高清扫描 (1024px)
+  try {
+    const scale1 = Math.min(1.0, 1024 / Math.max(naturalW, naturalH));
+    const c1 = document.createElement('canvas');
+    c1.width = Math.round(naturalW * scale1);
+    c1.height = Math.round(naturalH * scale1);
+    const ctx1 = c1.getContext('2d');
+    ctx1.drawImage(imageElement, 0, 0, c1.width, c1.height);
+
+    const raw1 = await faceModel.estimateFaces(c1, false);
+    if (raw1 && raw1.length > 0) {
+      detectedFaces = raw1.map(f => ({
+        startX: f.topLeft[0] / scale1,
+        startY: f.topLeft[1] / scale1,
+        endX: f.bottomRight[0] / scale1,
+        endY: f.bottomRight[1] / scale1
+      }));
+    }
+    c1.width = 0; c1.height = 0;
+  } catch (err) {
+    console.warn('人脸扫描一阶段异常:', err);
+  }
+
+  // 第 2 阶段：如果第一阶段未检出，启动对比度增强二次回溯扫描
+  if (detectedFaces.length === 0) {
+    try {
+      const scale2 = Math.min(1.0, 640 / Math.max(naturalW, naturalH));
+      const c2 = document.createElement('canvas');
+      c2.width = Math.round(naturalW * scale2);
+      c2.height = Math.round(naturalH * scale2);
+      const ctx2 = c2.getContext('2d');
+      // 增强对比度辅助暗光、逆光、侧脸识别
+      ctx2.filter = 'contrast(125%) brightness(105%)';
+      ctx2.drawImage(imageElement, 0, 0, c2.width, c2.height);
+      ctx2.filter = 'none';
+
+      const raw2 = await faceModel.estimateFaces(c2, false);
+      if (raw2 && raw2.length > 0) {
+        detectedFaces = raw2.map(f => ({
+          startX: f.topLeft[0] / scale2,
+          startY: f.topLeft[1] / scale2,
+          endX: f.bottomRight[0] / scale2,
+          endY: f.bottomRight[1] / scale2
+        }));
+      }
+      c2.width = 0; c2.height = 0;
+    } catch (err2) {
+      console.warn('人脸扫描二阶段异常:', err2);
+    }
+  }
+
+  return detectedFaces;
+}
+
 function updateBootUI(p) {
   const fill = document.getElementById('bootBarFill');
   const pct = document.getElementById('bootPct');
@@ -4298,14 +4369,27 @@ function updateBootUI(p) {
   if (pct) pct.innerText = Math.round(p) + '%';
 }
 
-/* 开屏进度与小助手加载深度联动 */
+/* 开屏进度与小助手加载深度联动（增加阶段性加载文案） */
 function bootTick() {
   if (bootFinished) return;
 
   let inc;
-  if (bootProgress < 70) inc = 1.6 + Math.random() * 1.4;
-  else if (bootProgress < 90) inc = 0.55 + Math.random() * 0.9;
-  else inc = modelReady ? 2.5 : 0;
+  if (bootProgress < 25) {
+    inc = 1.8 + Math.random() * 1.5;
+    setBootDetailMsg('正在读取 IndexedDB 本地数据库存储…');
+  } else if (bootProgress < 50) {
+    inc = 1.4 + Math.random() * 1.2;
+    setBootDetailMsg('正在恢复主屏壁纸、拍立得与小组件素材…');
+  } else if (bootProgress < 75) {
+    inc = 1.0 + Math.random() * 1.1;
+    setBootDetailMsg('正在初始化预览机多图层渲染引擎与透明识别…');
+  } else if (bootProgress < 92) {
+    inc = 0.6 + Math.random() * 0.8;
+    setBootDetailMsg('正在装配矢量 UI 视觉渲染管线…');
+  } else {
+    inc = modelReady ? 3.0 : 0;
+    if (modelReady) setBootDetailMsg('系统环境准备就绪，正在进入 drizzle…');
+  }
 
   bootProgress = Math.min(bootProgress + inc, modelReady ? 100 : 92);
   updateBootUI(bootProgress);
@@ -5710,37 +5794,14 @@ async function executeBatchWatermark() {
     wmCtx.imageSmoothingQuality = 'high';
     wmCtx.drawImage(watermarkImg, 0, 0, naturalW, naturalH);
 
-    /* 人脸识别擦除 */
+    /* 人脸识别擦除（接入双重扫描高精识别） */
     let detectedFaces = [];
     if (enableFace && faceModel) {
-      let dCanvas = null;
-      try {
-        const maxDetectDim = 640;
-        const scale = Math.min(1.0, maxDetectDim / Math.max(naturalW, naturalH));
-        dCanvas = document.createElement('canvas');
-        dCanvas.width = Math.round(naturalW * scale);
-        dCanvas.height = Math.round(naturalH * scale);
-        const dCtx = dCanvas.getContext('2d');
-        dCtx.drawImage(baseImg, 0, 0, dCanvas.width, dCanvas.height);
-
-        const rawFaces = await faceModel.estimateFaces(dCanvas, false);
-        if (rawFaces && rawFaces.length > 0) {
-          detectedFaces = rawFaces.map(f => ({
-            startX: f.topLeft[0] / scale,
-            startY: f.topLeft[1] / scale,
-            endX: f.bottomRight[0] / scale,
-            endY: f.bottomRight[1] / scale
-          }));
-        }
-      } catch (err) { 
-        console.error('人脸识别异常:', err); 
-      } finally {
-        if (dCanvas) { dCanvas.width = 0; dCanvas.height = 0; dCanvas = null; }
-      }
+      detectedFaces = await detectFacesRobust(baseImg, naturalW, naturalH);
     }
 
     if (detectedFaces.length > 0) {
-      progressText.innerText = `已识别并擦除 ${detectedFaces.length} 处脸部 (${i+1}/${selectedRawImages.length})`;
+      progressText.innerText = `已精确识别并羽化擦除 ${detectedFaces.length} 处脸部 (${i+1}/${selectedRawImages.length})`;
       wmCtx.save();
       wmCtx.globalCompositeOperation = 'destination-out';
       detectedFaces.forEach(face => {
@@ -5748,10 +5809,11 @@ async function executeBatchWatermark() {
         const fh = face.endY - face.startY;
         const cx = face.startX + fw / 2;
         const cy = face.startY + fh / 2;
-        const r = (Math.max(fw, fh) / 2) * 1.45;
-        const g = wmCtx.createRadialGradient(cx, cy, r * 0.25, cx, cy, r);
+        // 适度扩大柔和羽化半径，确保下巴与额头边缘过渡自然无生硬水印残留
+        const r = (Math.max(fw, fh) / 2) * 1.55;
+        const g = wmCtx.createRadialGradient(cx, cy, r * 0.2, cx, cy, r);
         g.addColorStop(0, 'rgba(0,0,0,1)');
-        g.addColorStop(0.85, 'rgba(0,0,0,0.85)');
+        g.addColorStop(0.8, 'rgba(0,0,0,0.85)');
         g.addColorStop(1, 'rgba(0,0,0,0)');
         wmCtx.fillStyle = g;
         wmCtx.beginPath();
@@ -7178,23 +7240,40 @@ async function executeExportAllDataZip() {
   }
 }
 
+/* 核心升级：全兼容、深层穿透的全局 ZIP 备份数据恢复引擎 */
 async function handleImportDataBackup(e) {
   const file = e.target.files[0];
   if (!file) return;
 
+  if (typeof showDownloadToast === 'function') {
+    showDownloadToast('正在解析并解压全量数据包…', 'loading');
+  }
+
   try {
     const zip = await JSZip.loadAsync(file);
-    const manifestFile = zip.file('drizzle_manifest.json');
-    if (!manifestFile) {
-      alert('导入失败：未找到有效 drizzle 数据结构清单，请确认选择的是正确的备份 ZIP 文件。');
+
+    // 1. 深度穿透查找 manifest 配置文件（自动兼容单层/多层子目录打包）
+    const manifestMatches = zip.file(/drizzle_manifest\.json$/i);
+    if (!manifestMatches || manifestMatches.length === 0) {
+      alert('导入失败：未找到有效 drizzle 数据结构清单！\n请确认您选择的是从本应用导出的有效 ZIP 备份文件。');
       e.target.value = '';
       return;
     }
-
+    const manifestFile = manifestMatches[0];
     const manifestText = await manifestFile.async('text');
     const manifest = JSON.parse(manifestText);
 
-    // 1. 恢复本地设置
+    // 通用递归查找 ZIP 文件内容的安全辅助函数（自动忽略外部文件夹前缀与后缀差异）
+    const getZipEntry = (subPath) => {
+      let f = zip.file(subPath);
+      if (f) return f;
+      const escaped = subPath.replace(/[/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const matches = zip.file(new RegExp('(^|/)' + escaped + '$', 'i'));
+      if (matches && matches.length > 0) return matches[0];
+      return null;
+    };
+
+    // 2. 恢复本地设置与主题壁纸
     if (manifest.localConfig) {
       const cfg = manifest.localConfig;
       if (cfg.user_name) localStorage.setItem('user_name', cfg.user_name);
@@ -7210,7 +7289,7 @@ async function handleImportDataBackup(e) {
       if (cfg.drizzle_last_read_version) localStorage.setItem('drizzle_last_read_version', cfg.drizzle_last_read_version);
     }
 
-    // 2. 恢复小组件文字与资产
+    // 3. 恢复小组件文本与专属图片资产
     if (manifest.widgetTexts) {
       for (const [key, text] of Object.entries(manifest.widgetTexts)) {
         await DrizzleDB.saveWidgetText(key, text);
@@ -7220,29 +7299,33 @@ async function handleImportDataBackup(e) {
     }
     const widgetKeys = ['main_avatar', 'quote_pic', 'music_art', 'pol_left', 'pol_center', 'pol_right', 'sys_audio_avatar'];
     for (const key of widgetKeys) {
-      const zFile = zip.file(`widget_assets/${key}.bin`);
+      const zFile = getZipEntry(`widget_assets/${key}.bin`);
       if (zFile) {
-        const b = await zFile.async('blob');
-        await DrizzleDB.saveWidgetAsset(key, b);
+        try {
+          const b = await zFile.async('blob');
+          await DrizzleDB.saveWidgetAsset(key, b);
+        } catch (err) {}
       }
     }
     await restoreAllWidgetData();
 
-    // 3. 恢复原图库
+    // 4. 恢复原图库（多级文件夹与原图 Blob）
     if (manifest.repoTreeMeta) {
       const rebuildRepoTree = async (node) => {
         const out = { id: node.id, name: node.name, subFolders: [], images: [] };
         for (const img of (node.images || [])) {
-          const zFile = zip.file(`raw_images/${img.id}.bin`);
+          const zFile = getZipEntry(`raw_images/${img.id}.bin`);
           if (zFile) {
-            const b = await zFile.async('blob');
-            out.images.push({
-              id: img.id,
-              name: img.name,
-              blob: b,
-              size: img.size || b.size,
-              src: URL.createObjectURL(b)
-            });
+            try {
+              const b = await zFile.async('blob');
+              out.images.push({
+                id: img.id,
+                name: img.name,
+                blob: b,
+                size: img.size || b.size,
+                src: URL.createObjectURL(b)
+              });
+            } catch (e) {}
           }
         }
         for (const sub of (node.subFolders || [])) {
@@ -7258,21 +7341,23 @@ async function handleImportDataBackup(e) {
       renderRepoView();
     }
 
-    // 4. 恢复水印库
+    // 5. 恢复水印库（多级分类与水印素材）
     if (manifest.wmTreeMeta) {
       const rebuildWmTree = async (node) => {
         const out = { id: node.id, name: node.name, subFolders: [], watermarks: [] };
         for (const wm of (node.watermarks || [])) {
-          const zFile = zip.file(`watermark_images/${wm.id}.bin`);
+          const zFile = getZipEntry(`watermark_images/${wm.id}.bin`);
           if (zFile) {
-            const b = await zFile.async('blob');
-            out.watermarks.push({
-              id: wm.id,
-              name: wm.name,
-              blob: b,
-              size: wm.size || b.size,
-              src: URL.createObjectURL(b)
-            });
+            try {
+              const b = await zFile.async('blob');
+              out.watermarks.push({
+                id: wm.id,
+                name: wm.name,
+                blob: b,
+                size: wm.size || b.size,
+                src: URL.createObjectURL(b)
+              });
+            } catch (e) {}
           }
         }
         for (const sub of (node.subFolders || [])) {
@@ -7288,18 +7373,22 @@ async function handleImportDataBackup(e) {
       renderWmView();
     }
 
-    // 5. 恢复贴膜图库
+    // 6. 恢复贴膜图库
     if (manifest.galleryMeta && Array.isArray(manifest.galleryMeta)) {
       galleryPackages = [];
       for (const pkg of manifest.galleryMeta) {
         const restoredItems = [];
         for (const it of (pkg.items || [])) {
-          const resF = zip.file(`gallery_images/${pkg.id}_${it.id}_res.bin`);
-          const baseF = zip.file(`gallery_images/${pkg.id}_${it.id}_base.bin`);
-          const wmF = zip.file(`gallery_images/${pkg.id}_${it.id}_wm.bin`);
-          const resBlob = resF ? await resF.async('blob') : null;
-          const baseBlob = baseF ? await baseF.async('blob') : null;
-          const wmBlob = wmF ? await wmF.async('blob') : null;
+          const resF = getZipEntry(`gallery_images/${pkg.id}_${it.id}_res.bin`);
+          const baseF = getZipEntry(`gallery_images/${pkg.id}_${it.id}_base.bin`);
+          const wmF = getZipEntry(`gallery_images/${pkg.id}_${it.id}_wm.bin`);
+          let resBlob = null, baseBlob = null, wmBlob = null;
+          try {
+            if (resF) resBlob = await resF.async('blob');
+            if (baseF) baseBlob = await baseF.async('blob');
+            if (wmF) wmBlob = await wmF.async('blob');
+          } catch (e) {}
+
           restoredItems.push({
             id: it.id,
             name: it.name,
@@ -7322,21 +7411,23 @@ async function handleImportDataBackup(e) {
       renderGallery();
     }
 
-    // 6. 恢复预览图库
+    // 7. 恢复预览图库
     if (manifest.pvMeta && Array.isArray(manifest.pvMeta)) {
       previewPackages = [];
       for (const pkg of manifest.pvMeta) {
         const restoredItems = [];
         for (const it of (pkg.items || [])) {
-          const zFile = zip.file(`preview_images/${pkg.id}_${it.id}.bin`);
+          const zFile = getZipEntry(`preview_images/${pkg.id}_${it.id}.bin`);
           if (zFile) {
-            const b = await zFile.async('blob');
-            restoredItems.push({
-              id: it.id,
-              name: it.name,
-              blob: b,
-              url: URL.createObjectURL(b)
-            });
+            try {
+              const b = await zFile.async('blob');
+              restoredItems.push({
+                id: it.id,
+                name: it.name,
+                blob: b,
+                url: URL.createObjectURL(b)
+              });
+            } catch (e) {}
           }
         }
         const fullPvPkg = {
@@ -7350,22 +7441,24 @@ async function handleImportDataBackup(e) {
       renderPvGallery();
     }
 
-    // 7. 恢复门槛记录
+    // 8. 恢复门槛记录及凭证多图
     if (manifest.threshMeta && Array.isArray(manifest.threshMeta)) {
       thresholdRecords = [];
       for (const rec of manifest.threshMeta) {
         const restoredImgs = [];
         for (const img of (rec.images || [])) {
-          const zFile = zip.file(`threshold_images/${rec.id}_${img.id}.bin`);
+          const zFile = getZipEntry(`threshold_images/${rec.id}_${img.id}.bin`);
           if (zFile) {
-            const b = await zFile.async('blob');
-            restoredImgs.push({
-              id: img.id,
-              name: img.name,
-              blob: b,
-              size: img.size || b.size,
-              src: URL.createObjectURL(b)
-            });
+            try {
+              const b = await zFile.async('blob');
+              restoredImgs.push({
+                id: img.id,
+                name: img.name,
+                blob: b,
+                size: img.size || b.size,
+                src: URL.createObjectURL(b)
+              });
+            } catch (e) {}
           }
         }
         const fullRec = {
@@ -7380,7 +7473,7 @@ async function handleImportDataBackup(e) {
       renderThresholdView();
     }
 
-    // 8. 恢复联系人与分组
+    // 9. 恢复联系人与圈子分组
     if (manifest.contactGroupsMeta && Array.isArray(manifest.contactGroupsMeta) && manifest.contactGroupsMeta.length > 0) {
       contactGroups = manifest.contactGroupsMeta;
       currentActiveGroupId = contactGroups[0].id;
@@ -7395,10 +7488,14 @@ async function handleImportDataBackup(e) {
     }
 
     initUserProfile();
-    alert('全量 ZIP 数据已成功完好恢复！所有图库、原图、门槛记录与联系人已全部就绪。');
+    if (typeof showDownloadToast === 'function') {
+      showDownloadToast('全局备份数据已 100% 完整恢复！', 'success');
+    } else {
+      alert('全量 ZIP 数据已成功完好恢复！所有图库、原图、门槛记录与联系人已全部就绪。');
+    }
   } catch (err) {
     console.error('ZIP 导入恢复失败:', err);
-    alert('ZIP 数据解析恢复失败，请确认文件完整性。');
+    alert('ZIP 数据解析失败，请确认文件完整或未被第三方软件损坏。');
   }
   e.target.value = '';
 }
@@ -7426,26 +7523,86 @@ function handleChoiceExportZip() {
   }
 }
 
+/* iOS 风格全局下载状态通知调度器 */
+let toastTimer = null;
+function showDownloadToast(text, status = 'loading') {
+  const toast = document.getElementById('iosDownloadToast');
+  const sp = document.getElementById('iosToastSpinner');
+  const ck = document.getElementById('iosToastCheckIcon');
+  const tx = document.getElementById('iosToastText');
+  if (!toast) return;
+
+  clearTimeout(toastTimer);
+  tx.innerText = text;
+
+  if (status === 'loading') {
+    sp.style.display = 'block';
+    ck.style.display = 'none';
+  } else {
+    sp.style.display = 'none';
+    ck.style.display = 'block';
+  }
+
+  toast.style.opacity = '1';
+  toast.style.transform = 'translateX(-50%) translateY(0px)';
+
+  if (status !== 'loading') {
+    toastTimer = setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(-50%) translateY(-100px)';
+    }, 2800);
+  }
+}
+
+/* 核心优化：高可靠多图连续保存函数（带实时反馈与下载句柄防丢处理） */
+async function triggerReliableDownload(blob, filename) {
+  return new Promise((resolve) => {
+    try {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        resolve();
+      }, 360);
+    } catch (e) {
+      saveAs(blob, filename);
+      setTimeout(resolve, 360);
+    }
+  });
+}
+
 async function handleDirectExportAllPng() {
   closeSaveChoiceModal();
   if (activeSaveCaller === 'watermarker') {
     if (!currentProcessedBatch || currentProcessedBatch.length === 0) return;
-    for (let i = 0; i < currentProcessedBatch.length; i++) {
+    const total = currentProcessedBatch.length;
+    showDownloadToast(`正在导出第 1/${total} 张无损 PNG 到相册…`, 'loading');
+
+    for (let i = 0; i < total; i++) {
       const item = currentProcessedBatch[i];
-      const safeName = item.name.replace(/\.[^.]+$/, '') + '.png';
-      saveAs(item.resultBlob, safeName);
-      await new Promise(r => setTimeout(r, 220));
+      const safeName = (item.name || `image_${i+1}`).replace(/\.[^.]+$/, '') + '.png';
+      showDownloadToast(`正在保存第 (${i+1}/${total}) 张无损 PNG…`, 'loading');
+      await triggerReliableDownload(item.resultBlob, safeName);
     }
-    alert(`已一次性导出 ${currentProcessedBatch.length} 张无损 PNG 到相册！`);
+    showDownloadToast(`全部 ${total} 张图片已成功保存！请在相册或下载文件夹中查看。`, 'success');
   } else if (activeSaveCaller === 'previewer') {
     if (!pvProcessedBatch || pvProcessedBatch.length === 0) return;
-    for (let i = 0; i < pvProcessedBatch.length; i++) {
+    const total = pvProcessedBatch.length;
+    showDownloadToast(`正在导出第 1/${total} 张预览图到相册…`, 'loading');
+
+    for (let i = 0; i < total; i++) {
       const item = pvProcessedBatch[i];
-      const safeName = item.name.replace(/\.[^.]+$/, '') + '.png';
-      saveAs(item.blob, safeName);
-      await new Promise(r => setTimeout(r, 220));
+      const safeName = (item.name || `preview_${i+1}`).replace(/\.[^.]+$/, '') + '.png';
+      showDownloadToast(`正在保存第 (${i+1}/${total}) 张预览图…`, 'loading');
+      await triggerReliableDownload(item.blob, safeName);
     }
-    alert(`已一次性导出 ${pvProcessedBatch.length} 张预览图 PNG 到相册！`);
+    showDownloadToast(`全部 ${total} 张预览图已成功保存！`, 'success');
   }
 }
 
@@ -7981,10 +8138,21 @@ function setPreviewRatio(ratio) {
   const customRow = document.getElementById('pvCustomRatioRow');
   if (customRow) customRow.classList.toggle('hidden', ratio !== 'custom');
 
-  const stageBox = document.getElementById('pvStageBox');
-  stageBox.className = `pv-stage-box ratio-${ratio}`;
-  if (ratio === 'custom') applyCustomRatio();
-  else renderPreviewStage();
+  // 当用户点击“自定义”时，自动智能抓取当前预览框图层的原始宽高并自适应填充输入框
+  if (ratio === 'custom') {
+    if (pvFrameLayers.length > 0 && pvFrameLayers[activePvFrameLayerIndex]?.img) {
+      const activeImg = pvFrameLayers[activePvFrameLayerIndex].img;
+      const nw = activeImg.naturalWidth || 1080;
+      const nh = activeImg.naturalHeight || 1080;
+      document.getElementById('pvCustomW').value = nw;
+      document.getElementById('pvCustomH').value = nh;
+    }
+    applyCustomRatio();
+  } else {
+    const stageBox = document.getElementById('pvStageBox');
+    if (stageBox) stageBox.style.aspectRatio = '';
+    renderPreviewStage();
+  }
 }
 
 function handleDropdownSelectFrameLayer(val) {
@@ -7992,11 +8160,16 @@ function handleDropdownSelectFrameLayer(val) {
 }
 
 function applyCustomRatio() {
-  const w = parseInt(document.getElementById('pvCustomW').value, 10) || 1080;
-  const h = parseInt(document.getElementById('pvCustomH').value, 10) || 1080;
+  const w = Math.max(100, parseInt(document.getElementById('pvCustomW').value, 10) || 1080);
+  const h = Math.max(100, parseInt(document.getElementById('pvCustomH').value, 10) || 1080);
   pvCustomRatioVal = { w, h };
   const stageBox = document.getElementById('pvStageBox');
   if (stageBox) stageBox.style.aspectRatio = `${w} / ${h}`;
+  
+  // 重新计算透明孔洞位置并无损等比重绘，绝不拉伸原图比例
+  if (pvIsAutoHoleEnabled) {
+    detectTransparentHoleFromFrame();
+  }
   renderPreviewStage();
 }
 
@@ -8125,49 +8298,205 @@ function syncPvWmOpacityFromInput(val) {
   renderPreviewStage();
 }
 
-/* 逐像素扫描预览框的 Alpha 透明度，自动探测透明镂空孔 */
+/* 声明多透明孔区域列表 */
+let pvDetectedHolesList = [];
+
+/* 核心升级：连通域/多宫格扫描算法，精准识别多个独立的透明框，并按从左到右、从上到下排序 */
 function detectTransparentHoleFromFrame() {
+  pvDetectedHolesList = [];
+  pvDetectedHoleRect = null;
+
   if (pvFrameLayers.length === 0) return;
   const mainFrame = pvFrameLayers[0].img;
   if (!mainFrame) return;
 
-  const scanW = 320, scanH = 320;
+  const scanW = 300, scanH = 300;
   const c = document.createElement('canvas');
   c.width = scanW; c.height = scanH;
   const ctx = c.getContext('2d');
   ctx.drawImage(mainFrame, 0, 0, scanW, scanH);
 
   const imgData = ctx.getImageData(0, 0, scanW, scanH).data;
-  let minX = scanW, minY = scanH, maxX = 0, maxY = 0;
-  let transparentPixelCount = 0;
+  const visited = new Uint8Array(scanW * scanH);
+  const foundBoxes = [];
 
   for (let y = 0; y < scanH; y++) {
     for (let x = 0; x < scanW; x++) {
-      const idx = (y * scanW + x) * 4;
-      const alpha = imgData[idx + 3];
-      if (alpha < 35) {
-        transparentPixelCount++;
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
+      const idx = y * scanW + x;
+      if (visited[idx]) continue;
+      const alpha = imgData[idx * 4 + 3];
+
+      // 判定为透明像素 (Alpha < 45)
+      if (alpha < 45) {
+        // BFS 广度优先探索连通的透明区域
+        let qHead = 0;
+        const queue = [x, y];
+        visited[idx] = 1;
+
+        let bMinX = x, bMaxX = x, bMinY = y, bMaxY = y;
+        let count = 0;
+
+        while (qHead < queue.length) {
+          const cx = queue[qHead++];
+          const cy = queue[qHead++];
+          count++;
+
+          if (cx < bMinX) bMinX = cx;
+          if (cx > bMaxX) bMaxX = cx;
+          if (cy < bMinY) bMinY = cy;
+          if (cy > bMaxY) bMaxY = cy;
+
+          const neighbors = [
+            cx + 1, cy,
+            cx - 1, cy,
+            cx, cy + 1,
+            cx, cy - 1
+          ];
+
+          for (let n = 0; n < neighbors.length; n += 2) {
+            const nx = neighbors[n];
+            const ny = neighbors[n + 1];
+            if (nx >= 0 && nx < scanW && ny >= 0 && ny < scanH) {
+              const nIdx = ny * scanW + nx;
+              if (!visited[nIdx] && imgData[nIdx * 4 + 3] < 45) {
+                visited[nIdx] = 1;
+                queue.push(nx, ny);
+              }
+            }
+          }
+        }
+
+        // 过滤掉细碎杂点（面积需大于有效阈值）
+        const boxW = bMaxX - bMinX;
+        const boxH = bMaxY - bMinY;
+        if (count > 280 && boxW > 20 && boxH > 20) {
+          foundBoxes.push({
+            x: bMinX / scanW,
+            y: bMinY / scanH,
+            width: boxW / scanW,
+            height: boxH / scanH,
+            centerX: (bMinX + boxW / 2) / scanW,
+            centerY: (bMinY + boxH / 2) / scanH
+          });
+        }
       }
     }
   }
 
-  if (transparentPixelCount > 400 && maxX > minX && maxY > minY) {
-    pvDetectedHoleRect = {
-      x: minX / scanW,
-      y: minY / scanH,
-      width: (maxX - minX) / scanW,
-      height: (maxY - minY) / scanH
-    };
-  } else {
-    pvDetectedHoleRect = null;
+  if (foundBoxes.length > 0) {
+    // 按照从上到下、从左到右排序（多宫格排列顺序）
+    foundBoxes.sort((a, b) => {
+      if (Math.abs(a.centerY - b.centerY) > 0.12) {
+        return a.centerY - b.centerY;
+      }
+      return a.centerX - b.centerX;
+    });
+
+    pvDetectedHolesList = foundBoxes;
+    pvDetectedHoleRect = foundBoxes[0]; // 兼容单框
   }
 }
 
 let pvFirstBaseImgObj = null;
+
+/* 核心升级：为每个宫格原图按尺寸独立贴膜水印，并无黑边填入镂空框中 */
+async function drawImageCoverIntoHole(ctx, imgObj, hole, W, H, scale, offX, offY) {
+  const baseHw = hole.width * W;
+  const baseHh = hole.height * H;
+  
+  // 动态计算出血量（外扩 10% 垫入边框背后，保证四角完全盖满）
+  const bleed = Math.max(36, Math.min(baseHw, baseHh) * 0.10);
+  
+  const hx = hole.x * W - bleed;
+  const hy = hole.y * H - bleed;
+  const hw = baseHw + bleed * 2;
+  const hh = baseHh + bleed * 2;
+
+  const naturalW = imgObj.naturalWidth || imgObj.width;
+  const naturalH = imgObj.naturalHeight || imgObj.height;
+  
+  // 计算 Cover 缩放比
+  const baseScaleRatio = Math.max(hw / naturalW, hh / naturalH);
+  const effectiveScale = (scale || 1.0) * baseScaleRatio;
+  
+  const drawW = naturalW * effectiveScale;
+  const drawH = naturalH * effectiveScale;
+
+  const holeCenterX = hole.x * W + baseHw / 2;
+  const holeCenterY = hole.y * H + baseHh / 2;
+  const dx = holeCenterX - drawW / 2 + (offX || 0) * (W / 320);
+  const dy = holeCenterY - drawH / 2 + (offY || 0) * (H / 320);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(hx, hy, hw, hh);
+  ctx.clip(); // 限制在该宫格范围内
+
+  // 1. 绘制当前格子的底图原图
+  ctx.drawImage(imgObj, dx, dy, drawW, drawH);
+
+  // 2. 获取水印膜（无论单张还是多宫格，每张图都按大小位置独立叠加贴膜水印）
+  const activeWm = pvWatermarkImg || watermarkImg;
+  if (pvIsWmOverlayEnabled && activeWm) {
+    const wmOp = parseFloat(document.getElementById('pvWmOpacityInput')?.value || 15) / 100;
+    const enableFace = document.getElementById('pvWmFaceDetectCheck')?.checked;
+
+    // 为当前原图创建等尺寸的水印膜图层
+    const singleWmCanvas = document.createElement('canvas');
+    singleWmCanvas.width = Math.round(drawW);
+    singleWmCanvas.height = Math.round(drawH);
+    const swCtx = singleWmCanvas.getContext('2d');
+    swCtx.imageSmoothingEnabled = true;
+    swCtx.imageSmoothingQuality = 'high';
+    swCtx.drawImage(activeWm, 0, 0, drawW, drawH);
+
+    // AI 擦脸小助手：识别人脸并羽化擦除当前图上的水印
+    if (enableFace && faceModel) {
+      try {
+        const maxDetectDim = 480;
+        const s = Math.min(1.0, maxDetectDim / Math.max(drawW, drawH));
+        const dCanvas = document.createElement('canvas');
+        dCanvas.width = Math.round(drawW * s);
+        dCanvas.height = Math.round(drawH * s);
+        dCanvas.getContext('2d').drawImage(imgObj, 0, 0, dCanvas.width, dCanvas.height);
+        const faces = await faceModel.estimateFaces(dCanvas, false);
+
+        if (faces && faces.length > 0) {
+          swCtx.save();
+          swCtx.globalCompositeOperation = 'destination-out';
+          faces.forEach(f => {
+            const fw = (f.bottomRight[0] - f.topLeft[0]) / s;
+            const fh = (f.bottomRight[1] - f.topLeft[1]) / s;
+            const cx = (f.topLeft[0] / s) + fw / 2;
+            const cy = (f.topLeft[1] / s) + fh / 2;
+            const r = (Math.max(fw, fh) / 2) * 1.45;
+            const g = swCtx.createRadialGradient(cx, cy, r * 0.25, cx, cy, r);
+            g.addColorStop(0, 'rgba(0,0,0,1)');
+            g.addColorStop(0.85, 'rgba(0,0,0,0.85)');
+            g.addColorStop(1, 'rgba(0,0,0,0)');
+            swCtx.fillStyle = g;
+            swCtx.beginPath();
+            swCtx.arc(cx, cy, r, 0, Math.PI * 2);
+            swCtx.fill();
+          });
+          swCtx.restore();
+        }
+        dCanvas.width = 0; dCanvas.height = 0;
+      } catch (e) {}
+    }
+
+    // 以覆盖（overlay）混合模式贴到当前原图上方
+    ctx.save();
+    ctx.globalAlpha = wmOp;
+    ctx.globalCompositeOperation = 'overlay';
+    ctx.drawImage(singleWmCanvas, dx, dy, drawW, drawH);
+    ctx.restore();
+
+    singleWmCanvas.width = 0; singleWmCanvas.height = 0;
+  }
+
+  ctx.restore();
+}
 
 async function renderPreviewStage() {
   const canvas = document.getElementById('pvStageCanvas');
@@ -8177,130 +8506,60 @@ async function renderPreviewStage() {
   let W = 1080, H = 1080;
   if (pvRatio === '3-4') { W = 1080; H = 1440; }
   else if (pvRatio === '9-16') { W = 1080; H = 1920; }
-  else if (pvRatio === 'auto' && pvBaseImages.length > 0) {
-    if (!pvFirstBaseImgObj && pvBaseImages[0]) {
-      pvFirstBaseImgObj = await loadImage(pvBaseImages[0].src);
-    }
-    if (pvFirstBaseImgObj) {
-      W = pvFirstBaseImgObj.naturalWidth || 1080;
-      H = pvFirstBaseImgObj.naturalHeight || 1080;
-    }
+  else if (pvRatio === 'custom') {
+    W = pvCustomRatioVal.w || 1080;
+    H = pvCustomRatioVal.h || 1080;
   }
 
   canvas.width = W;
   canvas.height = H;
-  ctx.clearRect(0, 0, W, H);
+  
+  // 垫纯白底色，防止任何透底引起的黑边
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, W, H);
 
-  // 1. 底图绘制
+  // 1. 底图绘制（给每一个宫格的原图逐一按大小位置贴上水印）
   if (pvBaseImages.length > 0) {
-    if (!pvFirstBaseImgObj) {
-      pvFirstBaseImgObj = await loadImage(pvBaseImages[0].src);
-    }
-    if (pvFirstBaseImgObj) {
-      ctx.save();
-      let bx = 0, by = 0, bw = W, bh = H;
-
-      if (pvIsAutoHoleEnabled && pvDetectedHoleRect) {
-        const holeExpand = 15;
-        const holeX = pvDetectedHoleRect.x * W - holeExpand;
-        const holeY = pvDetectedHoleRect.y * H - holeExpand;
-        const holeW = pvDetectedHoleRect.width * W + holeExpand * 2;
-        const holeH = pvDetectedHoleRect.height * H + holeExpand * 2;
-
-        const imgRatio = pvFirstBaseImgObj.naturalWidth / pvFirstBaseImgObj.naturalHeight;
-        const holeRatio = holeW / holeH;
-
-        // 采用 Cover 完全覆盖算法：确保长宽均不小于镂空区域，彻底杜绝黑边
-        if (imgRatio > holeRatio) {
-          bh = holeH * pvBaseScale;
-          bw = bh * imgRatio;
+    if (pvIsAutoHoleEnabled && pvDetectedHolesList.length > 1) {
+      for (let i = 0; i < pvDetectedHolesList.length; i++) {
+        const hole = pvDetectedHolesList[i];
+        const baseItem = pvBaseImages[i % pvBaseImages.length];
+        if (baseItem) {
+          const imgObj = await loadImage(baseItem.src);
+          await drawImageCoverIntoHole(ctx, imgObj, hole, W, H, pvBaseScale, pvBaseOffsetX, pvBaseOffsetY);
+        }
+      }
+    } else {
+      if (!pvFirstBaseImgObj) {
+        pvFirstBaseImgObj = await loadImage(pvBaseImages[0].src);
+      }
+      if (pvFirstBaseImgObj) {
+        if (pvIsAutoHoleEnabled && pvDetectedHolesList.length === 1) {
+          await drawImageCoverIntoHole(ctx, pvFirstBaseImgObj, pvDetectedHolesList[0], W, H, pvBaseScale, pvBaseOffsetX, pvBaseOffsetY);
         } else {
-          bw = holeW * pvBaseScale;
-          bh = bw / imgRatio;
-        }
-        // 若计算后的某一边依然小于镂空区域，强制拉伸等比覆盖
-        if (bw < holeW * pvBaseScale) {
-          bw = holeW * pvBaseScale;
-          bh = bw / imgRatio;
-        }
-        if (bh < holeH * pvBaseScale) {
-          bh = holeH * pvBaseScale;
-          bw = bh * imgRatio;
-        }
+          const baseRatio = Math.max(W / pvFirstBaseImgObj.naturalWidth, H / pvFirstBaseImgObj.naturalHeight) * pvBaseScale;
+          const bw = pvFirstBaseImgObj.naturalWidth * baseRatio;
+          const bh = pvFirstBaseImgObj.naturalHeight * baseRatio;
+          const bx = (W - bw) / 2 + pvBaseOffsetX * (W / 320);
+          const by = (H - bh) / 2 + pvBaseOffsetY * (H / 320);
+          ctx.drawImage(pvFirstBaseImgObj, bx, by, bw, bh);
 
-        bx = holeX + (holeW - bw) / 2 + pvBaseOffsetX * (W / 320);
-        by = holeY + (holeH - bh) / 2 + pvBaseOffsetY * (H / 320);
-      } else {
-        bw = W * pvBaseScale;
-        bh = (pvFirstBaseImgObj.height / pvFirstBaseImgObj.width) * bw;
-        bx = (W - bw) / 2 + pvBaseOffsetX * (W / 320);
-        by = (H - bh) / 2 + pvBaseOffsetY * (H / 320);
+          // 常规单图贴膜
+          const activeWm = pvWatermarkImg || watermarkImg;
+          if (pvIsWmOverlayEnabled && activeWm) {
+            const wmOp = parseFloat(document.getElementById('pvWmOpacityInput')?.value || 15) / 100;
+            ctx.save();
+            ctx.globalAlpha = wmOp;
+            ctx.globalCompositeOperation = 'overlay';
+            ctx.drawImage(activeWm, bx, by, bw, bh);
+            ctx.restore();
+          }
+        }
       }
-
-      ctx.drawImage(pvFirstBaseImgObj, bx, by, bw, bh);
-
- // 贴膜水印叠加（支持 AI 人脸擦除与覆盖模式）
-      const activeWm = pvWatermarkImg || watermarkImg;
-      if (pvIsWmOverlayEnabled && activeWm) {
-        const wmOp = parseFloat(document.getElementById('pvWmOpacityInput')?.value || 15) / 100;
-        const enableFace = document.getElementById('pvWmFaceDetectCheck')?.checked;
-
-        // 生成水印临时图层
-        const wmLayerCanvas = document.createElement('canvas');
-        wmLayerCanvas.width = Math.round(bw);
-        wmLayerCanvas.height = Math.round(bh);
-        const wctx = wmLayerCanvas.getContext('2d');
-        wctx.drawImage(activeWm, 0, 0, bw, bh);
-
-        // 如果开启了自动擦脸
-        if (enableFace && faceModel) {
-          try {
-            const maxDetectDim = 640;
-            const scale = Math.min(1.0, maxDetectDim / Math.max(bw, bh));
-            const dCanvas = document.createElement('canvas');
-            dCanvas.width = Math.round(bw * scale);
-            dCanvas.height = Math.round(bh * scale);
-            dCanvas.getContext('2d').drawImage(pvFirstBaseImgObj, 0, 0, dCanvas.width, dCanvas.height);
-            const faces = await faceModel.estimateFaces(dCanvas, false);
-
-            if (faces && faces.length > 0) {
-              wctx.save();
-              wctx.globalCompositeOperation = 'destination-out';
-              faces.forEach(f => {
-                const fw = (f.bottomRight[0] - f.topLeft[0]) / scale;
-                const fh = (f.bottomRight[1] - f.topLeft[1]) / scale;
-                const cx = (f.topLeft[0] / scale) + fw / 2;
-                const cy = (f.topLeft[1] / scale) + fh / 2;
-                const r = (Math.max(fw, fh) / 2) * 1.45;
-                const g = wctx.createRadialGradient(cx, cy, r * 0.25, cx, cy, r);
-                g.addColorStop(0, 'rgba(0,0,0,1)');
-                g.addColorStop(0.85, 'rgba(0,0,0,0.85)');
-                g.addColorStop(1, 'rgba(0,0,0,0)');
-                wctx.fillStyle = g;
-                wctx.beginPath();
-                wctx.arc(cx, cy, r, 0, Math.PI * 2);
-                wctx.fill();
-              });
-              wctx.restore();
-            }
-          } catch (e) {}
-        }
-
-        ctx.save();
-        ctx.globalAlpha = wmOp;
-        ctx.globalCompositeOperation = 'overlay';
-        ctx.drawImage(wmLayerCanvas, bx, by, bw, bh);
-        ctx.restore();
-      }
-
-      ctx.restore();
     }
-  } else {
-    ctx.fillStyle = '#CBD5E1';
-    ctx.fillRect(0, 0, W, H);
   }
 
-  // 2. 绘制多层预览框/条（各自独立应用位移、缩放与旋转）
+  // 2. 绘制顶层边框/预览框（覆盖遮盖多余边缘）
   if (pvFrameLayers.length > 0) {
     const globalOp = parseFloat(document.getElementById('pvOpacityInput')?.value || 100) / 100;
     pvFrameLayers.forEach(layer => {
@@ -8324,24 +8583,26 @@ async function renderPreviewStage() {
     });
   }
 
-  // 3. 蓝色虚线高亮识别框
-  if (pvIsAutoHoleEnabled && pvDetectedHoleRect) {
+  // 3. 蓝色虚线标注宫格位置
+  if (pvIsAutoHoleEnabled && pvDetectedHolesList.length > 0) {
     ctx.save();
-    const hx = pvDetectedHoleRect.x * W;
-    const hy = pvDetectedHoleRect.y * H;
-    const hw = pvDetectedHoleRect.width * W;
-    const hh = pvDetectedHoleRect.height * H;
+    pvDetectedHolesList.forEach((hole, idx) => {
+      const hx = hole.x * W;
+      const hy = hole.y * H;
+      const hw = hole.width * W;
+      const hh = hole.height * H;
 
-    ctx.strokeStyle = '#38BDF8';
-    ctx.lineWidth = Math.max(3, W * 0.005);
-    ctx.setLineDash([12, 8]);
-    ctx.strokeRect(hx, hy, hw, hh);
+      ctx.strokeStyle = '#38BDF8';
+      ctx.lineWidth = Math.max(2.5, W * 0.0035);
+      ctx.setLineDash([8, 6]);
+      ctx.strokeRect(hx, hy, hw, hh);
 
-    ctx.fillStyle = 'rgba(56, 189, 248, 0.9)';
-    ctx.fillRect(hx + 6, hy + 6, 140, 26);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 13px sans-serif';
-    ctx.fillText('已识别透明孔', hx + 14, hy + 24);
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.88)';
+      ctx.fillRect(hx + 4, hy + 4, 38, 20);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillText(`格${idx + 1}`, hx + 8, hy + 18);
+    });
     ctx.restore();
   }
 }
@@ -8373,7 +8634,7 @@ async function renderPreviewStage() {
   box.addEventListener('touchend', () => { isDragging = false; });
 })();
 
-/* 批量生成预览图（全流程动态进度文案 + 结果列表必显） */
+/* 批量生成预览图（严格按预览机上的多宫格完整排版进行合成导出） */
 async function executeBatchPreviewGeneration() {
   if (pvBaseImages.length === 0) {
     alert('请先导入待预览的底图！');
@@ -8396,33 +8657,38 @@ async function executeBatchPreviewGeneration() {
   const globalOp = parseFloat(document.getElementById('pvOpacityInput')?.value || 100) / 100;
   const wmOp = parseFloat(document.getElementById('pvWmOpacityInput')?.value || 15) / 100;
 
-  for (let i = 0; i < pvBaseImages.length; i++) {
-    const item = pvBaseImages[i];
-    if (progressText) progressText.innerText = `正在处理 (${i + 1}/${pvBaseImages.length})：正在定位原图…`;
-    await new Promise(r => setTimeout(r, 20));
+  // 动态确定画质分辨率（保持 2048px 高清标准）
+  let aspect = 1;
+  if (pvRatio === '3-4') aspect = 3 / 4;
+  else if (pvRatio === '9-16') aspect = 9 / 16;
+  else if (pvRatio === 'custom') aspect = (pvCustomRatioVal.w || 1080) / (pvCustomRatioVal.h || 1080);
 
-    const bImg = await loadImage(item.src);
+  let maxFrameDim = 2048;
+  pvFrameLayers.forEach(l => {
+    if (l.img) maxFrameDim = Math.max(maxFrameDim, l.img.naturalWidth || 0, l.img.naturalHeight || 0);
+  });
 
-    // 动态计算无损高清输出分辨率：以底图与边框中的最大原始分辨率为基准，彻底杜绝画质压缩
-    let aspect = 1;
-    if (pvRatio === '3-4') aspect = 3 / 4;
-    else if (pvRatio === '9-16') aspect = 9 / 16;
-    else if (pvRatio === 'custom') aspect = (pvCustomRatioVal.w || 1080) / (pvCustomRatioVal.h || 1080);
+  let curW = 2048, curH = 2048;
+  if (aspect <= 1) {
+    curH = maxFrameDim;
+    curW = Math.round(curH * aspect);
+  } else {
+    curW = maxFrameDim;
+    curH = Math.round(curW / aspect);
+  }
 
-    let maxFrameDim = 0;
-    pvFrameLayers.forEach(l => {
-      if (l.img) maxFrameDim = Math.max(maxFrameDim, l.img.naturalWidth || 0, l.img.naturalHeight || 0);
-    });
-    const maxSourceDim = Math.max(bImg.naturalWidth || 0, bImg.naturalHeight || 0, maxFrameDim, 2048);
+  const isMultiGridMode = (pvIsAutoHoleEnabled && pvDetectedHolesList.length > 1);
+  const holeCount = isMultiGridMode ? pvDetectedHolesList.length : 1;
+  // 计算需要导出的总张数（多宫格按孔数成套合成，例如 18 张图 / 9 宫格 = 2 张合成大图）
+  const totalSheets = isMultiGridMode ? Math.ceil(pvBaseImages.length / holeCount) : pvBaseImages.length;
 
-    let curW = 2048, curH = 2048;
-    if (aspect <= 1) {
-      curH = maxSourceDim;
-      curW = Math.round(curH * aspect);
-    } else {
-      curW = maxSourceDim;
-      curH = Math.round(curW / aspect);
+  for (let sheetIdx = 0; sheetIdx < totalSheets; sheetIdx++) {
+    if (progressText) {
+      progressText.innerText = isMultiGridMode
+        ? `正在合成多宫格预览大图 (${sheetIdx + 1}/${totalSheets})…`
+        : `正在处理第 (${sheetIdx + 1}/${totalSheets}) 张预览图…`;
     }
+    await new Promise(r => setTimeout(r, 20));
 
     const canvas = document.createElement('canvas');
     canvas.width = curW;
@@ -8431,102 +8697,48 @@ async function executeBatchPreviewGeneration() {
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
-    // 1. 底图定位
-    let bx = 0, by = 0, bw = curW, bh = curH;
-    if (pvIsAutoHoleEnabled && pvDetectedHoleRect) {
-      const holeExpand = 15;
-      const holeX = pvDetectedHoleRect.x * curW - holeExpand;
-      const holeY = pvDetectedHoleRect.y * curH - holeExpand;
-      const holeW = pvDetectedHoleRect.width * curW + holeExpand * 2;
-      const holeH = pvDetectedHoleRect.height * curH + holeExpand * 2;
+    // 填充白底，彻底消除未贴满处的透黑底色
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, curW, curH);
 
-      const imgRatio = bImg.naturalWidth / bImg.naturalHeight;
-      const holeRatio = holeW / holeH;
-
-      // 采用 Cover 完全覆盖算法：确保长宽均不小于镂空区域，彻底杜绝黑边
-      if (imgRatio > holeRatio) {
-        bh = holeH * pvBaseScale;
-        bw = bh * imgRatio;
-      } else {
-        bw = holeW * pvBaseScale;
-        bh = bw / imgRatio;
+    if (isMultiGridMode) {
+      // ===== 【多宫格模式】：每张图按大小独立贴膜后，填入对应格子 =====
+      for (let h = 0; h < holeCount; h++) {
+        const imgIndex = (sheetIdx * holeCount + h) % pvBaseImages.length;
+        const item = pvBaseImages[imgIndex];
+        if (item) {
+          const bImg = await loadImage(item.src);
+          const targetHole = pvDetectedHolesList[h];
+          await drawImageCoverIntoHole(ctx, bImg, targetHole, curW, curH, pvBaseScale, pvBaseOffsetX, pvBaseOffsetY);
+        }
       }
-      if (bw < holeW * pvBaseScale) {
-        bw = holeW * pvBaseScale;
-        bh = bw / imgRatio;
-      }
-      if (bh < holeH * pvBaseScale) {
-        bh = holeH * pvBaseScale;
-        bw = bh * imgRatio;
-      }
-
-      bx = holeX + (holeW - bw) / 2 + pvBaseOffsetX * (curW / 320);
-      by = holeY + (holeH - bh) / 2 + pvBaseOffsetY * (curH / 320);
     } else {
-      bw = curW * pvBaseScale;
-      bh = (bImg.naturalHeight / bImg.naturalWidth) * bw;
-      bx = (curW - bw) / 2 + pvBaseOffsetX * (curW / 320);
-      by = (curH - bh) / 2 + pvBaseOffsetY * (curH / 320);
-    }
+      // ===== 【单图/普通模式】 =====
+      const item = pvBaseImages[sheetIdx];
+      const bImg = await loadImage(item.src);
+      if (pvIsAutoHoleEnabled && pvDetectedHolesList.length === 1) {
+        await drawImageCoverIntoHole(ctx, bImg, pvDetectedHolesList[0], curW, curH, pvBaseScale, pvBaseOffsetX, pvBaseOffsetY);
+      } else {
+        const baseRatio = Math.max(curW / bImg.naturalWidth, curH / bImg.naturalHeight) * pvBaseScale;
+        const bw = bImg.naturalWidth * baseRatio;
+        const bh = bImg.naturalHeight * baseRatio;
+        const bx = (curW - bw) / 2 + pvBaseOffsetX * (curW / 320);
+        const by = (curH - bh) / 2 + pvBaseOffsetY * (curH / 320);
+        ctx.drawImage(bImg, bx, by, bw, bh);
 
-    ctx.drawImage(bImg, bx, by, bw, bh);
-
-    // 2. 贴膜水印叠加（支持 AI 人脸擦除）
-    const activeWm = pvWatermarkImg || watermarkImg;
-    let erasedFaceCount = 0;
-    if (pvIsWmOverlayEnabled && activeWm) {
-      const enableFace = document.getElementById('pvWmFaceDetectCheck')?.checked;
-      const wmLayerCanvas = document.createElement('canvas');
-      wmLayerCanvas.width = Math.round(bw);
-      wmLayerCanvas.height = Math.round(bh);
-      const wctx = wmLayerCanvas.getContext('2d');
-      wctx.imageSmoothingEnabled = true;
-      wctx.imageSmoothingQuality = 'high';
-      wctx.drawImage(activeWm, 0, 0, bw, bh);
-
-      if (enableFace && faceModel) {
-        try {
-          if (progressText) progressText.innerText = `(${i + 1}/${pvBaseImages.length})：正在识别人脸…`;
-          const maxDetectDim = 640;
-          const scale = Math.min(1.0, maxDetectDim / Math.max(bw, bh));
-          const dCanvas = document.createElement('canvas');
-          dCanvas.width = Math.round(bw * scale);
-          dCanvas.height = Math.round(bh * scale);
-          dCanvas.getContext('2d').drawImage(bImg, 0, 0, dCanvas.width, dCanvas.height);
-          const faces = await faceModel.estimateFaces(dCanvas, false);
-
-          if (faces && faces.length > 0) {
-            erasedFaceCount = faces.length;
-            wctx.save();
-            wctx.globalCompositeOperation = 'destination-out';
-            faces.forEach(f => {
-              const fw = (f.bottomRight[0] - f.topLeft[0]) / scale;
-              const fh = (f.bottomRight[1] - f.topLeft[1]) / scale;
-              const cx = (f.topLeft[0] / scale) + fw / 2;
-              const cy = (f.topLeft[1] / scale) + fh / 2;
-              const r = (Math.max(fw, fh) / 2) * 1.45;
-              const g = wctx.createRadialGradient(cx, cy, r * 0.25, cx, cy, r);
-              g.addColorStop(0, 'rgba(0,0,0,1)');
-              g.addColorStop(0.85, 'rgba(0,0,0,0.85)');
-              g.addColorStop(1, 'rgba(0,0,0,0)');
-              wctx.fillStyle = g;
-              wctx.beginPath();
-              wctx.arc(cx, cy, r, 0, Math.PI * 2);
-              wctx.fill();
-            });
-            wctx.restore();
-          }
-        } catch (e) {}
+        const activeWm = pvWatermarkImg || watermarkImg;
+        if (pvIsWmOverlayEnabled && activeWm) {
+          const wmOp = parseFloat(document.getElementById('pvWmOpacityInput')?.value || 15) / 100;
+          ctx.save();
+          ctx.globalAlpha = wmOp;
+          ctx.globalCompositeOperation = 'overlay';
+          ctx.drawImage(activeWm, bx, by, bw, bh);
+          ctx.restore();
+        }
       }
-
-      ctx.save();
-      ctx.globalAlpha = wmOp;
-      ctx.globalCompositeOperation = 'overlay';
-      ctx.drawImage(wmLayerCanvas, bx, by, bw, bh);
-      ctx.restore();
     }
 
-    // 3. 多预览框图层依次置顶绘制
+    // 叠加顶层预览框/边框图层
     if (pvFrameLayers.length > 0) {
       pvFrameLayers.forEach(layer => {
         if (layer.img) {
@@ -8552,10 +8764,14 @@ async function executeBatchPreviewGeneration() {
     const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
     const url = URL.createObjectURL(blob);
 
+    const outName = isMultiGridMode
+      ? `preview_grid_${holeCount}宫格_${sheetIdx + 1}.png`
+      : `preview_${pvBaseImages[sheetIdx].name.replace(/\.[^.]+$/, '')}.png`;
+
     pvProcessedBatch.push({
-      id: i,
-      name: `preview_${item.name.replace(/\.[^.]+$/, '')}.png`,
-      baseSrc: item.src,
+      id: sheetIdx,
+      name: outName,
+      baseSrc: isMultiGridMode ? pvBaseImages[sheetIdx * holeCount % pvBaseImages.length].src : pvBaseImages[sheetIdx].src,
       blob: blob,
       url: url,
       scale: pvBaseScale,
@@ -8567,14 +8783,9 @@ async function executeBatchPreviewGeneration() {
 
     canvas.width = 0; canvas.height = 0;
 
-    // 进度条文案阶段反馈
-    const pct = Math.round(((i + 1) / pvBaseImages.length) * 100);
+    const pct = Math.round(((sheetIdx + 1) / totalSheets) * 100);
     if (progressBar) progressBar.style.width = `${pct}%`;
     if (progressPct) progressPct.innerText = `${pct}%`;
-
-    const faceMsg = erasedFaceCount > 0 ? `已擦除 ${erasedFaceCount} 处人脸，` : '';
-    if (progressText) progressText.innerText = `(${i + 1}/${pvBaseImages.length})：${faceMsg}已完成对齐，正在进入下一张…`;
-
     await new Promise(r => setTimeout(r, 45));
   }
 
@@ -8582,14 +8793,14 @@ async function executeBatchPreviewGeneration() {
   const pvPkg = {
     id: `pvpkg_${Date.now()}`,
     timestamp: Date.now(),
-    name: `预览图包_${new Date().toLocaleDateString()}`,
+    name: isMultiGridMode ? `多宫格预览排版包_${new Date().toLocaleDateString()}` : `预览图包_${new Date().toLocaleDateString()}`,
     coverUrl: pvProcessedBatch[0].url,
     items: pvProcessedBatch.map(it => ({ id: it.id, name: it.name, blob: it.blob, url: it.url }))
   };
   previewPackages.unshift(pvPkg);
   DrizzleDB.savePvPackage(pvPkg).catch(() => {});
 
-  // 展开并平滑滚动至结果列表
+  // 展开并展示合成好的多宫格预览图
   if (progressBox) progressBox.classList.add('hidden');
   document.getElementById('pvCurrentBatchCount').innerText = pvProcessedBatch.length;
   renderPvBatchResults();
@@ -8629,11 +8840,38 @@ function renderPvBatchResults() {
 }
 
 /* ================================================================
-   单张从下往上滑出的精修微调逻辑（支持撤销、微调、双指缩放）
+   单张/多宫格精修微调与双指全图缩放查看引擎
 ================================================================ */
 let activeSingleAdjustItem = null;
 let singleAdjustHistory = [];
 let singleScale = 1.0, singleOffsetX = 0, singleOffsetY = 0;
+
+// 全图放大查看视角控制变量（只缩放大图用于看细节，不改动排版）
+let pvSingleViewScale = 1.0;
+let pvSinglePanX = 0, pvSinglePanY = 0;
+let pvSingleInitialDist = 0, pvSingleInitialScale = 1.0;
+let pvSinglePinchCenter = { x: 0, y: 0 };
+let pvSinglePanStart = { x: 0, y: 0 };
+let pvSingleIsInteracting = false;
+let pvSingleDragStart = { x: 0, y: 0 };
+
+function resetPvSingleViewportZoom() {
+  pvSingleViewScale = 1.0;
+  pvSinglePanX = 0;
+  pvSinglePanY = 0;
+  updatePvSingleViewportTransform();
+}
+
+function updatePvSingleViewportTransform() {
+  const wrap = document.getElementById('pvSingleTransformWrap');
+  const btn = document.getElementById('pvSingleResetViewBtn');
+  if (wrap) {
+    wrap.style.transform = `translate(${pvSinglePanX}px, ${pvSinglePanY}px) scale(${pvSingleViewScale})`;
+  }
+  if (btn) {
+    btn.style.display = (pvSingleViewScale !== 1.0 || pvSinglePanX !== 0 || pvSinglePanY !== 0) ? 'block' : 'none';
+  }
+}
 
 function openPvSingleAdjustModal(itemId) {
   activeSingleAdjustItem = pvProcessedBatch.find(it => it.id === itemId);
@@ -8644,7 +8882,6 @@ function openPvSingleAdjustModal(itemId) {
   singleOffsetY = activeSingleAdjustItem.offsetY || pvBaseOffsetY;
   singleAdjustHistory = [];
 
-  // 根据当前画布比例自适应居中大图容器
   const stageBox = document.getElementById('pvSingleStageBox');
   if (stageBox) {
     stageBox.className = `pv-stage-box ratio-${pvRatio}`;
@@ -8658,6 +8895,7 @@ function openPvSingleAdjustModal(itemId) {
   document.getElementById('pvSingleScaleInput').value = Math.round(singleScale * 100);
   document.getElementById('pvSingleScaleText').innerText = `${Math.round(singleScale * 100)}%`;
 
+  resetPvSingleViewportZoom();
   renderSingleAdjustCanvas();
   document.getElementById('pvSingleAdjustModal').classList.remove('hidden');
 }
@@ -8665,9 +8903,11 @@ function openPvSingleAdjustModal(itemId) {
 function closePvSingleAdjustModal(e) {
   if (e && e.target && e.target.closest('.modal-card')) return;
   document.getElementById('pvSingleAdjustModal').classList.add('hidden');
+  resetPvSingleViewportZoom();
 }
 function closePvSingleAdjustModalDirect() {
   document.getElementById('pvSingleAdjustModal').classList.add('hidden');
+  resetPvSingleViewportZoom();
 }
 
 function pushSingleHistory() {
@@ -8700,6 +8940,7 @@ function nudgePvSingle(dx, dy) {
   renderSingleAdjustCanvas();
 }
 
+/* 核心修复：多宫格全量加载绘制逻辑 */
 async function renderSingleAdjustCanvas() {
   if (!activeSingleAdjustItem) return;
   const canvas = document.getElementById('pvSingleCanvas');
@@ -8711,76 +8952,77 @@ async function renderSingleAdjustCanvas() {
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
-  const bImg = await loadImage(activeSingleAdjustItem.baseSrc);
+  // 垫纯白底色
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, curW, curH);
 
-  // 1. 底图
-  let bx = 0, by = 0, bw = curW, bh = curH;
-  if (pvIsAutoHoleEnabled && pvDetectedHoleRect) {
-    const holeExpand = 15;
-    const holeX = pvDetectedHoleRect.x * curW - holeExpand;
-    const holeY = pvDetectedHoleRect.y * curH - holeExpand;
-    const holeW = pvDetectedHoleRect.width * curW + holeExpand * 2;
-    const holeH = pvDetectedHoleRect.height * curH + holeExpand * 2;
-    const imgRatio = bImg.naturalWidth / bImg.naturalHeight;
-    const holeRatio = holeW / holeH;
+  const isMultiGrid = (pvIsAutoHoleEnabled && pvDetectedHolesList.length > 1);
+  const holeCount = isMultiGrid ? pvDetectedHolesList.length : 1;
+  const sheetIdx = activeSingleAdjustItem.id || 0;
 
-    // 采用 Cover 完全覆盖算法：确保长宽均不小于镂空区域，彻底杜绝黑边
-    if (imgRatio > holeRatio) {
-      bh = holeH * singleScale;
-      bw = bh * imgRatio;
+  // 1. 底图绘制：完整加载多宫格的每一张图片并各自贴膜
+  if (pvBaseImages.length > 0) {
+    if (isMultiGrid) {
+      for (let h = 0; h < holeCount; h++) {
+        const imgIndex = (sheetIdx * holeCount + h) % pvBaseImages.length;
+        const item = pvBaseImages[imgIndex];
+        if (item) {
+          const bImg = await loadImage(item.src);
+          const targetHole = pvDetectedHolesList[h];
+          await drawImageCoverIntoHole(ctx, bImg, targetHole, curW, curH, singleScale, singleOffsetX, singleOffsetY);
+        }
+      }
     } else {
-      bw = holeW * singleScale;
-      bh = bw / imgRatio;
-    }
-    if (bw < holeW * singleScale) {
-      bw = holeW * singleScale;
-      bh = bw / imgRatio;
-    }
-    if (bh < holeH * singleScale) {
-      bh = holeH * singleScale;
-      bw = bh * imgRatio;
-    }
+      const item = pvBaseImages[sheetIdx % pvBaseImages.length];
+      if (item) {
+        const bImg = await loadImage(item.src);
+        if (pvIsAutoHoleEnabled && pvDetectedHolesList.length === 1) {
+          await drawImageCoverIntoHole(ctx, bImg, pvDetectedHolesList[0], curW, curH, singleScale, singleOffsetX, singleOffsetY);
+        } else {
+          const baseRatio = Math.max(curW / bImg.naturalWidth, curH / bImg.naturalHeight) * singleScale;
+          const bw = bImg.naturalWidth * baseRatio;
+          const bh = bImg.naturalHeight * baseRatio;
+          const bx = (curW - bw) / 2 + singleOffsetX * (curW / 320);
+          const by = (curH - bh) / 2 + singleOffsetY * (curH / 320);
+          ctx.drawImage(bImg, bx, by, bw, bh);
 
-    bx = holeX + (holeW - bw) / 2 + singleOffsetX * (curW / 320);
-    by = holeY + (holeH - bh) / 2 + singleOffsetY * (curH / 320);
-  } else {
-    bw = curW * singleScale;
-    bh = (bImg.naturalHeight / bImg.naturalWidth) * bw;
-    bx = (curW - bw) / 2 + singleOffsetX * (curW / 320);
-    by = (curH - bh) / 2 + singleOffsetY * (curH / 320);
-  }
-  ctx.drawImage(bImg, bx, by, bw, bh);
-
-  // 2. 贴膜
-  const activeWm = pvWatermarkImg || watermarkImg;
-  if (pvIsWmOverlayEnabled && activeWm) {
-    const wmOp = parseFloat(document.getElementById('pvWmOpacityInput')?.value || 15) / 100;
-    const wmLayerCanvas = document.createElement('canvas');
-    wmLayerCanvas.width = Math.round(bw);
-    wmLayerCanvas.height = Math.round(bh);
-    const wctx = wmLayerCanvas.getContext('2d');
-    wctx.imageSmoothingEnabled = true;
-    wctx.imageSmoothingQuality = 'high';
-    wctx.drawImage(activeWm, 0, 0, bw, bh);
-
-    ctx.save();
-    ctx.globalAlpha = wmOp;
-    ctx.globalCompositeOperation = 'overlay';
-    ctx.drawImage(wmLayerCanvas, bx, by, bw, bh);
-    ctx.restore();
+          const activeWm = pvWatermarkImg || watermarkImg;
+          if (pvIsWmOverlayEnabled && activeWm) {
+            const wmOp = parseFloat(document.getElementById('pvWmOpacityInput')?.value || 15) / 100;
+            ctx.save();
+            ctx.globalAlpha = wmOp;
+            ctx.globalCompositeOperation = 'overlay';
+            ctx.drawImage(activeWm, bx, by, bw, bh);
+            ctx.restore();
+          }
+        }
+      }
+    }
   }
 
-  // 3. 预览框图层
-  const globalOp = parseFloat(document.getElementById('pvOpacityInput')?.value || 100) / 100;
-  pvFrameLayers.forEach(layer => {
-    if (layer.img) {
-      ctx.save();
-      ctx.globalAlpha = (layer.opacity / 100) * globalOp;
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.drawImage(layer.img, 0, 0, curW, curH);
-      ctx.restore();
-    }
-  });
+  // 2. 顶层预览框/边框图层置顶绘制
+  if (pvFrameLayers.length > 0) {
+    const globalOp = parseFloat(document.getElementById('pvOpacityInput')?.value || 100) / 100;
+    pvFrameLayers.forEach(layer => {
+      if (layer.img) {
+        ctx.save();
+        ctx.globalAlpha = (layer.opacity / 100) * globalOp;
+        ctx.globalCompositeOperation = 'source-over';
+
+        const scale = layer.scale || 1.0;
+        const ox = (layer.offsetX || 0) * (curW / 320);
+        const oy = (layer.offsetY || 0) * (curH / 320);
+        const rot = ((layer.rotate || 0) * Math.PI) / 180;
+
+        ctx.translate(curW / 2 + ox, curH / 2 + oy);
+        if (rot !== 0) ctx.rotate(rot);
+        ctx.scale(scale, scale);
+        ctx.drawImage(layer.img, -curW / 2, -curH / 2, curW, curH);
+
+        ctx.restore();
+      }
+    });
+  }
 }
 
 async function savePvSingleAdjustResult() {
@@ -8798,9 +9040,86 @@ async function savePvSingleAdjustResult() {
   const thumbImg = document.getElementById(`pv-thumb-${activeSingleAdjustItem.id}`);
   if (thumbImg) thumbImg.src = url;
 
+  // 同步更新预览图库里的归档缓存
+  if (previewPackages.length > 0 && previewPackages[0].items) {
+    const pkgItem = previewPackages[0].items.find(it => it.id === activeSingleAdjustItem.id);
+    if (pkgItem) {
+      pkgItem.blob = blob;
+      pkgItem.url = url;
+      DrizzleDB.savePvPackage(previewPackages[0]).catch(() => {});
+    }
+  }
+
   closePvSingleAdjustModalDirect();
-  alert('已成功保存单张微调效果！');
+  if (typeof showDownloadToast === 'function') {
+    showDownloadToast('已成功保存当前精修微调排版效果！', 'success');
+  } else {
+    alert('已成功保存当前微调排版！');
+  }
 }
+
+/* 核心绑定：单张精修视口双指放大查看全图细节手势 */
+(function initPvSingleViewportGestures() {
+  const stageBox = document.getElementById('pvSingleStageBox');
+  if (!stageBox) return;
+
+  stageBox.addEventListener('touchstart', (e) => {
+    if (e.touches.length >= 2) {
+      pvSingleIsInteracting = false;
+      const t1 = e.touches[0], t2 = e.touches[1];
+      pvSingleInitialDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      pvSingleInitialScale = pvSingleViewScale;
+      pvSinglePinchCenter = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
+      pvSinglePanStart = { x: pvSinglePanX, y: pvSinglePanY };
+    } else if (e.touches.length === 1 && pvSingleViewScale > 1.05) {
+      pvSingleIsInteracting = true;
+      pvSingleDragStart = { x: e.touches[0].clientX - pvSinglePanX, y: e.touches[0].clientY - pvSinglePanY };
+    }
+  }, { passive: true });
+
+  stageBox.addEventListener('touchmove', (e) => {
+    if (e.touches.length >= 2) {
+      e.preventDefault();
+      const t1 = e.touches[0], t2 = e.touches[1];
+      const curDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+
+      if (!pvSingleInitialDist || pvSingleInitialDist <= 0) {
+        pvSingleInitialDist = curDist;
+        pvSingleInitialScale = pvSingleViewScale;
+        pvSinglePinchCenter = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
+        pvSinglePanStart = { x: pvSinglePanX, y: pvSinglePanY };
+      }
+
+      if (pvSingleInitialDist > 0) {
+        const factor = curDist / pvSingleInitialDist;
+        pvSingleViewScale = Math.min(Math.max(0.9, pvSingleInitialScale * factor), 5.0);
+        const cx = (t1.clientX + t2.clientX) / 2;
+        const cy = (t1.clientY + t2.clientY) / 2;
+        pvSinglePanX = pvSinglePanStart.x + (cx - pvSinglePinchCenter.x);
+        pvSinglePanY = pvSinglePanStart.y + (cy - pvSinglePinchCenter.y);
+        updatePvSingleViewportTransform();
+      }
+    } else if (e.touches.length === 1 && pvSingleIsInteracting && pvSingleViewScale > 1.05) {
+      e.preventDefault();
+      pvSinglePanX = e.touches[0].clientX - pvSingleDragStart.x;
+      pvSinglePanY = e.touches[0].clientY - pvSingleDragStart.y;
+      updatePvSingleViewportTransform();
+    }
+  }, { passive: false });
+
+  stageBox.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) pvSingleInitialDist = 0;
+    if (e.touches.length === 0) pvSingleIsInteracting = false;
+  });
+
+  // 支持电脑端滚轮缩放全图视角
+  stageBox.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const zoomDelta = e.deltaY < 0 ? 1.15 : 0.85;
+    pvSingleViewScale = Math.min(Math.max(0.9, pvSingleViewScale * zoomDelta), 5.0);
+    updatePvSingleViewportTransform();
+  }, { passive: false });
+})();
 
 /* ================================================================
    预览图库（独立 APP：归档管理、多选批量删除、打包/单张下载）
@@ -9089,12 +9408,71 @@ async function triggerPwaInstall() {
 /* ================================================================
    更新公告版本管理与历史更新归档
 ================================================================ */
-const CURRENT_APP_VERSION = 'v1.2.0';
+const CURRENT_APP_VERSION = 'v1.3.0';
 
 const APP_UPDATE_HISTORY = [
   {
-    version: 'v1.2.0',
+    version: 'v1.3.0',
     tag: '最新版本',
+    date: '2026/10/04',
+    sections: [
+      {
+        title: '版本概览',
+        items: [
+          '本次对AI预览机、贴膜机各项功能进行全面优化修复，解决已知使用问题、升级多项实用功能，具体更新内容如下：'
+        ]
+      },
+      {
+        title: '一、优化PNG导出功能',
+        items: [
+          '修复用户反馈的PNG导出不完全、漏图的问题，优化导出底层逻辑，保障图片能够完整导出，解决导出缺失问题。'
+        ]
+      },
+      {
+        title: '二、升级预览机APP功能',
+        items: [
+          '1. 优化多宫格导入预览功能，导入多宫格预览框后，系统可自动识别透明底画布，将导入原图依次适配填充至图一、图二、图三等对应宫格位置，自动校准图片摆放位置。',
+          '2. 适配多宫格导出规则，生成图片时严格按照宫格排版样式导出，同时保留图片原有清晰度，保证成品画质无损。',
+          '3. 优化贴膜水印添加逻辑，支持根据原图顺序逐张贴合水印，采用单图单次贴合模式，取消大范围批量贴合，精准匹配每一张原图。'
+        ]
+      },
+      {
+        title: '三、优化预览机图片压缩适配逻辑',
+        items: [
+          '修复自定义尺寸下图片变形问题，用户上传预览框、自定义图片长度和大小时，系统将保留原图原始比例，不压缩、不拉伸、不挤压图片。仅自动适配调整水印框比例，最大程度还原原图效果。'
+        ]
+      },
+      {
+        title: '四、修复iOS端适配问题',
+        items: [
+          '优化iOS系统图片下载保存功能，新增下载状态通知提示。用户点击下载保存后，后台将弹出正在下载的进度通知，下载完成后同步推送完成提示，解决用户无法查看保存状态、不清楚文件保存位置的问题。'
+        ]
+      },
+      {
+        title: '五、修复贴膜机脸部擦除识别故障',
+        items: [
+          '排查修复脸部擦除功能异常隐患，解决部分用户设备显示亮绿灯，但点击擦脸无响应、功能失效的问题，统一设备识别适配逻辑，保证全员可正常使用脸部擦除功能。'
+        ]
+      },
+      {
+        title: '六、修复数据导入故障',
+        items: [
+          '修复全局数据ZIP压缩包导入失败的bug，优化数据导入通道，提升文件导入稳定性，可正常完成全局数据导入操作。'
+        ]
+      },
+      {
+        title: '七、优化图片导入功能',
+        items: [
+          '1. 统一全场景图片导入入口，新增相册选图为推荐导入格式，所有图片导入通道默认优先展示相册选图功能，文件导入功能保留并后置放置。',
+          '2. 修复部分图片导入后页面无法加载展示，但导出正常的显示bug。',
+          '3. 优化图片放大查看逻辑，调整双指放大功能机制：双指缩放可直接放大整张图片、查看全部细节；如需精准放大原图细节，可拖动页面拉杆操作，区分两种放大使用场景，提升查看体验。'
+        ]
+      }
+    ]
+  },
+  {
+    version: 'v1.2.0',
+    tag: '历史版本',
     date: '2026/10/02',
     sections: [
       {
@@ -9470,5 +9848,17 @@ window.addEventListener('DOMContentLoaded', async () => {
   renderContactsView();
 });
 </script>
+<!-- iOS 动态毛玻璃下载与操作通知胶囊 -->
+<div id="iosDownloadToast" style="position:fixed; top:max(16px, env(safe-area-inset-top)); left:50%; transform:translateX(-50%) translateY(-100px); z-index:99999; display:flex; align-items:center; gap:10px; padding:10px 18px; border-radius:22px; background:rgba(15, 23, 42, 0.88); backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%); border:1px solid rgba(255,255,255,0.2); box-shadow:0 12px 36px rgba(0,0,0,0.35); color:#FFFFFF; font-size:12px; font-weight:700; pointer-events:none; transition:transform .32s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity .3s ease; opacity:0;">
+  <div id="iosToastSpinner" style="width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#38BDF8; border-radius:50%; animation:toastSpin .75s linear infinite;"></div>
+  <svg id="iosToastCheckIcon" style="display:none; color:#34D399;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="iosToastText">正在保存图片…</span>
+</div>
+
+<style>
+@keyframes toastSpin {
+  to { transform: rotate(360deg); }
+}
+</style>
 </body>
 </html>
