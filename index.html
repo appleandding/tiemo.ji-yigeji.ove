@@ -1898,10 +1898,11 @@ body[data-theme="dark"] .auth-tab-btn.active {
       <div class="auth-title" id="authTitleText">账号密码登录</div>
     </div>
 
-    <!-- 登录 / 注册 切换标签 -->
+    <!-- 登录 / 注册 / 忘记密码 切换标签 -->
     <div class="auth-tab-switch">
       <button type="button" class="auth-tab-btn active" id="authTabLogin" onclick="switchAuthTab('login')">登录账号</button>
       <button type="button" class="auth-tab-btn" id="authTabRegister" onclick="switchAuthTab('register')">激活码注册</button>
+      <button type="button" class="auth-tab-btn" id="authTabForgot" onclick="switchAuthTab('forgot')">忘记密码</button>
     </div>
 
     <!-- 输入表单 -->
@@ -1911,15 +1912,15 @@ body[data-theme="dark"] .auth-tab-btn.active {
         <input type="number" id="authQQInput" placeholder="请输入你的QQ号" autocomplete="off">
       </div>
 
-      <div class="auth-input-group">
-        <label>登录密码</label>
+      <div class="auth-input-group" id="authPasswordGroup">
+        <label id="authPasswordLabel">登录密码</label>
         <input type="password" id="authPasswordInput" placeholder="请输入登录密码" autocomplete="off">
       </div>
 
-      <!-- 激活码（仅注册时显示） -->
+      <!-- 激活码（注册或找回重置密码时显示） -->
       <div class="auth-input-group hidden" id="authCodeGroup">
-        <label>专属激活码（一机一码）</label>
-        <input type="text" id="authCodeInput" placeholder="请输入16位激活码" autocomplete="off">
+        <label id="authCodeLabel">专属激活码（验证身份）</label>
+        <input type="text" id="authCodeInput" placeholder="请输入注册时使用的激活码" autocomplete="off">
       </div>
     </div>
 
@@ -1931,8 +1932,8 @@ body[data-theme="dark"] .auth-tab-btn.active {
       <span id="authSubmitBtnText">登 录</span>
     </button>
 
-    <div class="auth-device-hint">
-      提示：注册时激活码将自动绑定当前手机设备，不可借出或二传给他人使用。
+    <div class="auth-device-hint" id="authDeviceHintText">
+      提示：每个账号最多允许切换 4 个浏览器/独立环境，第 5 个环境需重新获取激活码。
     </div>
   </div>
 </div>
@@ -2576,6 +2577,21 @@ body[data-theme="dark"] .auth-tab-btn.active {
       </div>
     </div>
 
+    <!-- 账号安全与密码修改卡片 -->
+    <div class="card">
+      <div class="card-title-row">
+        <div class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>账号安全与密码设置</span>
+        </div>
+      </div>
+      <div style="font-size: 10px; color: var(--text-muted); margin: 6px 0 10px;">修改后自动同步至云端数据库，新密码立即生效</div>
+      <button class="action-btn" onclick="openChangePasswordModal()" style="width: 100%; justify-content: center;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span>修改云端登录密码</span>
+      </button>
+    </div>
+
     <div class="card">
       <div class="card-title-row">
         <div class="card-title">
@@ -2999,6 +3015,34 @@ body[data-theme="dark"] .auth-tab-btn.active {
 
     <div class="modal-actions" style="margin-top:6px;">
       <button class="btn-ghost" onclick="closeInstallModal()">我知道了</button>
+    </div>
+  </div>
+</div>
+
+<!-- 修改登录密码同色系弹窗 -->
+<div id="changePasswordModal" class="modal-mask hidden">
+  <div class="modal-card" style="max-width:320px;">
+    <div class="modal-head">
+      <div>
+        <h3>修改登录密码</h3>
+        <p>新密码将同步更新至云端 Supabase 数据库</p>
+      </div>
+      <button class="x-btn" onclick="closeChangePasswordModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="field" style="margin-top:8px;">
+      <label>设置新密码</label>
+      <input type="password" id="modalNewPasswordInput" placeholder="输入新的登录密码" autocomplete="off">
+    </div>
+    <div class="field" style="margin-top:6px;">
+      <label>再次确认新密码</label>
+      <input type="password" id="modalConfirmPasswordInput" placeholder="再次输入新密码" autocomplete="off">
+    </div>
+    <div class="auth-tip-msg" id="modalChangePwdTip" style="margin-top:4px;"></div>
+    <div class="modal-actions" style="margin-top:8px;">
+      <button class="btn-ghost" onclick="closeChangePasswordModal()">取消</button>
+      <button class="btn-solid" onclick="confirmSubmitNewPassword()">确认同步修改</button>
     </div>
   </div>
 </div>
@@ -4010,7 +4054,7 @@ body[data-theme="dark"] .auth-tab-btn.active {
 
 <script>
 /* ================================================================
-   Supabase 数据库连接配置与一机一码授权中心
+   Supabase 数据库连接配置与最多 4 浏览器/设备绑定授权中心
 ================================================================ */
 const SUPABASE_URL = "https://flqnyfpdmsulxjgudzrt.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_MTsNbs5-vUJLmlccP3KTTQ__64sHwlG";
@@ -4018,31 +4062,80 @@ const supabaseClient = (window.supabase && SUPABASE_URL.indexOf("drizzle yu ni")
   ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
 
-let currentAuthMode = 'login'; // 'login' | 'register'
+let currentAuthMode = 'login'; // 'login' | 'register' | 'forgot'
 
-// 获取或初始化当前手机的唯一硬件设备码 (一机一码)
+// 辅助函数：跨浏览器/PWA持久化Cookie
+function setCookieAuth(name, value, days = 365) {
+  const exp = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${exp}; path=/; SameSite=Lax`;
+}
+
+function getCookieAuth(name) {
+  const match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+  return match ? decodeURIComponent(match[3]) : null;
+}
+
+// 获取或初始化当前浏览器环境的独立设备码
 function getOrCreateDeviceId() {
-  let devId = localStorage.getItem('drizzle_device_id');
+  let devId = localStorage.getItem('drizzle_device_id') || getCookieAuth('drizzle_device_id');
   if (!devId) {
     devId = 'DEV_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9).toUpperCase();
-    localStorage.setItem('drizzle_device_id', devId);
   }
+  localStorage.setItem('drizzle_device_id', devId);
+  setCookieAuth('drizzle_device_id', devId);
   return devId;
 }
 
-// 切换 登录 / 注册 面板
-function switchAuthTab(mode) {
-  currentAuthMode = mode;
-  const isLogin = mode === 'login';
-  document.getElementById('authTabLogin').classList.toggle('active', isLogin);
-  document.getElementById('authTabRegister').classList.toggle('active', !isLogin);
-  document.getElementById('authTitleText').innerText = isLogin ? '账号密码登录' : '激活码注册新用户';
-  document.getElementById('authCodeGroup').classList.toggle('hidden', isLogin);
-  document.getElementById('authSubmitBtnText').innerText = isLogin ? '登 录' : '立即注册并绑定此机';
-  document.getElementById('authTipMsg').innerText = '';
+// 解析已有绑定的设备列表（最多允许 4 个）
+function parseBoundDevices(boundStr) {
+  if (!boundStr) return [];
+  try {
+    const parsed = JSON.parse(boundStr);
+    if (Array.isArray(parsed)) return parsed;
+  } catch(e) {}
+  return String(boundStr).split(',').map(s => s.trim()).filter(Boolean);
 }
 
-// 核心：提交登录 / 注册
+// 切换 登录 / 注册 / 忘记密码 面板
+function switchAuthTab(mode) {
+  currentAuthMode = mode;
+  document.getElementById('authTabLogin').classList.toggle('active', mode === 'login');
+  document.getElementById('authTabRegister').classList.toggle('active', mode === 'register');
+  document.getElementById('authTabForgot').classList.toggle('active', mode === 'forgot');
+
+  const titleEl = document.getElementById('authTitleText');
+  const codeGroup = document.getElementById('authCodeGroup');
+  const pwdGroup = document.getElementById('authPasswordGroup');
+  const pwdLabel = document.getElementById('authPasswordLabel');
+  const submitBtnText = document.getElementById('authSubmitBtnText');
+  const hintText = document.getElementById('authDeviceHintText');
+  document.getElementById('authTipMsg').innerText = '';
+
+  if (mode === 'login') {
+    titleEl.innerText = '账号密码登录';
+    codeGroup.classList.add('hidden');
+    pwdGroup.classList.remove('hidden');
+    pwdLabel.innerText = '登录密码';
+    submitBtnText.innerText = '登 录';
+    hintText.innerText = '提示：每个账号最多允许切换 4 个浏览器/独立环境，第 5 个环境需重新获取激活码。';
+  } else if (mode === 'register') {
+    titleEl.innerText = '激活码注册新用户';
+    codeGroup.classList.remove('hidden');
+    pwdGroup.classList.remove('hidden');
+    pwdLabel.innerText = '设置登录密码';
+    submitBtnText.innerText = '立即注册并绑定';
+    hintText.innerText = '提示：每个激活码仅限一人使用，最多支持切换 4 个不同浏览器。';
+  } else if (mode === 'forgot') {
+    titleEl.innerText = '找回并重置登录密码';
+    codeGroup.classList.remove('hidden');
+    pwdGroup.classList.remove('hidden');
+    pwdLabel.innerText = '重置为新密码';
+    submitBtnText.innerText = '验证激活码并重置密码';
+    hintText.innerText = '提示：请输入注册该 QQ 时使用的专属激活码进行身份验证。';
+  }
+}
+
+// 核心：处理登录、注册与找回重置密码
 async function handleAuthSubmit() {
   const qq = document.getElementById('authQQInput').value.trim();
   const pwd = document.getElementById('authPasswordInput').value.trim();
@@ -4051,11 +4144,15 @@ async function handleAuthSubmit() {
   const btn = document.getElementById('authSubmitBtn');
 
   if (!supabaseClient) {
-    tip.innerText = '错误：尚未配置有效的 Supabase URL 与 Key！';
+    tip.innerText = '错误：尚未连接至有效 Supabase 数据库！';
     return;
   }
-  if (!qq || !pwd) {
-    tip.innerText = '请完整填写 QQ 号和密码！';
+  if (!qq) {
+    tip.innerText = '请填写你的 QQ 号码！';
+    return;
+  }
+  if (!pwd) {
+    tip.innerText = '密码不能为空！';
     return;
   }
 
@@ -4070,12 +4167,12 @@ async function handleAuthSubmit() {
       // ===== 注册逻辑 =====
       if (!code) {
         tip.style.color = '#ef4444';
-        tip.innerText = '注册必须输入激活码！';
+        tip.innerText = '注册必须填写激活码！';
         btn.disabled = false;
         return;
       }
 
-      // 1. 检查激活码有效性
+      // 1. 验证激活码
       const { data: codeData, error: codeErr } = await supabaseClient
         .from('activation_codes')
         .select('*')
@@ -4090,12 +4187,12 @@ async function handleAuthSubmit() {
       }
       if (codeData.is_used) {
         tip.style.color = '#ef4444';
-        tip.innerText = '该激活码已被使用过，无法再次注册！';
+        tip.innerText = '该激活码已被注册绑定过！';
         btn.disabled = false;
         return;
       }
 
-      // 2. 检查 QQ 是否已被注册
+      // 2. 验证 QQ 是否被注册
       const { data: existUser } = await supabaseClient
         .from('app_users')
         .select('qq')
@@ -4104,13 +4201,13 @@ async function handleAuthSubmit() {
 
       if (existUser) {
         tip.style.color = '#ef4444';
-        tip.innerText = '该 QQ 号已被注册，请直接登录！';
+        tip.innerText = '该 QQ 号已被注册，请直接登录或找回密码！';
         btn.disabled = false;
         return;
       }
 
-      // 3. 标记激活码为已使用（一机一码绑定当前设备）
-      const { error: updateCodeErr } = await supabaseClient
+      // 3. 标记激活码为已使用
+      await supabaseClient
         .from('activation_codes')
         .update({
           is_used: true,
@@ -4119,29 +4216,75 @@ async function handleAuthSubmit() {
         })
         .eq('code', code);
 
-      if (updateCodeErr) throw updateCodeErr;
-
-      // 4. 写入用户表
-      const { error: insertUserErr } = await supabaseClient
+      // 4. 写入新用户（初始化当前设备数组为第 1 个设备）
+      const initialDevices = [deviceId];
+      const { error: insertErr } = await supabaseClient
         .from('app_users')
         .insert([{
           qq: qq,
           password: pwd,
-          bound_device_id: deviceId,
+          bound_device_id: JSON.stringify(initialDevices),
           activation_code: code
         }]);
 
-      if (insertUserErr) throw insertUserErr;
+      if (insertErr) throw insertErr;
 
-      // 注册成功，记录本地登录状态
+      // 保存本地凭证
       localStorage.setItem('drizzle_login_qq', qq);
       localStorage.setItem('drizzle_login_token', pwd);
-      tip.style.color = '#22c55e';
-      tip.innerText = '注册并绑定成功！正在进入工具…';
+      setCookieAuth('drizzle_login_qq', qq);
+      setCookieAuth('drizzle_login_token', pwd);
 
-      setTimeout(() => {
-        document.getElementById('authModalOverlay').classList.add('hidden');
-      }, 700);
+      tip.style.color = '#22c55e';
+      tip.innerText = '注册成功！当前浏览器已加入信任设备 (1/4)';
+      setTimeout(() => { document.getElementById('authModalOverlay').classList.add('hidden'); }, 700);
+
+    } else if (currentAuthMode === 'forgot') {
+      // ===== 忘记密码重置逻辑 =====
+      if (!code) {
+        tip.style.color = '#ef4444';
+        tip.innerText = '请填写注册时使用的专属激活码进行核验！';
+        btn.disabled = false;
+        return;
+      }
+
+      // 验证激活码与 QQ 是否匹配
+      const { data: user, error: userErr } = await supabaseClient
+        .from('app_users')
+        .select('*')
+        .eq('qq', qq)
+        .maybeSingle();
+
+      if (userErr || !user) {
+        tip.style.color = '#ef4444';
+        tip.innerText = '未找到该 QQ 绑定的账号！';
+        btn.disabled = false;
+        return;
+      }
+
+      if (user.activation_code !== code) {
+        tip.style.color = '#ef4444';
+        tip.innerText = '激活码与该 QQ 不匹配，验证失败！';
+        btn.disabled = false;
+        return;
+      }
+
+      // 验证通过，重置密码
+      const { error: updateErr } = await supabaseClient
+        .from('app_users')
+        .update({ password: pwd })
+        .eq('qq', qq);
+
+      if (updateErr) throw updateErr;
+
+      localStorage.setItem('drizzle_login_qq', qq);
+      localStorage.setItem('drizzle_login_token', pwd);
+      setCookieAuth('drizzle_login_qq', qq);
+      setCookieAuth('drizzle_login_token', pwd);
+
+      tip.style.color = '#22c55e';
+      tip.innerText = '密码重置成功，正在直接进入系统…';
+      setTimeout(() => { document.getElementById('authModalOverlay').classList.add('hidden'); }, 600);
 
     } else {
       // ===== 登录逻辑 =====
@@ -4160,50 +4303,59 @@ async function handleAuthSubmit() {
 
       if (user.password !== pwd) {
         tip.style.color = '#ef4444';
-        tip.innerText = '密码错误，请重新输入！';
+        tip.innerText = '密码错误！如遗忘请点击上方「忘记密码」重置';
         btn.disabled = false;
         return;
       }
 
-      // 一机一码强校验
-      if (user.bound_device_id && user.bound_device_id !== deviceId) {
-        tip.style.color = '#ef4444';
-        tip.innerText = '登录失败：账号绑定的设备与当前手机不一致！(防二传保护)';
-        btn.disabled = false;
-        return;
+      // 解析用户绑定的所有设备
+      let devList = parseBoundDevices(user.bound_device_id);
+
+      if (devList.includes(deviceId)) {
+        // 当前设备已经授权过，直接放行
+      } else {
+        // 新浏览器/新设备/PWA首次运行检测
+        if (devList.length < 4) {
+          // 在 4 个浏览器范围内：自动纳为合法设备并同步保存至云端
+          devList.push(deviceId);
+          await supabaseClient
+            .from('app_users')
+            .update({ bound_device_id: JSON.stringify(devList) })
+            .eq('qq', qq);
+        } else {
+          // 超出 4 个设备（换到第 5 个浏览器），拒绝登录
+          tip.style.color = '#ef4444';
+          tip.innerText = '登录失败：该账号已达到最多 4 个浏览器/设备使用上限！如需在第 5 个环境登录请重新获取激活码。';
+          btn.disabled = false;
+          return;
+        }
       }
 
-      // 如果旧账号无绑定设备，登录时初次自动绑定当前设备
-      if (!user.bound_device_id) {
-        await supabaseClient
-          .from('app_users')
-          .update({ bound_device_id: deviceId })
-          .eq('qq', qq);
-      }
-
-      // 登录通过，保存本地令牌
+      // 登录成功
       localStorage.setItem('drizzle_login_qq', qq);
       localStorage.setItem('drizzle_login_token', pwd);
-      tip.style.color = '#22c55e';
-      tip.innerText = '登录成功！';
+      setCookieAuth('drizzle_login_qq', qq);
+      setCookieAuth('drizzle_login_token', pwd);
 
-      setTimeout(() => {
-        document.getElementById('authModalOverlay').classList.add('hidden');
-      }, 500);
+      tip.style.color = '#22c55e';
+      tip.innerText = `登录成功！已授权此浏览器 (${devList.length}/4)`;
+      setTimeout(() => { document.getElementById('authModalOverlay').classList.add('hidden'); }, 500);
     }
   } catch (err) {
-    console.error('认证异常:', err);
+    console.error('认证异常详细信息:', err);
     tip.style.color = '#ef4444';
-    tip.innerText = '网络连接或数据库校验失败，请稍后再试';
+    // 直接把 Supabase 底层真实报错显示在界面上，杜绝瞎猜
+    const detailMsg = err?.message || err?.error_description || (typeof err === 'string' ? err : '未知错误');
+    tip.innerText = '注册/校验失败: ' + detailMsg;
   } finally {
     btn.disabled = false;
   }
 }
 
-// 检查是否已有合法免登录状态
+// 检查免登录态（兼容网页版与安装到手机的 PWA 桌面独立版）
 async function checkAuthSession() {
-  const cachedQQ = localStorage.getItem('drizzle_login_qq');
-  const cachedToken = localStorage.getItem('drizzle_login_token');
+  const cachedQQ = localStorage.getItem('drizzle_login_qq') || getCookieAuth('drizzle_login_qq');
+  const cachedToken = localStorage.getItem('drizzle_login_token') || getCookieAuth('drizzle_login_token');
   const overlay = document.getElementById('authModalOverlay');
   const deviceId = getOrCreateDeviceId();
 
@@ -4212,7 +4364,6 @@ async function checkAuthSession() {
     return;
   }
 
-  // 后台无感核验一次账密与设备 ID 是否依然合法
   try {
     const { data: user } = await supabaseClient
       .from('app_users')
@@ -4220,18 +4371,114 @@ async function checkAuthSession() {
       .eq('qq', cachedQQ)
       .maybeSingle();
 
-    if (user && user.password === cachedToken && (!user.bound_device_id || user.bound_device_id === deviceId)) {
-      // 验证通过，保持静默放行
-      if (overlay) overlay.classList.add('hidden');
-    } else {
-      // 验证失效（被踢下线或换了设备），弹出重新登录
-      localStorage.removeItem('drizzle_login_qq');
-      localStorage.removeItem('drizzle_login_token');
-      if (overlay) overlay.classList.remove('hidden');
+    if (user && user.password === cachedToken) {
+      let devList = parseBoundDevices(user.bound_device_id);
+      if (devList.includes(deviceId)) {
+        if (overlay) overlay.classList.add('hidden');
+        return;
+      } else if (devList.length < 4) {
+        // PWA 或新浏览器静默补全设备列表，无需重新让用户输账密
+        devList.push(deviceId);
+        await supabaseClient
+          .from('app_users')
+          .update({ bound_device_id: JSON.stringify(devList) })
+          .eq('qq', cachedQQ);
+        if (overlay) overlay.classList.add('hidden');
+        return;
+      }
     }
+
+    // 凭证失效或达到设备上限
+    if (overlay) overlay.classList.remove('hidden');
   } catch (e) {
-    // 离线环境可按需放行或重弹
     if (overlay) overlay.classList.add('hidden');
+  }
+}
+
+/* ================================================================
+   在“我的”页面修改密码并直接同步至 Supabase
+================================================================ */
+function openChangePasswordModal() {
+  const cachedQQ = localStorage.getItem('drizzle_login_qq') || getCookieAuth('drizzle_login_qq');
+  if (!cachedQQ) {
+    alert('请先登录账号后再修改密码！');
+    return;
+  }
+  document.getElementById('modalNewPasswordInput').value = '';
+  document.getElementById('modalConfirmPasswordInput').value = '';
+  document.getElementById('modalChangePwdTip').innerText = '';
+  document.getElementById('changePasswordModal').classList.remove('hidden');
+}
+
+function closeChangePasswordModal() {
+  document.getElementById('changePasswordModal').classList.add('hidden');
+}
+
+async function confirmSubmitNewPassword() {
+  const newPwd = document.getElementById('modalNewPasswordInput').value.trim();
+  const confirmPwd = document.getElementById('modalConfirmPasswordInput').value.trim();
+  const tip = document.getElementById('modalChangePwdTip');
+  
+  // 多重兼容读取当前用户的 QQ 号，防止读取为空
+  let qq = localStorage.getItem('drizzle_login_qq') || 
+           (typeof getCookieAuth === 'function' ? getCookieAuth('drizzle_login_qq') : null) ||
+           document.getElementById('prefQQInput')?.value.trim() ||
+           document.getElementById('homeQQ')?.innerText.replace(/[^0-9]/g, '');
+
+  if (!qq) {
+    tip.style.color = '#ef4444';
+    tip.innerText = '未检测到当前登录的QQ账号，请重新登录！';
+    return;
+  }
+  if (!newPwd) {
+    tip.style.color = '#ef4444';
+    tip.innerText = '新密码不能为空！';
+    return;
+  }
+  if (newPwd !== confirmPwd) {
+    tip.style.color = '#ef4444';
+    tip.innerText = '两次输入的新密码不一致！';
+    return;
+  }
+
+  tip.style.color = 'var(--text-muted)';
+  tip.innerText = '正在同步写入云端 Supabase 数据库…';
+
+  try {
+    // 1. 同步更新 app_users 表中的密码
+    const { data, error } = await supabaseClient
+      .from('app_users')
+      .update({ password: String(newPwd) })
+      .eq('qq', String(qq))
+      .select();
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      tip.style.color = '#ef4444';
+      tip.innerText = `同步失败：云端未找到 QQ(${qq}) 对应的记录！`;
+      return;
+    }
+
+    // 2. 更新本地所有缓存凭证
+    localStorage.setItem('drizzle_login_token', String(newPwd));
+    localStorage.setItem('drizzle_login_qq', String(qq));
+    if (typeof setCookieAuth === 'function') {
+      setCookieAuth('drizzle_login_token', String(newPwd));
+      setCookieAuth('drizzle_login_qq', String(qq));
+    }
+
+    tip.style.color = '#22c55e';
+    tip.innerText = '密码修改成功，云端已完成同步！';
+
+    setTimeout(() => {
+      closeChangePasswordModal();
+      alert(`【密码同步成功】\n你的账号(${qq})密码已实时更新为新密码！下次请使用新密码登录。`);
+    }, 600);
+  } catch (err) {
+    console.error('密码同步失败:', err);
+    tip.style.color = '#ef4444';
+    tip.innerText = '同步失败：' + (err.message || '网络连接超时');
   }
 }
 
