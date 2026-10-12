@@ -19,6 +19,8 @@
 <script src="https://unpkg.com/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+<!-- 引入 Supabase 数据库接口支持库 -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 * {
@@ -1703,6 +1705,168 @@ input[type="range"]::-moz-range-thumb {
   background: var(--glass-subtle); border: 1px solid var(--glass-border);
   border-radius: 8px; padding: 1.5px 6px; box-shadow: inset 0 1px 1px rgba(255,255,255,0.7);
 }
+
+/* ============ 账密与激活码认证模态层（原汁原味液体玻璃风格） ============ */
+#authModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+#authModalOverlay.hidden { display: none !important; }
+
+.auth-card {
+  width: 100%;
+  max-width: 350px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(34px) saturate(190%);
+  -webkit-backdrop-filter: blur(34px) saturate(190%);
+  border: 1px solid var(--glass-border);
+  border-radius: 28px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18), var(--glass-shine);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: authZoomIn .28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes authZoomIn {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+body[data-theme="dark"] .auth-card {
+  background: rgba(26, 29, 35, 0.94);
+  color: #F8FAFC;
+}
+
+.auth-header-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+}
+.auth-app-badge {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--accent);
+  background: var(--glass-subtle);
+  border: 1px solid var(--glass-border);
+  padding: 3px 12px;
+  border-radius: 20px;
+}
+.auth-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: 0.5px;
+}
+
+.auth-tab-switch {
+  display: flex;
+  background: var(--glass-subtle);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 3px;
+  width: 100%;
+}
+.auth-tab-btn {
+  flex: 1;
+  padding: 7px 0;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 11px;
+  transition: all .18s ease;
+  font-family: inherit;
+}
+.auth-tab-btn.active {
+  background: #FFFFFF;
+  color: var(--text-main);
+  box-shadow: 0 1px 5px rgba(100, 116, 139, 0.2);
+}
+body[data-theme="dark"] .auth-tab-btn.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+}
+
+.auth-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.auth-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.auth-input-group label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.auth-input-group input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--glass-subtle);
+  border: 1px solid var(--glass-border);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  outline: none;
+  font-family: inherit;
+  box-shadow: inset 0 1px 1.5px rgba(0, 0, 0, 0.04);
+}
+.auth-input-group input:focus {
+  border-color: var(--accent);
+  background: #FFFFFF;
+}
+
+.auth-tip-msg {
+  font-size: 10px;
+  color: #ef4444;
+  min-height: 14px;
+  text-align: center;
+  font-weight: 600;
+}
+.auth-submit-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--text-main);
+  color: #FFFFFF;
+  border: none;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(51, 65, 85, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.auth-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.auth-device-hint {
+  font-size: 9.5px;
+  color: var(--text-light);
+  text-align: center;
+  line-height: 1.4;
+}
 </style>
 </head>
 
@@ -1725,6 +1889,53 @@ input[type="range"]::-moz-range-thumb {
 <input type="file" id="wallpaperUploadInput" class="hidden-file-input" onchange="handleWallpaperChange(event)">
 <input type="file" id="dataImportInput" class="hidden-file-input" accept=".zip,application/zip" onchange="handleImportDataBackup(event)">
 <input type="file" id="thresholdImageInput" class="hidden-file-input" multiple accept="image/*" onchange="handleThresholdFileSelect(event)">
+
+<!-- ============ 账密与激活码认证模态窗口（手机端极简UI） ============ -->
+<div id="authModalOverlay" class="hidden">
+  <div class="auth-card">
+    <div class="auth-header-box">
+      <span class="auth-app-badge">DRIZZLE AUTH</span>
+      <div class="auth-title" id="authTitleText">账号密码登录</div>
+    </div>
+
+    <!-- 登录 / 注册 切换标签 -->
+    <div class="auth-tab-switch">
+      <button type="button" class="auth-tab-btn active" id="authTabLogin" onclick="switchAuthTab('login')">登录账号</button>
+      <button type="button" class="auth-tab-btn" id="authTabRegister" onclick="switchAuthTab('register')">激活码注册</button>
+    </div>
+
+    <!-- 输入表单 -->
+    <div class="auth-form-fields">
+      <div class="auth-input-group">
+        <label>QQ 号码</label>
+        <input type="number" id="authQQInput" placeholder="请输入你的QQ号" autocomplete="off">
+      </div>
+
+      <div class="auth-input-group">
+        <label>登录密码</label>
+        <input type="password" id="authPasswordInput" placeholder="请输入登录密码" autocomplete="off">
+      </div>
+
+      <!-- 激活码（仅注册时显示） -->
+      <div class="auth-input-group hidden" id="authCodeGroup">
+        <label>专属激活码（一机一码）</label>
+        <input type="text" id="authCodeInput" placeholder="请输入16位激活码" autocomplete="off">
+      </div>
+    </div>
+
+    <!-- 错误与状态提示文案 -->
+    <div class="auth-tip-msg" id="authTipMsg"></div>
+
+    <!-- 提交按钮 -->
+    <button type="button" class="auth-submit-btn" id="authSubmitBtn" onclick="handleAuthSubmit()">
+      <span id="authSubmitBtnText">登 录</span>
+    </button>
+
+    <div class="auth-device-hint">
+      提示：注册时激活码将自动绑定当前手机设备，不可借出或二传给他人使用。
+    </div>
+  </div>
+</div>
 
 <!-- ============ 开场雨滴遮罩（新增详细文件与模块加载实时展示） ============ -->
 <div id="bootOverlay">
@@ -3171,7 +3382,7 @@ input[type="range"]::-moz-range-thumb {
   </div>
 </div>
 
-<!-- 单张效果精修微调居中大图弹窗（支持双指放大整张大图查看细节） -->
+<!-- 单张效果精修微调居中大图弹窗 -->
 <div id="pvSingleAdjustModal" class="modal-mask hidden" onclick="closePvSingleAdjustModal(event)">
   <div class="modal-card" style="max-width: 400px; width: 94%; max-height: 92vh; display: flex; flex-direction: column; gap: 10px;" onclick="event.stopPropagation()">
     <div class="modal-head" style="border-bottom:1px solid var(--line); padding-bottom:8px;">
@@ -3180,8 +3391,8 @@ input[type="range"]::-moz-range-thumb {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
         <div>
-          <h3 style="font-size:13px; font-weight:800;">效果精修与细节查看</h3>
-          <p style="font-size:9.5px; color:var(--text-muted);">下方滑杆调原图 · 双指在画幅内缩放可放大整图看细节</p>
+          <h3 style="font-size:13px; font-weight:800;">单张效果精修微调</h3>
+          <p style="font-size:9.5px; color:var(--text-muted);">方向键微调位置 · 滑杆缩放大小</p>
         </div>
       </div>
       <div style="display:flex; gap:6px;">
@@ -3190,16 +3401,11 @@ input[type="range"]::-moz-range-thumb {
       </div>
     </div>
 
-    <!-- 居中超大预览画布视口（支持双指整体缩放漫游） -->
-    <div style="display:flex; justify-content:center; align-items:center; width:100%; position:relative;">
-      <div id="pvSingleStageBox" class="pv-stage-box ratio-1-1" style="width: min(82vw, 320px); height: min(82vw, 320px); border-radius: 18px; overflow: hidden; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.1); touch-action: none; user-select: none;">
-        <div id="pvSingleTransformWrap" style="width:100%; height:100%; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; transform-origin:center center; will-change:transform;">
-          <canvas id="pvSingleCanvas" class="pv-canvas-layer" style="position:absolute; inset:0; width:100%; height:100%; display:block;"></canvas>
-        </div>
+    <!-- 居中超大预览画布视口 -->
+    <div style="display:flex; justify-content:center; align-items:center; width:100%;">
+      <div id="pvSingleStageBox" class="pv-stage-box ratio-1-1" style="width: min(82vw, 320px); height: min(82vw, 320px); border-radius: 18px; overflow: hidden; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <canvas id="pvSingleCanvas" class="pv-canvas-layer" style="position: absolute; inset: 0; width: 100%; height: 100%; display: block;"></canvas>
       </div>
-      <button type="button" class="mini-btn ghost" id="pvSingleResetViewBtn" onclick="resetPvSingleViewportZoom()" style="position:absolute; bottom:8px; right:calc(50% - min(41vw, 160px) + 8px); z-index:15; font-size:9.5px; opacity:0.9; display:none; background:rgba(15,23,42,0.75); color:#FFF; border:none;" title="复位全图视角">
-        复位全图视角
-      </button>
     </div>
 
     <!-- 缩放与微调操作栏 -->
@@ -3669,7 +3875,7 @@ input[type="range"]::-moz-range-thumb {
     </button>
     <div class="app-title">更新公告与历史</div>
     <div class="app-header-right">
-      <span class="mini-badge ready"><span class="bdot"></span><span>v1.3.0 最新版</span></span>
+      <span class="mini-badge ready"><span class="bdot"></span><span>v1.2.0 最新版</span></span>
     </div>
   </div>
 
@@ -3691,10 +3897,10 @@ input[type="range"]::-moz-range-thumb {
           </svg>
         </div>
         <div>
-          <div style="font-size:14px; font-weight:800; color:var(--text-main);">版本更新优化公告</div>
+          <div style="font-size:14px; font-weight:800; color:var(--text-main);">版本更新公告</div>
           <div class="ver-badge">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            <span>v1.3.0 正式上线</span>
+            <span>v1.2.0 正式上线</span>
           </div>
         </div>
       </div>
@@ -3709,70 +3915,82 @@ input[type="range"]::-moz-range-thumb {
         <div class="log-sec-title">
           <span>版本概览</span>
         </div>
-        <div class="log-item-text">本次对AI预览机、贴膜机各项功能进行全面优化修复，解决已知使用问题、升级多项实用功能，具体更新内容如下：</div>
-      </div>
-
-      <div class="log-section-card">
-        <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span>一、优化PNG导出功能</span>
-        </div>
-        <div class="log-item-text">修复用户反馈的PNG导出不完全、漏图的问题，优化导出底层逻辑，保障图片能够完整导出，解决导出缺失问题。</div>
+        <div class="log-item-text">本次版本重点新增两大核心功能：<b>预览机</b>、<b>预览图库</b>，同时对全功能模块进行大量优化升级，修复多项使用问题，具体更新内容如下：</div>
       </div>
 
       <div class="log-section-card">
         <div class="log-sec-title">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/><circle cx="15" cy="15" r="2"/></svg>
-          <span>二、升级预览机APP功能</span>
+          <span>一、新增核心功能</span>
         </div>
         <div class="log-item-text">
-          <b>1.</b> 优化多宫格导入预览功能，导入多宫格预览框后，系统可自动识别透明底画布，将导入原图依次适配填充至图一、图二、图三等对应宫格位置，自动校准图片摆放位置。<br>
-          <b>2.</b> 适配多宫格导出规则，生成图片时严格按照宫格排版样式导出，同时保留图片原有清晰度，保证成品画质无损。<br>
-          <b>3.</b> 优化贴膜水印添加逻辑，支持根据原图顺序逐张贴合水印，采用单图单次贴合模式，取消大范围批量贴合，精准匹配每一张原图。
+          <b>1. 全新功能：预览机</b><br>
+          1. 支持底图批量导入、水印导入预览，可实现水印覆盖混合效果，适配贴膜水印制作需求<br>
+          2. 新增透明底自动识别功能，识别区域以蓝色边框标注，支持首张图片定位调整，后续图片自动适配填充，可手动关闭识别、自由自定义位置<br>
+          3. 集成贴膜水印效果，可直接在预览机内完成水印贴膜操作<br>
+          4. 支持多预览框导入，可自由调整各水印框层级、上下层级排序，分层排版后批量生成图片<br>
+          5. 新增自定义比例功能，破除固定比例限制，适配头像、壁纸等多场景预览制作
+        </div>
+        <div class="log-item-text">
+          <b>2. 全新页面：预览图库</b><br>
+          1. 独立第二应用页面，专门收纳所有归档、保存的原图与预览成品图<br>
+          2. 统一汇总所有制作记录，无需反复导出查找，素材集中管理更便捷
         </div>
       </div>
 
       <div class="log-section-card">
         <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-          <span>三、优化预览机图片压缩适配逻辑</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span>二、核心功能优化</span>
         </div>
-        <div class="log-item-text">修复自定义尺寸下图片变形问题，用户上传预览框、自定义图片长度和大小时，系统将保留原图原始比例，不压缩、不拉伸、不挤压图片。仅自动适配调整水印框比例，最大程度还原原图效果。</div>
+        <div class="log-item-text">
+          <b>1. 导出保存功能升级</b><br>
+          1. 新增批量导出模式，点击导出弹出双选项：ZIP压缩包导出、全部图片一次性PNG导出至相册<br>
+          2. 单张图片保存默认直接输出PNG格式并保存到手机相册<br>
+          3. 批量生成图片新增实时进度条，精准展示制作进度，同步提示「人脸擦除、位置调整」等操作步骤
+        </div>
+        <div class="log-item-text">
+          <b>2. 预览编辑操作优化</b><br>
+          1. 新增原图锁定功能：导入图片后默认开启锁图，防止误触滑动移位；手动调整图片时可关闭锁定，自由操作<br>
+          2. 支持成品图二次编辑，点击已生成图片，居中弹出大图编辑弹窗，可微调图片位置、大小<br>
+          3. 支持双指放大查看图片细节，新增撤销功能，可撤回误操作<br>
+          4. 优化水印框编辑：支持精准选择指定水印框单独调整，可自由移动、缩放、旋转，旋转支持正负数值调节<br>
+          5. 新增贴膜水印擦脸开关，可自主开启或关闭人脸擦除功能
+        </div>
+        <div class="log-item-text">
+          <b>3. 素材导入与展示优化</b><br>
+          1. 支持完整文件夹批量导入，可直接选取文件夹导入全部图片<br>
+          2. 实时刷新素材列表，新增、删除图片即时生效，无需重启页面即可查看最新素材<br>
+          3. 新增原图列表展示功能，清晰查看所有已导入素材<br>
+          4. 优化操作排版，所有移动、调整类功能按键统一放置在预览框下方，操作更直观<br>
+          5. 实现水印APP与预览机功能互通，预览框可跨功能联动选择使用
+        </div>
       </div>
 
       <div class="log-section-card">
         <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-          <span>四、修复iOS端适配问题</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/></svg>
+          <span>三、全局美化与适配优化</span>
         </div>
-        <div class="log-item-text">优化iOS系统图片下载保存功能，新增下载状态通知提示。用户点击下载保存后，后台将弹出正在下载的进度通知，下载完成后同步推送完成提示，解决用户无法查看保存状态、不清楚文件保存位置的问题。</div>
-      </div>
-
-      <div class="log-section-card">
-        <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 15s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-          <span>五、修复贴膜机脸部擦除识别故障</span>
+        <div class="log-item-text">
+          1. 新增APP全局黑白配色主题，原有灰白、蓝色、粉色主题保留，丰富自定义风格<br>
+          2. 全局壁纸适配升级，APP内置壁纸自动模糊20%显示，彻底解决界面白边问题<br>
+          3. 全系升级iOS液体玻璃质感UI，所有图标替换为SVG矢量图标，画质高清无失真<br>
+          4. 移除多余自适应选项，精简功能面板，降低操作干扰
         </div>
-        <div class="log-item-text">排查修复脸部擦除功能异常隐患，解决部分用户设备显示亮绿灯，但点击擦脸无响应、功能失效的问题，统一设备识别适配逻辑，保证全员可正常使用脸部擦除功能。</div>
-      </div>
-
-      <div class="log-section-card">
-        <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-          <span>六、修复数据导入故障</span>
-        </div>
-        <div class="log-item-text">修复全局数据ZIP压缩包导入失败的bug，优化数据导入通道，提升文件导入稳定性，可正常完成全局数据导入操作。</div>
       </div>
 
       <div class="log-section-card">
         <div class="log-sec-title">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          <span>七、优化图片导入功能</span>
+          <span>四、问题修复</span>
         </div>
         <div class="log-item-text">
-          <b>1.</b> 统一全场景图片导入入口，新增相册选图为推荐导入格式，所有图片导入通道默认优先展示相册选图功能，文件导入功能保留并后置放置。<br>
-          <b>2.</b> 修复部分图片导入后页面无法加载展示，但导出正常的显示bug。<br>
-          <b>3.</b> 优化图片放大查看逻辑，调整双指放大功能机制：双指缩放可直接放大整张图片、查看全部细节；如需精准放大原图细节，可拖动页面拉杆操作，区分两种放大使用场景，提升查看体验。
+          1. 修复九宫格及多宫格拼图点击无响应的故障<br>
+          2. 修复批量生成预览图后成品图不显示的问题<br>
+          3. 优化页面滑动逻辑，杜绝误触移位、右滑误退出APP的情况<br>
+          4. 优化贴膜机不透明度调节，支持手动输入精准数值设置参数<br>
+          5. 升级图包下载模式，新增单张图片png下载方式，不再仅支持ZIP压缩包下载
         </div>
       </div>
 
@@ -3791,6 +4009,232 @@ input[type="range"]::-moz-range-thumb {
 
 
 <script>
+/* ================================================================
+   Supabase 数据库连接配置与一机一码授权中心
+================================================================ */
+const SUPABASE_URL = "https://flqnyfpdmsulxjgudzrt.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_MTsNbs5-vUJLmlccP3KTTQ__64sHwlG";
+const supabaseClient = (window.supabase && SUPABASE_URL.indexOf("drizzle yu ni") === -1)
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+let currentAuthMode = 'login'; // 'login' | 'register'
+
+// 获取或初始化当前手机的唯一硬件设备码 (一机一码)
+function getOrCreateDeviceId() {
+  let devId = localStorage.getItem('drizzle_device_id');
+  if (!devId) {
+    devId = 'DEV_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9).toUpperCase();
+    localStorage.setItem('drizzle_device_id', devId);
+  }
+  return devId;
+}
+
+// 切换 登录 / 注册 面板
+function switchAuthTab(mode) {
+  currentAuthMode = mode;
+  const isLogin = mode === 'login';
+  document.getElementById('authTabLogin').classList.toggle('active', isLogin);
+  document.getElementById('authTabRegister').classList.toggle('active', !isLogin);
+  document.getElementById('authTitleText').innerText = isLogin ? '账号密码登录' : '激活码注册新用户';
+  document.getElementById('authCodeGroup').classList.toggle('hidden', isLogin);
+  document.getElementById('authSubmitBtnText').innerText = isLogin ? '登 录' : '立即注册并绑定此机';
+  document.getElementById('authTipMsg').innerText = '';
+}
+
+// 核心：提交登录 / 注册
+async function handleAuthSubmit() {
+  const qq = document.getElementById('authQQInput').value.trim();
+  const pwd = document.getElementById('authPasswordInput').value.trim();
+  const code = document.getElementById('authCodeInput').value.trim().toUpperCase();
+  const tip = document.getElementById('authTipMsg');
+  const btn = document.getElementById('authSubmitBtn');
+
+  if (!supabaseClient) {
+    tip.innerText = '错误：尚未配置有效的 Supabase URL 与 Key！';
+    return;
+  }
+  if (!qq || !pwd) {
+    tip.innerText = '请完整填写 QQ 号和密码！';
+    return;
+  }
+
+  btn.disabled = true;
+  tip.style.color = 'var(--text-muted)';
+  tip.innerText = '正在验证中，请稍候…';
+
+  const deviceId = getOrCreateDeviceId();
+
+  try {
+    if (currentAuthMode === 'register') {
+      // ===== 注册逻辑 =====
+      if (!code) {
+        tip.style.color = '#ef4444';
+        tip.innerText = '注册必须输入激活码！';
+        btn.disabled = false;
+        return;
+      }
+
+      // 1. 检查激活码有效性
+      const { data: codeData, error: codeErr } = await supabaseClient
+        .from('activation_codes')
+        .select('*')
+        .eq('code', code)
+        .maybeSingle();
+
+      if (codeErr || !codeData) {
+        tip.style.color = '#ef4444';
+        tip.innerText = '激活码不存在，请确认是否输入正确！';
+        btn.disabled = false;
+        return;
+      }
+      if (codeData.is_used) {
+        tip.style.color = '#ef4444';
+        tip.innerText = '该激活码已被使用过，无法再次注册！';
+        btn.disabled = false;
+        return;
+      }
+
+      // 2. 检查 QQ 是否已被注册
+      const { data: existUser } = await supabaseClient
+        .from('app_users')
+        .select('qq')
+        .eq('qq', qq)
+        .maybeSingle();
+
+      if (existUser) {
+        tip.style.color = '#ef4444';
+        tip.innerText = '该 QQ 号已被注册，请直接登录！';
+        btn.disabled = false;
+        return;
+      }
+
+      // 3. 标记激活码为已使用（一机一码绑定当前设备）
+      const { error: updateCodeErr } = await supabaseClient
+        .from('activation_codes')
+        .update({
+          is_used: true,
+          used_by_qq: qq,
+          device_id: deviceId
+        })
+        .eq('code', code);
+
+      if (updateCodeErr) throw updateCodeErr;
+
+      // 4. 写入用户表
+      const { error: insertUserErr } = await supabaseClient
+        .from('app_users')
+        .insert([{
+          qq: qq,
+          password: pwd,
+          bound_device_id: deviceId,
+          activation_code: code
+        }]);
+
+      if (insertUserErr) throw insertUserErr;
+
+      // 注册成功，记录本地登录状态
+      localStorage.setItem('drizzle_login_qq', qq);
+      localStorage.setItem('drizzle_login_token', pwd);
+      tip.style.color = '#22c55e';
+      tip.innerText = '注册并绑定成功！正在进入工具…';
+
+      setTimeout(() => {
+        document.getElementById('authModalOverlay').classList.add('hidden');
+      }, 700);
+
+    } else {
+      // ===== 登录逻辑 =====
+      const { data: user, error: userErr } = await supabaseClient
+        .from('app_users')
+        .select('*')
+        .eq('qq', qq)
+        .maybeSingle();
+
+      if (userErr || !user) {
+        tip.style.color = '#ef4444';
+        tip.innerText = '账号未注册，请先使用激活码注册！';
+        btn.disabled = false;
+        return;
+      }
+
+      if (user.password !== pwd) {
+        tip.style.color = '#ef4444';
+        tip.innerText = '密码错误，请重新输入！';
+        btn.disabled = false;
+        return;
+      }
+
+      // 一机一码强校验
+      if (user.bound_device_id && user.bound_device_id !== deviceId) {
+        tip.style.color = '#ef4444';
+        tip.innerText = '登录失败：账号绑定的设备与当前手机不一致！(防二传保护)';
+        btn.disabled = false;
+        return;
+      }
+
+      // 如果旧账号无绑定设备，登录时初次自动绑定当前设备
+      if (!user.bound_device_id) {
+        await supabaseClient
+          .from('app_users')
+          .update({ bound_device_id: deviceId })
+          .eq('qq', qq);
+      }
+
+      // 登录通过，保存本地令牌
+      localStorage.setItem('drizzle_login_qq', qq);
+      localStorage.setItem('drizzle_login_token', pwd);
+      tip.style.color = '#22c55e';
+      tip.innerText = '登录成功！';
+
+      setTimeout(() => {
+        document.getElementById('authModalOverlay').classList.add('hidden');
+      }, 500);
+    }
+  } catch (err) {
+    console.error('认证异常:', err);
+    tip.style.color = '#ef4444';
+    tip.innerText = '网络连接或数据库校验失败，请稍后再试';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// 检查是否已有合法免登录状态
+async function checkAuthSession() {
+  const cachedQQ = localStorage.getItem('drizzle_login_qq');
+  const cachedToken = localStorage.getItem('drizzle_login_token');
+  const overlay = document.getElementById('authModalOverlay');
+  const deviceId = getOrCreateDeviceId();
+
+  if (!cachedQQ || !cachedToken || !supabaseClient) {
+    if (overlay) overlay.classList.remove('hidden');
+    return;
+  }
+
+  // 后台无感核验一次账密与设备 ID 是否依然合法
+  try {
+    const { data: user } = await supabaseClient
+      .from('app_users')
+      .select('password, bound_device_id')
+      .eq('qq', cachedQQ)
+      .maybeSingle();
+
+    if (user && user.password === cachedToken && (!user.bound_device_id || user.bound_device_id === deviceId)) {
+      // 验证通过，保持静默放行
+      if (overlay) overlay.classList.add('hidden');
+    } else {
+      // 验证失效（被踢下线或换了设备），弹出重新登录
+      localStorage.removeItem('drizzle_login_qq');
+      localStorage.removeItem('drizzle_login_token');
+      if (overlay) overlay.classList.remove('hidden');
+    }
+  } catch (e) {
+    // 离线环境可按需放行或重弹
+    if (overlay) overlay.classList.add('hidden');
+  }
+}
+
 /* ================================================================
    全局状态
 ================================================================ */
@@ -4419,7 +4863,11 @@ function finishBoot() {
   setTimeout(() => {
     const overlay = document.getElementById('bootOverlay');
     overlay.classList.add('gone');
-    setTimeout(() => { overlay.style.display = 'none'; }, 800);
+    setTimeout(() => { 
+      overlay.style.display = 'none'; 
+      // 开场动画结束后，立刻执行账密与激活码权限校验
+      checkAuthSession();
+    }, 800);
   }, 720);
 }
 
@@ -8840,38 +9288,11 @@ function renderPvBatchResults() {
 }
 
 /* ================================================================
-   单张/多宫格精修微调与双指全图缩放查看引擎
+   单张从下往上滑出的精修微调逻辑（支持撤销、微调、双指缩放）
 ================================================================ */
 let activeSingleAdjustItem = null;
 let singleAdjustHistory = [];
 let singleScale = 1.0, singleOffsetX = 0, singleOffsetY = 0;
-
-// 全图放大查看视角控制变量（只缩放大图用于看细节，不改动排版）
-let pvSingleViewScale = 1.0;
-let pvSinglePanX = 0, pvSinglePanY = 0;
-let pvSingleInitialDist = 0, pvSingleInitialScale = 1.0;
-let pvSinglePinchCenter = { x: 0, y: 0 };
-let pvSinglePanStart = { x: 0, y: 0 };
-let pvSingleIsInteracting = false;
-let pvSingleDragStart = { x: 0, y: 0 };
-
-function resetPvSingleViewportZoom() {
-  pvSingleViewScale = 1.0;
-  pvSinglePanX = 0;
-  pvSinglePanY = 0;
-  updatePvSingleViewportTransform();
-}
-
-function updatePvSingleViewportTransform() {
-  const wrap = document.getElementById('pvSingleTransformWrap');
-  const btn = document.getElementById('pvSingleResetViewBtn');
-  if (wrap) {
-    wrap.style.transform = `translate(${pvSinglePanX}px, ${pvSinglePanY}px) scale(${pvSingleViewScale})`;
-  }
-  if (btn) {
-    btn.style.display = (pvSingleViewScale !== 1.0 || pvSinglePanX !== 0 || pvSinglePanY !== 0) ? 'block' : 'none';
-  }
-}
 
 function openPvSingleAdjustModal(itemId) {
   activeSingleAdjustItem = pvProcessedBatch.find(it => it.id === itemId);
@@ -8882,6 +9303,7 @@ function openPvSingleAdjustModal(itemId) {
   singleOffsetY = activeSingleAdjustItem.offsetY || pvBaseOffsetY;
   singleAdjustHistory = [];
 
+  // 根据当前画布比例自适应居中大图容器
   const stageBox = document.getElementById('pvSingleStageBox');
   if (stageBox) {
     stageBox.className = `pv-stage-box ratio-${pvRatio}`;
@@ -8895,7 +9317,6 @@ function openPvSingleAdjustModal(itemId) {
   document.getElementById('pvSingleScaleInput').value = Math.round(singleScale * 100);
   document.getElementById('pvSingleScaleText').innerText = `${Math.round(singleScale * 100)}%`;
 
-  resetPvSingleViewportZoom();
   renderSingleAdjustCanvas();
   document.getElementById('pvSingleAdjustModal').classList.remove('hidden');
 }
@@ -8903,11 +9324,9 @@ function openPvSingleAdjustModal(itemId) {
 function closePvSingleAdjustModal(e) {
   if (e && e.target && e.target.closest('.modal-card')) return;
   document.getElementById('pvSingleAdjustModal').classList.add('hidden');
-  resetPvSingleViewportZoom();
 }
 function closePvSingleAdjustModalDirect() {
   document.getElementById('pvSingleAdjustModal').classList.add('hidden');
-  resetPvSingleViewportZoom();
 }
 
 function pushSingleHistory() {
@@ -8940,7 +9359,6 @@ function nudgePvSingle(dx, dy) {
   renderSingleAdjustCanvas();
 }
 
-/* 核心修复：多宫格全量加载绘制逻辑 */
 async function renderSingleAdjustCanvas() {
   if (!activeSingleAdjustItem) return;
   const canvas = document.getElementById('pvSingleCanvas');
@@ -8952,77 +9370,76 @@ async function renderSingleAdjustCanvas() {
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
-  // 垫纯白底色
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(0, 0, curW, curH);
+  const bImg = await loadImage(activeSingleAdjustItem.baseSrc);
 
-  const isMultiGrid = (pvIsAutoHoleEnabled && pvDetectedHolesList.length > 1);
-  const holeCount = isMultiGrid ? pvDetectedHolesList.length : 1;
-  const sheetIdx = activeSingleAdjustItem.id || 0;
+  // 1. 底图
+  let bx = 0, by = 0, bw = curW, bh = curH;
+  if (pvIsAutoHoleEnabled && pvDetectedHoleRect) {
+    const holeExpand = 15;
+    const holeX = pvDetectedHoleRect.x * curW - holeExpand;
+    const holeY = pvDetectedHoleRect.y * curH - holeExpand;
+    const holeW = pvDetectedHoleRect.width * curW + holeExpand * 2;
+    const holeH = pvDetectedHoleRect.height * curH + holeExpand * 2;
+    const imgRatio = bImg.naturalWidth / bImg.naturalHeight;
+    const holeRatio = holeW / holeH;
 
-  // 1. 底图绘制：完整加载多宫格的每一张图片并各自贴膜
-  if (pvBaseImages.length > 0) {
-    if (isMultiGrid) {
-      for (let h = 0; h < holeCount; h++) {
-        const imgIndex = (sheetIdx * holeCount + h) % pvBaseImages.length;
-        const item = pvBaseImages[imgIndex];
-        if (item) {
-          const bImg = await loadImage(item.src);
-          const targetHole = pvDetectedHolesList[h];
-          await drawImageCoverIntoHole(ctx, bImg, targetHole, curW, curH, singleScale, singleOffsetX, singleOffsetY);
-        }
-      }
+    // 采用 Cover 完全覆盖算法：确保长宽均不小于镂空区域，彻底杜绝黑边
+    if (imgRatio > holeRatio) {
+      bh = holeH * singleScale;
+      bw = bh * imgRatio;
     } else {
-      const item = pvBaseImages[sheetIdx % pvBaseImages.length];
-      if (item) {
-        const bImg = await loadImage(item.src);
-        if (pvIsAutoHoleEnabled && pvDetectedHolesList.length === 1) {
-          await drawImageCoverIntoHole(ctx, bImg, pvDetectedHolesList[0], curW, curH, singleScale, singleOffsetX, singleOffsetY);
-        } else {
-          const baseRatio = Math.max(curW / bImg.naturalWidth, curH / bImg.naturalHeight) * singleScale;
-          const bw = bImg.naturalWidth * baseRatio;
-          const bh = bImg.naturalHeight * baseRatio;
-          const bx = (curW - bw) / 2 + singleOffsetX * (curW / 320);
-          const by = (curH - bh) / 2 + singleOffsetY * (curH / 320);
-          ctx.drawImage(bImg, bx, by, bw, bh);
-
-          const activeWm = pvWatermarkImg || watermarkImg;
-          if (pvIsWmOverlayEnabled && activeWm) {
-            const wmOp = parseFloat(document.getElementById('pvWmOpacityInput')?.value || 15) / 100;
-            ctx.save();
-            ctx.globalAlpha = wmOp;
-            ctx.globalCompositeOperation = 'overlay';
-            ctx.drawImage(activeWm, bx, by, bw, bh);
-            ctx.restore();
-          }
-        }
-      }
+      bw = holeW * singleScale;
+      bh = bw / imgRatio;
     }
+    if (bw < holeW * singleScale) {
+      bw = holeW * singleScale;
+      bh = bw / imgRatio;
+    }
+    if (bh < holeH * singleScale) {
+      bh = holeH * singleScale;
+      bw = bh * imgRatio;
+    }
+
+    bx = holeX + (holeW - bw) / 2 + singleOffsetX * (curW / 320);
+    by = holeY + (holeH - bh) / 2 + singleOffsetY * (curH / 320);
+  } else {
+    bw = curW * singleScale;
+    bh = (bImg.naturalHeight / bImg.naturalWidth) * bw;
+    bx = (curW - bw) / 2 + singleOffsetX * (curW / 320);
+    by = (curH - bh) / 2 + singleOffsetY * (curH / 320);
+  }
+  ctx.drawImage(bImg, bx, by, bw, bh);
+
+  // 2. 贴膜
+  const activeWm = pvWatermarkImg || watermarkImg;
+  if (pvIsWmOverlayEnabled && activeWm) {
+    const wmOp = parseFloat(document.getElementById('pvWmOpacityInput')?.value || 15) / 100;
+    const wmLayerCanvas = document.createElement('canvas');
+    wmLayerCanvas.width = Math.round(bw);
+    wmLayerCanvas.height = Math.round(bh);
+    const wctx = wmLayerCanvas.getContext('2d');
+    wctx.imageSmoothingEnabled = true;
+    wctx.imageSmoothingQuality = 'high';
+    wctx.drawImage(activeWm, 0, 0, bw, bh);
+
+    ctx.save();
+    ctx.globalAlpha = wmOp;
+    ctx.globalCompositeOperation = 'overlay';
+    ctx.drawImage(wmLayerCanvas, bx, by, bw, bh);
+    ctx.restore();
   }
 
-  // 2. 顶层预览框/边框图层置顶绘制
-  if (pvFrameLayers.length > 0) {
-    const globalOp = parseFloat(document.getElementById('pvOpacityInput')?.value || 100) / 100;
-    pvFrameLayers.forEach(layer => {
-      if (layer.img) {
-        ctx.save();
-        ctx.globalAlpha = (layer.opacity / 100) * globalOp;
-        ctx.globalCompositeOperation = 'source-over';
-
-        const scale = layer.scale || 1.0;
-        const ox = (layer.offsetX || 0) * (curW / 320);
-        const oy = (layer.offsetY || 0) * (curH / 320);
-        const rot = ((layer.rotate || 0) * Math.PI) / 180;
-
-        ctx.translate(curW / 2 + ox, curH / 2 + oy);
-        if (rot !== 0) ctx.rotate(rot);
-        ctx.scale(scale, scale);
-        ctx.drawImage(layer.img, -curW / 2, -curH / 2, curW, curH);
-
-        ctx.restore();
-      }
-    });
-  }
+  // 3. 预览框图层
+  const globalOp = parseFloat(document.getElementById('pvOpacityInput')?.value || 100) / 100;
+  pvFrameLayers.forEach(layer => {
+    if (layer.img) {
+      ctx.save();
+      ctx.globalAlpha = (layer.opacity / 100) * globalOp;
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.drawImage(layer.img, 0, 0, curW, curH);
+      ctx.restore();
+    }
+  });
 }
 
 async function savePvSingleAdjustResult() {
@@ -9040,86 +9457,9 @@ async function savePvSingleAdjustResult() {
   const thumbImg = document.getElementById(`pv-thumb-${activeSingleAdjustItem.id}`);
   if (thumbImg) thumbImg.src = url;
 
-  // 同步更新预览图库里的归档缓存
-  if (previewPackages.length > 0 && previewPackages[0].items) {
-    const pkgItem = previewPackages[0].items.find(it => it.id === activeSingleAdjustItem.id);
-    if (pkgItem) {
-      pkgItem.blob = blob;
-      pkgItem.url = url;
-      DrizzleDB.savePvPackage(previewPackages[0]).catch(() => {});
-    }
-  }
-
   closePvSingleAdjustModalDirect();
-  if (typeof showDownloadToast === 'function') {
-    showDownloadToast('已成功保存当前精修微调排版效果！', 'success');
-  } else {
-    alert('已成功保存当前微调排版！');
-  }
+  alert('已成功保存单张微调效果！');
 }
-
-/* 核心绑定：单张精修视口双指放大查看全图细节手势 */
-(function initPvSingleViewportGestures() {
-  const stageBox = document.getElementById('pvSingleStageBox');
-  if (!stageBox) return;
-
-  stageBox.addEventListener('touchstart', (e) => {
-    if (e.touches.length >= 2) {
-      pvSingleIsInteracting = false;
-      const t1 = e.touches[0], t2 = e.touches[1];
-      pvSingleInitialDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-      pvSingleInitialScale = pvSingleViewScale;
-      pvSinglePinchCenter = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
-      pvSinglePanStart = { x: pvSinglePanX, y: pvSinglePanY };
-    } else if (e.touches.length === 1 && pvSingleViewScale > 1.05) {
-      pvSingleIsInteracting = true;
-      pvSingleDragStart = { x: e.touches[0].clientX - pvSinglePanX, y: e.touches[0].clientY - pvSinglePanY };
-    }
-  }, { passive: true });
-
-  stageBox.addEventListener('touchmove', (e) => {
-    if (e.touches.length >= 2) {
-      e.preventDefault();
-      const t1 = e.touches[0], t2 = e.touches[1];
-      const curDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-
-      if (!pvSingleInitialDist || pvSingleInitialDist <= 0) {
-        pvSingleInitialDist = curDist;
-        pvSingleInitialScale = pvSingleViewScale;
-        pvSinglePinchCenter = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
-        pvSinglePanStart = { x: pvSinglePanX, y: pvSinglePanY };
-      }
-
-      if (pvSingleInitialDist > 0) {
-        const factor = curDist / pvSingleInitialDist;
-        pvSingleViewScale = Math.min(Math.max(0.9, pvSingleInitialScale * factor), 5.0);
-        const cx = (t1.clientX + t2.clientX) / 2;
-        const cy = (t1.clientY + t2.clientY) / 2;
-        pvSinglePanX = pvSinglePanStart.x + (cx - pvSinglePinchCenter.x);
-        pvSinglePanY = pvSinglePanStart.y + (cy - pvSinglePinchCenter.y);
-        updatePvSingleViewportTransform();
-      }
-    } else if (e.touches.length === 1 && pvSingleIsInteracting && pvSingleViewScale > 1.05) {
-      e.preventDefault();
-      pvSinglePanX = e.touches[0].clientX - pvSingleDragStart.x;
-      pvSinglePanY = e.touches[0].clientY - pvSingleDragStart.y;
-      updatePvSingleViewportTransform();
-    }
-  }, { passive: false });
-
-  stageBox.addEventListener('touchend', (e) => {
-    if (e.touches.length < 2) pvSingleInitialDist = 0;
-    if (e.touches.length === 0) pvSingleIsInteracting = false;
-  });
-
-  // 支持电脑端滚轮缩放全图视角
-  stageBox.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const zoomDelta = e.deltaY < 0 ? 1.15 : 0.85;
-    pvSingleViewScale = Math.min(Math.max(0.9, pvSingleViewScale * zoomDelta), 5.0);
-    updatePvSingleViewportTransform();
-  }, { passive: false });
-})();
 
 /* ================================================================
    预览图库（独立 APP：归档管理、多选批量删除、打包/单张下载）
@@ -9408,71 +9748,12 @@ async function triggerPwaInstall() {
 /* ================================================================
    更新公告版本管理与历史更新归档
 ================================================================ */
-const CURRENT_APP_VERSION = 'v1.3.0';
+const CURRENT_APP_VERSION = 'v1.2.0';
 
 const APP_UPDATE_HISTORY = [
   {
-    version: 'v1.3.0',
-    tag: '最新版本',
-    date: '2026/10/04',
-    sections: [
-      {
-        title: '版本概览',
-        items: [
-          '本次对AI预览机、贴膜机各项功能进行全面优化修复，解决已知使用问题、升级多项实用功能，具体更新内容如下：'
-        ]
-      },
-      {
-        title: '一、优化PNG导出功能',
-        items: [
-          '修复用户反馈的PNG导出不完全、漏图的问题，优化导出底层逻辑，保障图片能够完整导出，解决导出缺失问题。'
-        ]
-      },
-      {
-        title: '二、升级预览机APP功能',
-        items: [
-          '1. 优化多宫格导入预览功能，导入多宫格预览框后，系统可自动识别透明底画布，将导入原图依次适配填充至图一、图二、图三等对应宫格位置，自动校准图片摆放位置。',
-          '2. 适配多宫格导出规则，生成图片时严格按照宫格排版样式导出，同时保留图片原有清晰度，保证成品画质无损。',
-          '3. 优化贴膜水印添加逻辑，支持根据原图顺序逐张贴合水印，采用单图单次贴合模式，取消大范围批量贴合，精准匹配每一张原图。'
-        ]
-      },
-      {
-        title: '三、优化预览机图片压缩适配逻辑',
-        items: [
-          '修复自定义尺寸下图片变形问题，用户上传预览框、自定义图片长度和大小时，系统将保留原图原始比例，不压缩、不拉伸、不挤压图片。仅自动适配调整水印框比例，最大程度还原原图效果。'
-        ]
-      },
-      {
-        title: '四、修复iOS端适配问题',
-        items: [
-          '优化iOS系统图片下载保存功能，新增下载状态通知提示。用户点击下载保存后，后台将弹出正在下载的进度通知，下载完成后同步推送完成提示，解决用户无法查看保存状态、不清楚文件保存位置的问题。'
-        ]
-      },
-      {
-        title: '五、修复贴膜机脸部擦除识别故障',
-        items: [
-          '排查修复脸部擦除功能异常隐患，解决部分用户设备显示亮绿灯，但点击擦脸无响应、功能失效的问题，统一设备识别适配逻辑，保证全员可正常使用脸部擦除功能。'
-        ]
-      },
-      {
-        title: '六、修复数据导入故障',
-        items: [
-          '修复全局数据ZIP压缩包导入失败的bug，优化数据导入通道，提升文件导入稳定性，可正常完成全局数据导入操作。'
-        ]
-      },
-      {
-        title: '七、优化图片导入功能',
-        items: [
-          '1. 统一全场景图片导入入口，新增相册选图为推荐导入格式，所有图片导入通道默认优先展示相册选图功能，文件导入功能保留并后置放置。',
-          '2. 修复部分图片导入后页面无法加载展示，但导出正常的显示bug。',
-          '3. 优化图片放大查看逻辑，调整双指放大功能机制：双指缩放可直接放大整张图片、查看全部细节；如需精准放大原图细节，可拖动页面拉杆操作，区分两种放大使用场景，提升查看体验。'
-        ]
-      }
-    ]
-  },
-  {
     version: 'v1.2.0',
-    tag: '历史版本',
+    tag: '最新版本',
     date: '2026/10/02',
     sections: [
       {
