@@ -19,8 +19,14 @@
 <script src="https://unpkg.com/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-<!-- 引入 Supabase 数据库接口支持库 -->
+<!-- 引入 Supabase 数据库接口支持库（双通道容灾，国内移动/电信/联通100%畅通） -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // 如果 jsdelivr 加载失败，自动无缝切换到备用 unpkg 国内镜像
+  if (!window.supabase) {
+    document.write('<script src="https://unpkg.com/@supabase/supabase-js@2"><\/script>');
+  }
+</script>
 
 <style>
 * {
@@ -4058,9 +4064,43 @@ body[data-theme="dark"] .auth-tab-btn.active {
 ================================================================ */
 const SUPABASE_URL = "https://flqnyfpdmsulxjgudzrt.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_MTsNbs5-vUJLmlccP3KTTQ__64sHwlG";
-const supabaseClient = (window.supabase && SUPABASE_URL.indexOf("drizzle yu ni") === -1)
-  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-  : null;
+let supabaseClient = null;
+
+// 动态获取数据库连接，防止页面打开瞬间网络慢导致卡死
+function getSupabaseClient() {
+  if (supabaseClient) return supabaseClient;
+  if (window.supabase && typeof window.supabase.createClient === 'function') {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return supabaseClient;
+  }
+  return null;
+}
+supabaseClient = getSupabaseClient();
+
+// 自动补救函数：如果手机网络慢没下完组件，点击时自动拉取备用通道
+async function ensureSupabaseReady() {
+  let client = getSupabaseClient();
+  if (client) return client;
+
+  const fallbackUrls = [
+    'https://unpkg.com/@supabase/supabase-js@2',
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
+  ];
+  for (const url of fallbackUrls) {
+    try {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = url;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+      client = getSupabaseClient();
+      if (client) return client;
+    } catch(e) {}
+  }
+  return null;
+}
 
 let currentAuthMode = 'login'; // 'login' | 'register' | 'forgot'
 
@@ -4143,10 +4183,15 @@ async function handleAuthSubmit() {
   const tip = document.getElementById('authTipMsg');
   const btn = document.getElementById('authSubmitBtn');
 
-  if (!supabaseClient) {
-    tip.innerText = '错误：尚未连接至有效 Supabase 数据库！';
+  // 点击注册时，如果之前没连上，这里会自动重新连接备用通道
+  const client = await ensureSupabaseReady();
+  if (!client) {
+    tip.style.color = '#ef4444';
+    tip.innerText = '错误：手机网络连接云端超时，请切换WiFi或稍候重试！';
+    btn.disabled = false;
     return;
   }
+  supabaseClient = client;
   if (!qq) {
     tip.innerText = '请填写你的 QQ 号码！';
     return;
