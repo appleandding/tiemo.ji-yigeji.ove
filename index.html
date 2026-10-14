@@ -78,6 +78,20 @@ body[data-theme="pink"] {
   --glass-border: rgba(255, 255, 255, 0.92);
 }
 
+/* 新增：自然清新薄荷绿主题 */
+body[data-theme="green"] {
+  --bg-base: #F0FDF4;
+  --dot-color: #DCFCE7;
+  --text-main: #14532D;
+  --text-muted: #166534;
+  --text-light: #86EFAC;
+  --accent: #10B981;
+  --line: rgba(220, 252, 231, 0.88);
+  --glass-bg: rgba(240, 253, 244, 0.68);
+  --glass-border: rgba(255, 255, 255, 0.92);
+  --glass-subtle: rgba(220, 252, 231, 0.65);
+}
+
 /* 黑白极致极简拟态主题 */
 body[data-theme="dark"] {
   --bg-base: #121417;
@@ -105,37 +119,76 @@ body[data-theme="dark"] .thumb-foot { background: rgba(26,29,35,0.92); }
 body[data-theme="dark"] .batch-toolbar { background: rgba(26,29,35,0.95); }
 body[data-theme="dark"] .num-direct-input { background: rgba(38, 42, 50, 0.9); color: #FFF; border-color: rgba(255,255,255,0.2); }
 
-/* 全局壁纸生效时：背景自动 20% 柔焦毛玻璃，消除任何边缘白边与断层 */
+/* 全局壁纸原生图层：主桌面 100vw × 100dvh 原画质平铺，绝不缩放放大变形 */
+#globalWallpaperBg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 0;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  display: none;
+}
+
 body.has-custom-wallpaper {
   background-color: #0F172A !important;
 }
-body.has-custom-wallpaper::before {
-  content: '';
+body.has-custom-wallpaper #globalWallpaperBg {
+  display: block !important;
+}
+body.has-custom-wallpaper .dot-pattern {
+  display: none !important;
+}
+
+/* 所有功能 APP 视图：默认状态与壁纸状态均为 100% 实体不透明，彻底绝杜绝透出主页桌面图标 */
+.app-view {
   position: fixed;
-  inset: -10px;
-  background-image: inherit;
-  background-size: cover;
-  background-position: center;
-  filter: blur(12px) brightness(0.95);
-  -webkit-filter: blur(12px) brightness(0.95);
-  transform: scale(1.04);
-  z-index: -1;
-  pointer-events: none;
+  inset: 0;
+  z-index: 100;
+  background-color: var(--bg-base);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
 }
+.app-view.open {
+  display: flex !important;
+}
+
+/* 开启全局壁纸时：功能 APP 直接使用 100% 实体原画壁纸，彻底关闭模糊与半透明穿透，绝不漏桌面图标 */
 body.has-custom-wallpaper .app-view {
-  background: rgba(245, 247, 250, 0.62) !important;
-  backdrop-filter: blur(26px) saturate(190%);
-  -webkit-backdrop-filter: blur(26px) saturate(190%);
-  border: none !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-color: var(--bg-base) !important;
+  opacity: 1 !important;
 }
-body.has-custom-wallpaper[data-theme="blue"] .app-view {
-  background: rgba(237, 244, 250, 0.68) !important;
+body.has-custom-wallpaper .app-view::before,
+body.has-custom-wallpaper .app-view::after {
+  display: none !important;
 }
-body.has-custom-wallpaper[data-theme="pink"] .app-view {
-  background: rgba(253, 242, 244, 0.68) !important;
+
+/* 核心优化：锁死卡片宽度与容器溢出，彻底杜绝大图将页面向外撑开无法滑动的Bug */
+.page {
+  box-sizing: border-box !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
 }
-body.has-custom-wallpaper[data-theme="dark"] .app-view {
-  background: rgba(18, 20, 23, 0.75) !important;
+.profile-outer, .grid-section, .quote-card, .music-widget, .card, .system-card-widget {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  min-width: 0 !important;
+}
+.polaroid-freestyle-wrap {
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+.quote-content, .music-title, .profile-bio, .profile-name {
+  max-width: 100% !important;
+  word-break: break-all !important;
 }
 
 /* 红圈处图层选择下拉条 */
@@ -584,6 +637,91 @@ body {
   gap: 10px;
 }
 .page::-webkit-scrollbar { display: none; }
+
+/* ============ 平板与电脑端响应式分段自适应 (手机保持单列不变) ============ */
+/* 1. 平板端 (768px - 1024px)：主页分为左右两段，打开应用功能分为左右两段 */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .viewport {
+    scroll-snap-type: none;
+    justify-content: center;
+  }
+  .page {
+    flex: 0 0 50%;
+    width: 50% !important;
+    max-width: 500px !important;
+  }
+  .app-body {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px !important;
+    align-items: start !important;
+  }
+  .app-body > .import-grid,
+  .app-body > #sourceImagesDrawer,
+  .app-body > #pvSourceImagesDrawer,
+  .app-body > #resultsWrapper,
+  .app-body > #pvResultsWrapper,
+  .app-body > .search-wrap,
+  .app-body > .threshold-bar,
+  .app-body > .contact-group-bar,
+  .app-body > .contact-action-row {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+/* 2. 电脑大屏端 (> 1024px)：主屏左右两段并居中；点进功能页面立即智能分为三段式专业工作台 */
+@media (min-width: 1025px) {
+  .viewport {
+    scroll-snap-type: none;
+    justify-content: center;
+    gap: 24px;
+    padding: 0 30px;
+  }
+  .page {
+    flex: 0 0 460px !important;
+    width: 460px !important;
+    max-width: 460px !important;
+  }
+  .app-view.open {
+    display: flex;
+    align-items: center;
+  }
+  .app-view .app-header {
+    width: 100%;
+  }
+  .app-view .app-body {
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    display: grid !important;
+    grid-template-columns: 340px 1fr 360px !important; /* 电脑端三段式：左侧导入与素材列 | 中间舞台与大预览 | 右侧微调与结果 */
+    gap: 20px !important;
+    align-items: start !important;
+  }
+  /* 适配三段式布局排版：把各个小块对齐到相应列 */
+  #app-watermarker .import-grid { grid-column: 1 / 2; display: flex; flex-direction: column; }
+  #app-watermarker #sourceImagesDrawer { grid-column: 1 / 2; }
+  #app-watermarker #wmRealtimePreviewCard { grid-column: 2 / 3; }
+  #app-watermarker .card:not(#wmRealtimePreviewCard):not(#sourceImagesDrawer) { grid-column: 3 / 4; }
+  #app-watermarker #startProcessBtn { grid-column: 3 / 4; }
+  #app-watermarker #wmProgressBarBox { grid-column: 3 / 4; }
+  #app-watermarker #resultsWrapper { grid-column: 1 / -1; }
+
+  #app-previewer .import-grid { grid-column: 1 / 2; display: flex; flex-direction: column; }
+  #app-previewer #pvSourceImagesDrawer { grid-column: 1 / 2; }
+  #app-previewer .pv-stage-container { grid-column: 2 / 3; }
+  #app-previewer #pvTransformControlPanel,
+  #app-previewer .card:not(#pvTransformControlPanel):not(#pvSourceImagesDrawer) { grid-column: 3 / 4; }
+  #app-previewer #pvStartBatchBtn { grid-column: 3 / 4; }
+  #app-previewer #pvProgressBarBox { grid-column: 3 / 4; }
+  #app-previewer #pvResultsWrapper { grid-column: 1 / -1; }
+
+  #app-gallery .app-body, #app-preview_gallery .app-body, #app-repo .app-body, #app-watermark .app-body, #app-threshold .app-body, #app-contacts .app-body {
+    display: flex !important;
+    flex-direction: column !important;
+    max-width: 1100px;
+  }
+}
 
 .liquid-glass {
   background: var(--glass-bg);
@@ -1878,6 +2016,7 @@ body[data-theme="dark"] .auth-tab-btn.active {
 
 <body>
 <div class="dot-pattern"></div>
+<div id="globalWallpaperBg"></div>
 
 <!-- 隐藏文件输入（统一限定直接呼出手机相册） -->
 <input type="file" id="wmInput" class="hidden-file-input" accept="image/*" onchange="handleWmFile(event)">
@@ -2340,7 +2479,43 @@ body[data-theme="dark"] .auth-tab-btn.active {
       <div class="hscroll" id="sourceThumbList"></div>
     </div>
 
-    <!-- 混合效果与浓度 -->
+    <!-- 贴膜机新增：实时浓度与微调预览舞台（配备左右切换箭头与原图实时展示） -->
+    <div class="card" id="wmRealtimePreviewCard" style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+      <div class="card-title-row" style="width:100%;">
+        <div class="card-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <span>实时效果预览视窗（自适应原图实际尺寸）</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="mini-badge" id="wmPreviewIndexBadge" style="display:none; font-weight:800; font-variant-numeric:tabular-nums;"><span class="bdot"></span><span id="wmPreviewIndexText">1 / 1</span></span>
+          <span class="mini-badge ready" id="wmRatioHintTag"><span class="bdot"></span><span>100% 原尺寸映射</span></span>
+        </div>
+      </div>
+      <div id="wmRealtimePreviewStageBox" style="width: min(84vw, 300px); aspect-ratio: 1/1; position:relative; background:#E2E8F0; border-radius:18px; overflow:hidden; border:1px solid var(--glass-border); box-shadow:var(--glass-shine); display:flex; align-items:center; justify-content:center; touch-action:none;">
+        <canvas id="wmRealtimePreviewCanvas" style="width:100%; height:100%; object-fit:contain; display:block;"></canvas>
+
+        <!-- 实时预览加载动态遮罩（iOS 液体玻璃质感 + 矢量动态旋转环） -->
+        <div id="wmPreviewLoadingOverlay" style="position:absolute; inset:0; background:rgba(255,255,255,0.76); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); display:none; flex-direction:column; align-items:center; justify-content:center; gap:9px; z-index:15; border-radius:18px;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="animation:toastSpin .8s linear infinite;">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+          <span style="font-size:11px; font-weight:700; color:var(--text-main); letter-spacing:0.5px;">正在加载实时预览图片…</span>
+        </div>
+
+        <!-- 左箭头切换按钮（iOS 液体玻璃拟态） -->
+        <button type="button" id="wmPrevArrowBtn" onclick="switchWmRealtimePreviewIndex(-1)" title="查看上一张原图" style="position:absolute; left:8px; top:50%; transform:translateY(-50%); width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.85); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid var(--glass-border); display:none; align-items:center; justify-content:center; color:var(--text-main); cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,0.15); z-index:10; transition:transform .15s ease;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+
+        <!-- 右箭头切换按钮（iOS 液体玻璃拟态） -->
+        <button type="button" id="wmNextArrowBtn" onclick="switchWmRealtimePreviewIndex(1)" title="查看下一张原图" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.85); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid var(--glass-border); display:none; align-items:center; justify-content:center; color:var(--text-main); cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,0.15); z-index:10; transition:transform .15s ease;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+      <div style="font-size:10px; color:var(--text-muted); font-weight:600;">点击左右箭头或上方原图列表，可自由翻看每张原图的贴膜效果</div>
+    </div>
+
+    <!-- 混合效果与浓度 + 水印位移旋转缩放控制 -->
     <div class="card">
       <div class="card-title-row">
         <div class="card-title">
@@ -2349,7 +2524,7 @@ body[data-theme="dark"] .auth-tab-btn.active {
         </div>
         <div class="select-pill">
           <span>图层</span>
-          <select id="blendModeSelect">
+          <select id="blendModeSelect" onchange="renderWmRealtimePreview()">
             <option value="overlay" selected>覆盖</option>
             <option value="soft-light">软光</option>
             <option value="source-over">正常</option>
@@ -2373,10 +2548,58 @@ body[data-theme="dark"] .auth-tab-btn.active {
         <input type="range" id="opacityInput" min="5" max="100" value="15">
       </div>
 
+      <!-- 水印位置、缩放与旋转控制（支持负数，批量原图完全一致） -->
+      <div style="margin-top:12px; border-top:1px solid var(--line); padding-top:10px;">
+        <div style="font-size:11.5px; font-weight:800; color:var(--text-main); margin-bottom:8px;">水印精细调整 (支持负数，所有原图同步对应)</div>
+        
+        <div class="slider-row" style="margin-top:0;">
+          <div class="slider-label">
+            <span class="k">水印大小缩放</span>
+            <div style="display:flex; align-items:center; gap:3px;">
+              <input type="number" id="wmScaleDirectNum" class="num-direct-input" min="10" max="300" value="100" onchange="syncWmAdjustFromDirect('scale', this.value)">
+              <span class="v" style="font-size:12px;">%</span>
+            </div>
+          </div>
+          <input type="range" id="wmScaleInput" min="30" max="250" value="100" oninput="syncWmAdjustFromSlider('scale', this.value)">
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-label">
+            <span class="k">旋转角度 (-180° ~ 180°)</span>
+            <div style="display:flex; align-items:center; gap:3px;">
+              <input type="number" id="wmRotateDirectNum" class="num-direct-input" min="-180" max="180" value="0" onchange="syncWmAdjustFromDirect('rotate', this.value)">
+              <span class="v" style="font-size:12px;">°</span>
+            </div>
+          </div>
+          <input type="range" id="wmRotateInput" min="-180" max="180" value="0" oninput="syncWmAdjustFromSlider('rotate', this.value)">
+        </div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:8px; padding:6px 10px; background:var(--glass-subtle); border-radius:12px; border:1px solid var(--glass-border);">
+          <div style="display:flex; align-items:center; gap:4px;">
+            <span style="font-size:11px; font-weight:700; color:var(--text-muted);">水平X:</span>
+            <input type="number" id="wmOffsetXInput" class="num-direct-input" style="width:50px;" value="0" onchange="syncWmAdjustOffsets()">
+            <span style="font-size:9.5px; color:var(--text-muted);">px</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:4px;">
+            <span style="font-size:11px; font-weight:700; color:var(--text-muted);">垂直Y:</span>
+            <input type="number" id="wmOffsetYInput" class="num-direct-input" style="width:50px;" value="0" onchange="syncWmAdjustOffsets()">
+            <span style="font-size:9.5px; color:var(--text-muted);">px</span>
+          </div>
+          <button type="button" class="mini-btn ghost" style="font-size:9.5px;" onclick="resetWmAdjustOffsets()">归零</button>
+        </div>
+
+        <div class="pv-control-grid" style="margin-top:8px;">
+          <button type="button" class="pv-ctrl-btn" onclick="nudgeWmOffset(0, -6)"><span>上移</span></button>
+          <button type="button" class="pv-ctrl-btn" onclick="nudgeWmOffset(0, 6)"><span>下移</span></button>
+          <button type="button" class="pv-ctrl-btn" onclick="nudgeWmOffset(-6, 0)"><span>左移</span></button>
+          <button type="button" class="pv-ctrl-btn" onclick="nudgeWmOffset(6, 0)"><span>右移</span></button>
+        </div>
+      </div>
+
       <div class="check-row">
         <span>自动擦除脸部水印（擦脸小助手）</span>
         <label class="switch">
-          <input type="checkbox" id="faceDetectCheck" checked>
+          <input type="checkbox" id="faceDetectCheck" checked onchange="renderWmRealtimePreview()">
           <span class="slider-track"></span>
         </label>
       </div>
@@ -2639,10 +2862,11 @@ body[data-theme="dark"] .auth-tab-btn.active {
           <span>全局主题配色切换</span>
         </div>
       </div>
-      <div class="preset-row" style="margin-top:0;">
+      <div class="preset-row" style="margin-top:0; flex-wrap:wrap;">
         <button type="button" class="preset-btn active" id="themeBtn-default" onclick="switchAppTheme('default')">经典灰白</button>
         <button type="button" class="preset-btn" id="themeBtn-blue" onclick="switchAppTheme('blue')">冰晶浅蓝</button>
         <button type="button" class="preset-btn" id="themeBtn-pink" onclick="switchAppTheme('pink')">樱花柔粉</button>
+        <button type="button" class="preset-btn" id="themeBtn-green" onclick="switchAppTheme('green')">清新薄荷绿</button>
         <button type="button" class="preset-btn" id="themeBtn-dark" onclick="switchAppTheme('dark')">黑白极简</button>
       </div>
     </div>
@@ -3925,7 +4149,7 @@ body[data-theme="dark"] .auth-tab-btn.active {
     </button>
     <div class="app-title">更新公告与历史</div>
     <div class="app-header-right">
-      <span class="mini-badge ready"><span class="bdot"></span><span>v1.2.0 最新版</span></span>
+      <span class="mini-badge ready"><span class="bdot"></span><span>v1.2.8 最新版</span></span>
     </div>
   </div>
 
@@ -3950,7 +4174,7 @@ body[data-theme="dark"] .auth-tab-btn.active {
           <div style="font-size:14px; font-weight:800; color:var(--text-main);">版本更新公告</div>
           <div class="ver-badge">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            <span>v1.2.0 正式上线</span>
+            <span>v1.2.8 正式上线</span>
           </div>
         </div>
       </div>
@@ -3961,87 +4185,85 @@ body[data-theme="dark"] .auth-tab-btn.active {
 
     <!-- 更新内容正文列表 -->
     <div class="update-scroll-body">
-      <div class="log-section-card" style="background: rgba(240, 244, 248, 0.75);">
-        <div class="log-sec-title">
-          <span>版本概览</span>
-        </div>
-        <div class="log-item-text">本次版本重点新增两大核心功能：<b>预览机</b>、<b>预览图库</b>，同时对全功能模块进行大量优化升级，修复多项使用问题，具体更新内容如下：</div>
-      </div>
-
+      <!-- 一、全局壁纸与美化优化 -->
       <div class="log-section-card">
         <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/><circle cx="15" cy="15" r="2"/></svg>
-          <span>一、新增核心功能</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/></svg>
+          <span>一、全局壁纸与美化优化</span>
         </div>
-        <div class="log-item-text">
-          <b>1. 全新功能：预览机</b><br>
-          1. 支持底图批量导入、水印导入预览，可实现水印覆盖混合效果，适配贴膜水印制作需求<br>
-          2. 新增透明底自动识别功能，识别区域以蓝色边框标注，支持首张图片定位调整，后续图片自动适配填充，可手动关闭识别、自由自定义位置<br>
-          3. 集成贴膜水印效果，可直接在预览机内完成水印贴膜操作<br>
-          4. 支持多预览框导入，可自由调整各水印框层级、上下层级排序，分层排版后批量生成图片<br>
-          5. 新增自定义比例功能，破除固定比例限制，适配头像、壁纸等多场景预览制作
-        </div>
-        <div class="log-item-text">
-          <b>2. 全新页面：预览图库</b><br>
-          1. 独立第二应用页面，专门收纳所有归档、保存的原图与预览成品图<br>
-          2. 统一汇总所有制作记录，无需反复导出查找，素材集中管理更便捷
-        </div>
+        <div class="log-item-text">1. 全面适配全局壁纸效果，不仅主桌面显示壁纸，所有功能页面背景统一生效。</div>
+        <div class="log-item-text">2. 导入自定义壁纸后，自动移除页面默认圆点装饰元素，界面更加干净统一。</div>
+        <div class="log-item-text">3. 新增绿色系主题配色方案，优化整体视觉搭配效果。</div>
       </div>
 
+      <!-- 二、贴膜机、预览机功能优化 -->
       <div class="log-section-card">
         <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-          <span>二、核心功能优化</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          <span>二、贴膜机、预览机功能优化</span>
         </div>
-        <div class="log-item-text">
-          <b>1. 导出保存功能升级</b><br>
-          1. 新增批量导出模式，点击导出弹出双选项：ZIP压缩包导出、全部图片一次性PNG导出至相册<br>
-          2. 单张图片保存默认直接输出PNG格式并保存到手机相册<br>
-          3. 批量生成图片新增实时进度条，精准展示制作进度，同步提示「人脸擦除、位置调整」等操作步骤
-        </div>
-        <div class="log-item-text">
-          <b>2. 预览编辑操作优化</b><br>
-          1. 新增原图锁定功能：导入图片后默认开启锁图，防止误触滑动移位；手动调整图片时可关闭锁定，自由操作<br>
-          2. 支持成品图二次编辑，点击已生成图片，居中弹出大图编辑弹窗，可微调图片位置、大小<br>
-          3. 支持双指放大查看图片细节，新增撤销功能，可撤回误操作<br>
-          4. 优化水印框编辑：支持精准选择指定水印框单独调整，可自由移动、缩放、旋转，旋转支持正负数值调节<br>
-          5. 新增贴膜水印擦脸开关，可自主开启或关闭人脸擦除功能
-        </div>
-        <div class="log-item-text">
-          <b>3. 素材导入与展示优化</b><br>
-          1. 支持完整文件夹批量导入，可直接选取文件夹导入全部图片<br>
-          2. 实时刷新素材列表，新增、删除图片即时生效，无需重启页面即可查看最新素材<br>
-          3. 新增原图列表展示功能，清晰查看所有已导入素材<br>
-          4. 优化操作排版，所有移动、调整类功能按键统一放置在预览框下方，操作更直观<br>
-          5. 实现水印APP与预览机功能互通，预览框可跨功能联动选择使用
-        </div>
+        <div class="log-item-text">1. 贴膜机新增水印实时预览功能，输入水印参数后，可实时查看水印不透明度、尺寸效果。</div>
+        <div class="log-item-text">2. 重构画布适配逻辑，画布尺寸自动匹配原图真实长宽，取消固定画布限制，完全自适应原图比例，杜绝图片拉伸、挤压问题。</div>
+        <div class="log-item-text">3. 修复预览机多宫格预览图片被挤压的bug，保证所有预览画面比例正常。</div>
+        <div class="log-item-text">4. 升级贴膜机图片浏览功能，首张原图置顶展示，新增左右切换箭头，可滑动查看全部图片的水印展示效果。</div>
       </div>
 
+      <!-- 三、水印导入bug修复 -->
       <div class="log-section-card">
         <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/></svg>
-          <span>三、全局美化与适配优化</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span>三、水印导入bug修复</span>
         </div>
-        <div class="log-item-text">
-          1. 新增APP全局黑白配色主题，原有灰白、蓝色、粉色主题保留，丰富自定义风格<br>
-          2. 全局壁纸适配升级，APP内置壁纸自动模糊20%显示，彻底解决界面白边问题<br>
-          3. 全系升级iOS液体玻璃质感UI，所有图标替换为SVG矢量图标，画质高清无失真<br>
-          4. 移除多余自适应选项，精简功能面板，降低操作干扰
-        </div>
+        <div class="log-item-text">修复部分用户导入水印时，出现“未检测到水印格式”、水印导入失败的异常问题，提升水印导入稳定性。</div>
       </div>
 
+      <!-- 四、页面卡片宽度固定 -->
       <div class="log-section-card">
         <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          <span>四、问题修复</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
+          <span>四、页面卡片宽度固定</span>
         </div>
-        <div class="log-item-text">
-          1. 修复九宫格及多宫格拼图点击无响应的故障<br>
-          2. 修复批量生成预览图后成品图不显示的问题<br>
-          3. 优化页面滑动逻辑，杜绝误触移位、右滑误退出APP的情况<br>
-          4. 优化贴膜机不透明度调节，支持手动输入精准数值设置参数<br>
-          5. 升级图包下载模式，新增单张图片png下载方式，不再仅支持ZIP压缩包下载
+        <div class="log-item-text">优化长图适配问题，固定页面卡片展示宽度，解决长图自动外扩、页面无法滑动的问题，统一页面展示样式。</div>
+      </div>
+
+      <!-- 五、图片裂图问题修复 -->
+      <div class="log-section-card">
+        <div class="log-sec-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span>五、图片裂图问题修复</span>
         </div>
+        <div class="log-item-text">针对性修复用户反馈的图片随机裂图、加载异常的bug，提升图片加载稳定性。</div>
+      </div>
+
+      <!-- 六、非一比一比例原图水印适配优化 -->
+      <div class="log-section-card">
+        <div class="log-sec-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <span>六、非一比一比例原图水印适配优化</span>
+        </div>
+        <div class="log-item-text">1. 解决非1:1比例原图水印拉伸、挤压、变形的问题。新增水印平铺适配逻辑，非正方形原图将水印自动居中对齐，根据原图尺寸自动平铺重复水印，对标专业绘图软件平铺效果。</div>
+        <div class="log-item-text">2. 新增适配加载提示，处理非一比一原图时，显示水印适配加载状态，提升用户体验。</div>
+      </div>
+
+      <!-- 七、贴膜机水印精细化调节升级 -->
+      <div class="log-section-card">
+        <div class="log-sec-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>七、贴膜机水印精细化调节升级</span>
+        </div>
+        <div class="log-item-text">1. 新增水印XY轴位置调节、旋转、放大缩小功能，参数支持正负数值调节。</div>
+        <div class="log-item-text">2. 调节参数实时同步原图展示位置，精准匹配预览与导出效果。</div>
+      </div>
+
+      <!-- 八、设备自适应分栏布局 -->
+      <div class="log-section-card">
+        <div class="log-sec-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="12" y1="3" x2="12" y2="17"/></svg>
+          <span>八、设备自适应分栏布局</span>
+        </div>
+        <div class="log-item-text">1. 全面适配多设备布局：手机设备保持无分栏全屏展示，平板、电脑设备自动启用分栏布局。</div>
+        <div class="log-item-text">2. 平板设备全局左右双分栏展示。</div>
+        <div class="log-item-text">3. 电脑端主页面双分栏，功能页面自动切换为三分栏布局，适配大屏观看与操作体验，兼顾不同设备的使用场景。</div>
       </div>
 
       <div style="font-size:10px; color:var(--text-light); text-align:center; padding: 4px 0;">
@@ -6049,7 +6271,72 @@ function closeWmPickerModal() {
   document.getElementById('wmPickerModal').classList.add('hidden');
 }
 
-/* 统一应用水印 */
+/* 贴膜机专属水印微调状态 (支持负数，批量处理时后方所有原图严格应用此参数) */
+let wmAdjustScale = 1.0;
+let wmAdjustRotate = 0;
+let wmAdjustOffsetX = 0;
+let wmAdjustOffsetY = 0;
+
+function syncWmAdjustFromSlider(type, val) {
+  if (type === 'scale') {
+    wmAdjustScale = parseFloat(val) / 100;
+    const num = document.getElementById('wmScaleDirectNum');
+    if (num) num.value = val;
+  } else if (type === 'rotate') {
+    wmAdjustRotate = parseInt(val, 10) || 0;
+    const num = document.getElementById('wmRotateDirectNum');
+    if (num) num.value = val;
+  }
+  renderWmRealtimePreview();
+}
+
+function syncWmAdjustFromDirect(type, val) {
+  let v = parseInt(val, 10);
+  if (type === 'scale') {
+    if (isNaN(v)) v = 100;
+    v = Math.max(10, Math.min(300, v));
+    wmAdjustScale = v / 100;
+    document.getElementById('wmScaleInput').value = v;
+    document.getElementById('wmScaleDirectNum').value = v;
+  } else if (type === 'rotate') {
+    if (isNaN(v)) v = 0;
+    v = Math.max(-180, Math.min(180, v));
+    wmAdjustRotate = v;
+    document.getElementById('wmRotateInput').value = v;
+    document.getElementById('wmRotateDirectNum').value = v;
+  }
+  renderWmRealtimePreview();
+}
+
+function syncWmAdjustOffsets() {
+  wmAdjustOffsetX = parseInt(document.getElementById('wmOffsetXInput')?.value, 10) || 0;
+  wmAdjustOffsetY = parseInt(document.getElementById('wmOffsetYInput')?.value, 10) || 0;
+  renderWmRealtimePreview();
+}
+
+function resetWmAdjustOffsets() {
+  wmAdjustOffsetX = 0;
+  wmAdjustOffsetY = 0;
+  wmAdjustScale = 1.0;
+  wmAdjustRotate = 0;
+  if (document.getElementById('wmOffsetXInput')) document.getElementById('wmOffsetXInput').value = 0;
+  if (document.getElementById('wmOffsetYInput')) document.getElementById('wmOffsetYInput').value = 0;
+  if (document.getElementById('wmScaleInput')) document.getElementById('wmScaleInput').value = 100;
+  if (document.getElementById('wmScaleDirectNum')) document.getElementById('wmScaleDirectNum').value = 100;
+  if (document.getElementById('wmRotateInput')) document.getElementById('wmRotateInput').value = 0;
+  if (document.getElementById('wmRotateDirectNum')) document.getElementById('wmRotateDirectNum').value = 0;
+  renderWmRealtimePreview();
+}
+
+function nudgeWmOffset(dx, dy) {
+  wmAdjustOffsetX += dx;
+  wmAdjustOffsetY += dy;
+  if (document.getElementById('wmOffsetXInput')) document.getElementById('wmOffsetXInput').value = wmAdjustOffsetX;
+  if (document.getElementById('wmOffsetYInput')) document.getElementById('wmOffsetYInput').value = wmAdjustOffsetY;
+  renderWmRealtimePreview();
+}
+
+/* 统一应用水印并驱动实时预览 */
 function applyWatermarkFromSrc(src, name) {
   watermarkImg = new Image();
   watermarkImg.onload = () => {
@@ -6061,19 +6348,204 @@ function applyWatermarkFromSrc(src, name) {
     if (tag) {
       tag.innerText = name ? `已载入：${name.length > 10 ? name.slice(0, 9) + '…' : name}` : '已载入水印膜';
     }
+    renderWmRealtimePreview();
   };
   watermarkImg.src = src;
 }
 
-/* 本地文件导入水印 */
+/* 核心方案：非 1:1 原图防止挤压变窄 —— 水印等比居中并在四周进行平铺重复 (爱笔思画重复平铺模式) */
+function drawRepeatedWatermarkLayer(ctx, wmImg, targetW, targetH, scale = 1.0, rotateDeg = 0, offX = 0, offY = 0) {
+  const wmAspect = (wmImg.naturalWidth || wmImg.width) / (wmImg.naturalHeight || wmImg.height);
+  const targetAspect = targetW / targetH;
+
+  // 1. 基准水印尺寸：两边宽度完全对齐且保持原水印比例，绝不拉伸压扁
+  let baseUnitW = targetW * scale;
+  let baseUnitH = (baseUnitW / wmAspect);
+
+  // 2. 如果原图比例与水印不一致，使用离屏 Canvas 作为 Pattern 进行周围重复平铺
+  const tileCanvas = document.createElement('canvas');
+  tileCanvas.width = Math.max(16, Math.round(baseUnitW));
+  tileCanvas.height = Math.max(16, Math.round(baseUnitH));
+  const tCtx = tileCanvas.getContext('2d');
+  tCtx.imageSmoothingEnabled = true;
+  tCtx.imageSmoothingQuality = 'high';
+  tCtx.drawImage(wmImg, 0, 0, tileCanvas.width, tileCanvas.height);
+
+  ctx.save();
+  // 平移到目标中心并施加 XY 位移与旋转
+  ctx.translate(targetW / 2 + offX, targetH / 2 + offY);
+  if (rotateDeg !== 0) {
+    ctx.rotate((rotateDeg * Math.PI) / 180);
+  }
+
+  const pattern = ctx.createPattern(tileCanvas, 'repeat');
+  ctx.fillStyle = pattern;
+
+  // 充足覆盖旋转与偏移时的外围区域
+  const diag = Math.hypot(targetW, targetH) * 2;
+  ctx.translate(-diag / 2, -diag / 2);
+  ctx.fillRect(0, 0, diag, diag);
+  ctx.restore();
+
+  tileCanvas.width = 0; tileCanvas.height = 0;
+}
+
+/* 贴膜机当前实时预览的原图索引 */
+let currentWmRealtimePreviewIndex = 0;
+
+/* 左右箭头切换查看不同原图的贴膜效果 */
+function switchWmRealtimePreviewIndex(delta) {
+  if (!selectedRawImages || selectedRawImages.length === 0) return;
+  currentWmRealtimePreviewIndex = (currentWmRealtimePreviewIndex + delta + selectedRawImages.length) % selectedRawImages.length;
+  renderWmRealtimePreview();
+  updateRawThumbDisplay();
+}
+
+/* 贴膜机实时预览画布渲染器（自适应当前翻看原图尺寸，显示加载动画与左右箭头） */
+async function renderWmRealtimePreview() {
+  const canvas = document.getElementById('wmRealtimePreviewCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const loader = document.getElementById('wmPreviewLoadingOverlay');
+  const prevBtn = document.getElementById('wmPrevArrowBtn');
+  const nextBtn = document.getElementById('wmNextArrowBtn');
+  const indexBadge = document.getElementById('wmPreviewIndexBadge');
+  const indexText = document.getElementById('wmPreviewIndexText');
+  const stageBox = document.getElementById('wmRealtimePreviewStageBox');
+
+  // 若有原图待加载，立即显示加载图标与提示文字
+  if (selectedRawImages && selectedRawImages.length > 0 && loader) {
+    loader.style.display = 'flex';
+  }
+
+  // 控制左右箭头的显示/隐藏：导入 2 张及以上原图时显示左右箭头与页码指示
+  if (selectedRawImages && selectedRawImages.length > 1) {
+    if (prevBtn) prevBtn.style.display = 'flex';
+    if (nextBtn) nextBtn.style.display = 'flex';
+    if (indexBadge) indexBadge.style.display = 'inline-flex';
+    if (indexText) indexText.innerText = `${currentWmRealtimePreviewIndex + 1} / ${selectedRawImages.length}`;
+  } else {
+    if (prevBtn) prevBtn.style.display = 'none';
+    if (nextBtn) nextBtn.style.display = 'none';
+    if (indexBadge) indexBadge.style.display = 'none';
+  }
+
+  // 校验当前索引边界
+  if (currentWmRealtimePreviewIndex >= selectedRawImages.length) {
+    currentWmRealtimePreviewIndex = Math.max(0, selectedRawImages.length - 1);
+  }
+
+  let targetW = 1080, targetH = 1080;
+  let basePreviewImg = null;
+
+  // 优先加载当前选中的原图（默认就是第 1 张原图）
+  if (selectedRawImages.length > 0) {
+    try {
+      const curItem = selectedRawImages[currentWmRealtimePreviewIndex] || selectedRawImages[0];
+      basePreviewImg = await loadImage(curItem.src);
+      targetW = basePreviewImg.naturalWidth || basePreviewImg.width;
+      targetH = basePreviewImg.naturalHeight || basePreviewImg.height;
+    } catch (e) {
+      console.warn('原图预览加载异常:', e);
+    }
+  } else if (watermarkImg) {
+    targetW = watermarkImg.naturalWidth || 1080;
+    targetH = watermarkImg.naturalHeight || 1080;
+  }
+
+  // 自适应调整视窗容器的宽高比例，保证完全不挤压原图
+  if (stageBox && targetW > 0 && targetH > 0) {
+    stageBox.style.aspectRatio = `${targetW} / ${targetH}`;
+  }
+
+  canvas.width = targetW;
+  canvas.height = targetH;
+  ctx.clearRect(0, 0, targetW, targetH);
+
+  // 1. 绘制当前原图底图
+  if (basePreviewImg) {
+    ctx.drawImage(basePreviewImg, 0, 0, targetW, targetH);
+  } else {
+    // 尚未导入原图时，显示透明棋盘格
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, targetW, targetH);
+    ctx.fillStyle = '#F1F5F9';
+    const s = 40;
+    for (let y = 0; y < targetH; y += s) {
+      for (let x = 0; x < targetW; x += s) {
+        if (((x / s) + (y / s)) % 2 === 0) ctx.fillRect(x, y, s, s);
+      }
+    }
+  }
+
+  // 2. 绘制实时水印层（自动根据当前原图的长宽比进行居中平铺并施加当前透明度）
+  if (watermarkImg) {
+    const opacity = parseFloat(document.getElementById('opacityInput')?.value || 15) / 100;
+    const blendMode = document.getElementById('blendModeSelect')?.value || 'overlay';
+
+    const wmLayer = document.createElement('canvas');
+    wmLayer.width = targetW;
+    wmLayer.height = targetH;
+    const wmCtx = wmLayer.getContext('2d');
+
+    drawRepeatedWatermarkLayer(
+      wmCtx,
+      watermarkImg,
+      targetW,
+      targetH,
+      wmAdjustScale,
+      wmAdjustRotate,
+      wmAdjustOffsetX * (targetW / 320),
+      wmAdjustOffsetY * (targetH / 320)
+    );
+
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    ctx.globalCompositeOperation = blendMode;
+    ctx.drawImage(wmLayer, 0, 0);
+    ctx.restore();
+
+    wmLayer.width = 0; wmLayer.height = 0;
+  }
+
+  // 渲染完成，平滑淡出并隐藏加载动画
+  if (loader) {
+    loader.style.display = 'none';
+  }
+}
+
+/* 核心修复：放宽判定，解决部分安卓/iOS特殊格式导致“未检测到水印格式”的Bug */
+function isImageFileCandidate(file) {
+  if (!file) return false;
+  if (file.type && file.type.startsWith('image/')) return true;
+  // 许多手机传回的 mime 为空，此时放行常见图片扩展名
+  const name = (file.name || '').toLowerCase();
+  return /\.(png|jpe?g|webp|gif|bmp|avif|heic|heif|svg)$/i.test(name) || file.size > 0;
+}
+
+/* 本地文件导入水印（多重通道容灾，杜绝未检测到格式报错） */
 function handleWmFile(e) {
   const file = e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    applyWatermarkFromSrc(ev.target.result, file.name);
-  };
-  reader.readAsDataURL(file);
+
+  if (!isImageFileCandidate(file)) {
+    alert('提示：请选择有效的图片或透明PNG水印文件！');
+    e.target.value = '';
+    return;
+  }
+
+  // 优先直接用 createObjectURL 读取，避免部分机型 FileReader.readAsDataURL 内存被截断
+  try {
+    const objectUrl = URL.createObjectURL(file);
+    applyWatermarkFromSrc(objectUrl, file.name);
+  } catch (err) {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      applyWatermarkFromSrc(ev.target.result, file.name);
+    };
+    reader.readAsDataURL(file);
+  }
   e.target.value = '';
 }
 
@@ -6350,13 +6822,20 @@ function triggerImport(channel) {
 function handleBulkFiles(e) {
   const files = Array.from(e.target.files);
   if (files.length === 0) return;
-  const imgFiles = files.filter(f => f.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp|avif)$/i.test(f.name));
+  const imgFiles = files.filter(f => f.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp|avif|heic|heif)$/i.test(f.name));
   if (imgFiles.length === 0) { alert('未检测到有效图片文件，请重新选择！'); return; }
 
+  const prevLen = selectedRawImages.length;
   imgFiles.forEach(f => {
     selectedRawImages.push({ name: f.name, file: f, src: URL.createObjectURL(f) });
   });
+
+  // 如果是首次导入，默认选中第 1 张原图上屏
+  if (prevLen === 0) {
+    currentWmRealtimePreviewIndex = 0;
+  }
   updateRawThumbDisplay();
+  renderWmRealtimePreview();
   e.target.value = '';
 }
 
@@ -6367,9 +6846,11 @@ function updateRawThumbDisplay() {
   const list = document.getElementById('sourceThumbList');
 
   if (selectedRawImages.length === 0) {
+    currentWmRealtimePreviewIndex = 0;
     emptyBox.classList.remove('hidden');
     filledBox.classList.add('hidden');
     drawer.classList.add('hidden');
+    renderWmRealtimePreview();
     return;
   }
 
@@ -6381,13 +6862,28 @@ function updateRawThumbDisplay() {
   drawer.classList.remove('hidden');
   list.innerHTML = '';
   selectedRawImages.forEach((item, idx) => {
+    const isCurrentActive = (idx === currentWmRealtimePreviewIndex);
     const card = document.createElement('div');
     card.className = 'hthumb';
+    card.style.cursor = 'pointer';
+    if (isCurrentActive) {
+      card.style.outline = '2.5px solid var(--accent)';
+      card.style.transform = 'scale(0.96)';
+    }
+
     card.innerHTML = `
       <img src="${item.src}">
-      <button class="rm" onclick="removeRawImageAt(${idx})">
+      <button class="rm" onclick="event.stopPropagation(); removeRawImageAt(${idx})">
         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
       </button>`;
+
+    // 点击缩略图直接将大预览图切到当前这张
+    card.onclick = () => {
+      currentWmRealtimePreviewIndex = idx;
+      renderWmRealtimePreview();
+      updateRawThumbDisplay();
+    };
+
     list.appendChild(card);
   });
 }
@@ -6441,11 +6937,13 @@ function syncOpacityFromInput(val) {
   v = Math.max(1, Math.min(100, v));
   opacityInput.value = v;
   document.getElementById('opacityDirectNum').value = v;
+  renderWmRealtimePreview();
 }
 
 opacityInput.addEventListener('input', (e) => {
   const numInput = document.getElementById('opacityDirectNum');
   if (numInput) numInput.value = e.target.value;
+  renderWmRealtimePreview();
 });
 
 /* 贴膜机：单张逐张保存到相册 */
@@ -6518,21 +7016,37 @@ async function executeBatchWatermark() {
 
   for (let i = 0; i < selectedRawImages.length; i++) {
     const item = selectedRawImages[i];
-    progressText.innerText = `正在处理 (${i+1}/${selectedRawImages.length})：${item.name}`;
 
-    // 1. 加载单张原图
+    // 1. 加载单张原图，画布尺寸严格识别原图真实宽度、长度，绝不强制缩放改变原图比例
     let baseImg = await loadImage(item.src);
     const naturalW = baseImg.naturalWidth || baseImg.width;
     const naturalH = baseImg.naturalHeight || baseImg.height;
+    const isSquare = Math.abs(naturalW - naturalH) <= 2;
 
-    // 2. 贴膜绘制
+    if (!isSquare) {
+      progressText.innerText = `水印正在对应原图长宽度 (${i+1}/${selectedRawImages.length})：${item.name}`;
+    } else {
+      progressText.innerText = `正在处理 (${i+1}/${selectedRawImages.length})：${item.name}`;
+    }
+
+    // 2. 贴膜绘制（采用等比居中 + 周围重复平铺，并同步应用用户设置的XY轴、旋转与缩放）
     let wmCanvas = document.createElement('canvas');
     wmCanvas.width = naturalW;
     wmCanvas.height = naturalH;
     let wmCtx = wmCanvas.getContext('2d');
     wmCtx.imageSmoothingEnabled = true;
     wmCtx.imageSmoothingQuality = 'high';
-    wmCtx.drawImage(watermarkImg, 0, 0, naturalW, naturalH);
+
+    drawRepeatedWatermarkLayer(
+      wmCtx,
+      watermarkImg,
+      naturalW,
+      naturalH,
+      wmAdjustScale,
+      wmAdjustRotate,
+      wmAdjustOffsetX * (naturalW / 320),
+      wmAdjustOffsetY * (naturalH / 320)
+    );
 
     /* 人脸识别擦除（接入双重扫描高精识别） */
     let detectedFaces = [];
@@ -7639,35 +8153,70 @@ function handleWallpaperChange(e) {
   reader.readAsDataURL(file);
 }
 
+/* 全局壁纸应用：主桌面与所有功能 APP 均采用 100% 实体不透明、纯净清晰的原版壁纸，彻底杜绝主页漏图 */
 function applyWallpaperStyle(bgUrl) {
-  const body = document.body;
-  body.style.backgroundImage = `url('${bgUrl}')`;
-  body.style.backgroundSize = 'cover';
-  body.style.backgroundPosition = 'center';
-  body.style.backgroundAttachment = 'fixed';
-  body.classList.add('has-custom-wallpaper');
+  if (!bgUrl) return;
+  document.body.classList.add('has-custom-wallpaper');
+
+  // 1. 桌面固定独立壁纸层生效
+  const bgEl = document.getElementById('globalWallpaperBg');
+  if (bgEl) {
+    bgEl.style.backgroundImage = `url("${bgUrl}")`;
+  }
+
+  // 2. 将壁纸直接赋给所有功能 APP 实体背景（100% 实底覆盖，绝不使用任何模糊或半透层，杜绝漏出桌面）
+  let styleTag = document.getElementById('dynamicWallpaperInjectStyle');
+  if (!styleTag) {
+    styleTag = document.createElement('style');
+    styleTag.id = 'dynamicWallpaperInjectStyle';
+    document.head.appendChild(styleTag);
+  }
+  styleTag.textContent = `
+    #globalWallpaperBg {
+      background-image: url("${bgUrl}") !important;
+    }
+    body.has-custom-wallpaper .app-view {
+      background-image: url("${bgUrl}") !important;
+    }
+  `;
+
+  try {
+    localStorage.setItem('custom_wallpaper', bgUrl);
+  } catch (err) {
+    console.warn('壁纸存储提示:', err);
+  }
 }
 
 function restoreDefaultWallpaper() {
   localStorage.removeItem('custom_wallpaper');
-  const body = document.body;
-  body.style.backgroundImage = '';
-  body.classList.remove('has-custom-wallpaper');
+  document.body.classList.remove('has-custom-wallpaper');
+
+  const bgEl = document.getElementById('globalWallpaperBg');
+  if (bgEl) {
+    bgEl.style.backgroundImage = '';
+  }
+
+  const styleTag = document.getElementById('dynamicWallpaperInjectStyle');
+  if (styleTag) {
+    styleTag.remove();
+  }
 }
 
 function loadCustomWallpaper() {
   const savedWp = localStorage.getItem('custom_wallpaper');
-  if (savedWp) applyWallpaperStyle(savedWp);
+  if (savedWp && savedWp.length > 10) {
+    applyWallpaperStyle(savedWp);
+  }
   const savedTheme = localStorage.getItem('drizzle_app_theme') || 'default';
   switchAppTheme(savedTheme);
 }
 
-/* 全局主题切换：default(经典灰白) | blue(冰晶浅蓝) | pink(樱花柔粉) | dark(黑白极简) */
+/* 全局主题切换：default(经典灰白) | blue(冰晶浅蓝) | pink(樱花柔粉) | green(清新薄荷绿) | dark(黑白极简) */
 function switchAppTheme(theme) {
   document.body.setAttribute('data-theme', theme);
   localStorage.setItem('drizzle_app_theme', theme);
 
-  ['default', 'blue', 'pink', 'dark'].forEach(t => {
+  ['default', 'blue', 'pink', 'green', 'dark'].forEach(t => {
     const btn = document.getElementById(`themeBtn-${t}`);
     if (btn) btn.classList.toggle('active', t === theme);
   });
@@ -9139,13 +9688,13 @@ function detectTransparentHoleFromFrame() {
 
 let pvFirstBaseImgObj = null;
 
-/* 核心升级：为每个宫格原图按尺寸独立贴膜水印，并无黑边填入镂空框中 */
+/* 核心修复：彻底解决多宫格预览原图挤压变形问题，等比裁切（Cover）且绝不破坏原图长宽比 */
 async function drawImageCoverIntoHole(ctx, imgObj, hole, W, H, scale, offX, offY) {
   const baseHw = hole.width * W;
   const baseHh = hole.height * H;
   
-  // 动态计算出血量（外扩 10% 垫入边框背后，保证四角完全盖满）
-  const bleed = Math.max(36, Math.min(baseHw, baseHh) * 0.10);
+  // 出血量：外扩 5% 垫入透明边框背后，杜绝边缘露白
+  const bleed = Math.max(20, Math.min(baseHw, baseHh) * 0.05);
   
   const hx = hole.x * W - bleed;
   const hy = hole.y * H - bleed;
@@ -9155,12 +9704,20 @@ async function drawImageCoverIntoHole(ctx, imgObj, hole, W, H, scale, offX, offY
   const naturalW = imgObj.naturalWidth || imgObj.width;
   const naturalH = imgObj.naturalHeight || imgObj.height;
   
-  // 计算 Cover 缩放比
-  const baseScaleRatio = Math.max(hw / naturalW, hh / naturalH);
-  const effectiveScale = (scale || 1.0) * baseScaleRatio;
-  
-  const drawW = naturalW * effectiveScale;
-  const drawH = naturalH * effectiveScale;
+  // 严格按原图宽高比与宫格宽高比做等比 Cover 适配，绝不直接将宽和高分别赋值为 hw / hh
+  const imgRatio = naturalW / naturalH;
+  const boxRatio = hw / hh;
+
+  let drawW, drawH;
+  if (imgRatio > boxRatio) {
+    // 原图偏宽：高度填满，宽度等比放大并居中裁剪，不挤压
+    drawH = hh * (scale || 1.0);
+    drawW = drawH * imgRatio;
+  } else {
+    // 原图偏长：宽度填满，高度等比放大并居中裁剪，不挤压
+    drawW = hw * (scale || 1.0);
+    drawH = drawW / imgRatio;
+  }
 
   const holeCenterX = hole.x * W + baseHw / 2;
   const holeCenterY = hole.y * H + baseHh / 2;
@@ -9170,9 +9727,9 @@ async function drawImageCoverIntoHole(ctx, imgObj, hole, W, H, scale, offX, offY
   ctx.save();
   ctx.beginPath();
   ctx.rect(hx, hy, hw, hh);
-  ctx.clip(); // 限制在该宫格范围内
+  ctx.clip(); // 限制在该宫格镂空区域内
 
-  // 1. 绘制当前格子的底图原图
+  // 1. 绘制等比还原、不挤压的原图
   ctx.drawImage(imgObj, dx, dy, drawW, drawH);
 
   // 2. 获取水印膜（无论单张还是多宫格，每张图都按大小位置独立叠加贴膜水印）
@@ -10040,52 +10597,82 @@ async function triggerPwaInstall() {
 /* ================================================================
    更新公告版本管理与历史更新归档
 ================================================================ */
-const CURRENT_APP_VERSION = 'v1.2.0';
+const CURRENT_APP_VERSION = 'v1.2.8';
 
 const APP_UPDATE_HISTORY = [
   {
-    version: 'v1.2.0',
+    version: 'v1.2.8',
     tag: '最新版本',
+    date: '2026/10/14',
+    sections: [
+      {
+        title: '一、全局壁纸与美化优化',
+        items: [
+          '全面适配全局壁纸效果，不仅主桌面显示壁纸，所有功能页面背景统一生效。',
+          '导入自定义壁纸后，自动移除页面默认圆点装饰元素，界面更加干净统一。',
+          '新增绿色系主题配色方案，优化整体视觉搭配效果。'
+        ]
+      },
+      {
+        title: '二、贴膜机、预览机功能优化',
+        items: [
+          '贴膜机新增水印实时预览功能，输入水印参数后，可实时查看水印不透明度、尺寸效果。',
+          '重构画布适配逻辑，画布尺寸自动匹配原图真实长宽，取消固定画布限制，完全自适应原图比例，杜绝图片拉伸、挤压问题。',
+          '修复预览机多宫格预览图片被挤压的bug，保证所有预览画面比例正常。',
+          '升级贴膜机图片浏览功能，首张原图置顶展示，新增左右切换箭头，可滑动查看全部图片的水印展示效果。'
+        ]
+      },
+      {
+        title: '三、水印导入bug修复',
+        items: [
+          '修复部分用户导入水印时，出现“未检测到水印格式”、水印导入失败的异常问题，提升水印导入稳定性。'
+        ]
+      },
+      {
+        title: '四、页面卡片宽度固定',
+        items: [
+          '优化长图适配问题，固定页面卡片展示宽度，解决长图自动外扩、页面无法滑动的问题，统一页面展示样式。'
+        ]
+      },
+      {
+        title: '五、图片裂图问题修复',
+        items: [
+          '针对性修复用户反馈的图片随机裂图、加载异常的bug，提升图片加载稳定性。'
+        ]
+      },
+      {
+        title: '六、非一比一比例原图水印适配优化',
+        items: [
+          '解决非1:1比例原图水印拉伸、挤压、变形的问题。新增水印平铺适配逻辑，非正方形原图将水印自动居中对齐，根据原图尺寸自动平铺重复水印，对标专业绘图软件平铺效果。',
+          '新增适配加载提示，处理非一比一原图时，显示水印适配加载状态，提升用户体验。'
+        ]
+      },
+      {
+        title: '七、贴膜机水印精细化调节升级',
+        items: [
+          '新增水印XY轴位置调节、旋转、放大缩小功能，参数支持正负数值调节。',
+          '调节参数实时同步原图展示位置，精准匹配预览与导出效果。'
+        ]
+      },
+      {
+        title: '八、设备自适应分栏布局',
+        items: [
+          '全面适配多设备布局：手机设备保持无分栏全屏展示，平板、电脑设备自动启用分栏布局。',
+          '平板设备全局左右双分栏展示。',
+          '电脑端主页面双分栏，功能页面自动切换为三分栏布局，适配大屏观看与操作体验，兼顾不同设备的使用场景。'
+        ]
+      }
+    ]
+  },
+  {
+    version: 'v1.2.0',
+    tag: '历史版本',
     date: '2026/10/02',
     sections: [
       {
         title: '版本概览',
         items: [
-          '本次版本重点新增两大核心功能：预览机、预览图库，同时对全功能模块进行大量优化升级，修复多项使用问题，具体更新内容如下：'
-        ]
-      },
-      {
-        title: '一、新增核心功能',
-        items: [
-          '【全新功能：预览机】1. 支持底图批量导入、水印导入预览，可实现水印覆盖混合效果，适配贴膜水印制作需求；2. 新增透明底自动识别功能，识别区域以蓝色边框标注，支持首张图片定位调整，后续图片自动适配填充，可手动关闭识别、自由自定义位置；3. 集成贴膜水印效果，可直接在预览机内完成水印贴膜操作；4. 支持多预览框导入，可自由调整各水印框层级、上下层级排序，分层排版后批量生成图片；5. 新增自定义比例功能，破除固定比例限制，适配头像、壁纸等多场景预览制作。',
-          '【全新页面：预览图库】1. 独立第二应用页面，专门收纳所有归档、保存的原图与预览成品图；2. 统一汇总所有制作记录，无需反复导出查找，素材集中管理更便捷。'
-        ]
-      },
-      {
-        title: '二、核心功能优化',
-        items: [
-          '【导出保存功能升级】1. 新增批量导出模式，点击导出弹出双选项：ZIP压缩包导出、全部图片一次性PNG导出至相册；2. 单张图片保存默认直接输出PNG格式并保存到手机相册；3. 批量生成图片新增实时进度条，精准展示制作进度，同步提示「人脸擦除、位置调整」等操作步骤。',
-          '【预览编辑操作优化】1. 新增原图锁定功能：导入图片后默认开启锁图，防止误触滑动移位；手动调整图片时可关闭锁定，自由操作；2. 支持成品图二次编辑，点击已生成图片，居中弹出大图编辑弹窗，可微调图片位置、大小；3. 支持双指放大查看图片细节，新增撤销功能，可撤回误操作；4. 优化水印框编辑：支持精准选择指定水印框单独调整，可自由移动、缩放、旋转，旋转支持正负数值调节；5. 新增贴膜水印擦脸开关，可自主开启或关闭人脸擦除功能。',
-          '【素材导入与展示优化】1. 支持完整文件夹批量导入，可直接选取文件夹导入全部图片；2. 实时刷新素材列表，新增、删除图片即时生效，无需重启页面即可查看最新素材；3. 新增原图列表展示功能，清晰查看所有已导入素材；4. 优化操作排版，所有移动、调整类功能按键统一放置在预览框下方，操作更直观；5. 实现水印APP与预览机功能互通，预览框可跨功能联动选择使用。'
-        ]
-      },
-      {
-        title: '三、全局美化与适配优化',
-        items: [
-          '1. 新增APP全局黑白配色主题，原有灰白、蓝色、粉色主题保留，丰富自定义风格；',
-          '2. 全局壁纸适配升级，APP内置壁纸自动模糊20%显示，彻底解决界面白边问题；',
-          '3. 全系升级iOS液体玻璃质感UI，所有图标替换为SVG矢量图标，画质高清无失真；',
-          '4. 移除多余自适应选项，精简功能面板，降低操作干扰。'
-        ]
-      },
-      {
-        title: '四、问题修复',
-        items: [
-          '1. 修复九宫格及多宫格拼图点击无响应的故障；',
-          '2. 修复批量生成预览图后成品图不显示的问题；',
-          '3. 优化页面滑动逻辑，杜绝误触移位、右滑误退出APP的情况；',
-          '4. 优化贴膜机不透明度调节，支持手动输入精准数值设置参数；',
-          '5. 升级图包下载模式，新增单张图片png下载方式，不再仅支持ZIP压缩包下载。'
+          '新增预览机与预览图库核心功能，升级全功能模块并优化导出逻辑。'
         ]
       }
     ]
