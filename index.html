@@ -638,8 +638,8 @@ body {
 }
 .page::-webkit-scrollbar { display: none; }
 
-/* ============ 平板与电脑端响应式分段自适应 (手机保持单列不变) ============ */
-/* 1. 平板端 (768px - 1024px)：主页分为左右两段，打开应用功能分为左右两段 */
+/* ============ 平板与电脑端（桌面网站模式）分段自适应重构 ============ */
+/* 1. 平板端与桌面网站模式 (768px - 1024px)：大图预览独占居中分段，控制台在侧边紧凑化 */
 @media (min-width: 768px) and (max-width: 1024px) {
   .viewport {
     scroll-snap-type: none;
@@ -652,15 +652,35 @@ body {
   }
   .app-body {
     display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: 1.15fr 0.85fr !important;
     gap: 16px !important;
     align-items: start !important;
   }
-  .app-body > .import-grid,
-  .app-body > #sourceImagesDrawer,
-  .app-body > #pvSourceImagesDrawer,
-  .app-body > #resultsWrapper,
-  .app-body > #pvResultsWrapper,
+  /* 贴膜机：左侧独占完整大预览舞台，右侧为素材导入与参数调节 */
+  #app-watermarker #wmRealtimePreviewCard {
+    grid-column: 1 / 2 !important;
+    grid-row: 1 / 5 !important;
+  }
+  #app-watermarker .import-grid { grid-column: 2 / 3 !important; }
+  #app-watermarker #sourceImagesDrawer { grid-column: 2 / 3 !important; }
+  #app-watermarker .card:not(#wmRealtimePreviewCard):not(#sourceImagesDrawer) { grid-column: 2 / 3 !important; }
+  #app-watermarker #startProcessBtn { grid-column: 2 / 3 !important; }
+  #app-watermarker #wmProgressBarBox { grid-column: 2 / 3 !important; }
+  #app-watermarker #resultsWrapper { grid-column: 1 / -1 !important; }
+
+  /* 预览机：左侧为主舞台视口，右侧为多图层与调节 */
+  #app-previewer .pv-stage-container {
+    grid-column: 1 / 2 !important;
+    grid-row: 1 / 5 !important;
+  }
+  #app-previewer .import-grid { grid-column: 2 / 3 !important; }
+  #app-previewer #pvSourceImagesDrawer { grid-column: 2 / 3 !important; }
+  #app-previewer #pvTransformControlPanel,
+  #app-previewer .card:not(#pvTransformControlPanel):not(#pvSourceImagesDrawer) { grid-column: 2 / 3 !important; }
+  #app-previewer #pvStartBatchBtn { grid-column: 2 / 3 !important; }
+  #app-previewer #pvProgressBarBox { grid-column: 2 / 3 !important; }
+  #app-previewer #pvResultsWrapper { grid-column: 1 / -1 !important; }
+
   .app-body > .search-wrap,
   .app-body > .threshold-bar,
   .app-body > .contact-group-bar,
@@ -669,7 +689,7 @@ body {
   }
 }
 
-/* 2. 电脑大屏端 (> 1024px)：主屏左右两段并居中；点进功能页面立即智能分为三段式专业工作台 */
+/* 2. 电脑大屏端 (> 1024px)：专业三段式工位（左：素材集 | 中：超大原图预览核心舞台 | 右：参数微调面板） */
 @media (min-width: 1025px) {
   .viewport {
     scroll-snap-type: none;
@@ -694,22 +714,25 @@ body {
     max-width: 1440px;
     margin: 0 auto;
     display: grid !important;
-    grid-template-columns: 340px 1fr 360px !important; /* 电脑端三段式：左侧导入与素材列 | 中间舞台与大预览 | 右侧微调与结果 */
+    grid-template-columns: 320px 1.4fr 340px !important;
     gap: 20px !important;
     align-items: start !important;
   }
-  /* 适配三段式布局排版：把各个小块对齐到相应列 */
+  /* 贴膜机三段排版 */
   #app-watermarker .import-grid { grid-column: 1 / 2; display: flex; flex-direction: column; }
   #app-watermarker #sourceImagesDrawer { grid-column: 1 / 2; }
   #app-watermarker #wmRealtimePreviewCard { grid-column: 2 / 3; }
+  #app-watermarker #wmRealtimePreviewStageBox { width: 100% !important; max-width: 520px; }
   #app-watermarker .card:not(#wmRealtimePreviewCard):not(#sourceImagesDrawer) { grid-column: 3 / 4; }
   #app-watermarker #startProcessBtn { grid-column: 3 / 4; }
   #app-watermarker #wmProgressBarBox { grid-column: 3 / 4; }
   #app-watermarker #resultsWrapper { grid-column: 1 / -1; }
 
+  /* 预览机三段排版 */
   #app-previewer .import-grid { grid-column: 1 / 2; display: flex; flex-direction: column; }
   #app-previewer #pvSourceImagesDrawer { grid-column: 1 / 2; }
   #app-previewer .pv-stage-container { grid-column: 2 / 3; }
+  #app-previewer .pv-stage-box { width: 100% !important; max-width: 520px; }
   #app-previewer #pvTransformControlPanel,
   #app-previewer .card:not(#pvTransformControlPanel):not(#pvSourceImagesDrawer) { grid-column: 3 / 4; }
   #app-previewer #pvStartBatchBtn { grid-column: 3 / 4; }
@@ -2019,7 +2042,7 @@ body[data-theme="dark"] .auth-tab-btn.active {
 <div id="globalWallpaperBg"></div>
 
 <!-- 隐藏文件输入（统一限定直接呼出手机相册） -->
-<input type="file" id="wmInput" class="hidden-file-input" accept="image/*" onchange="handleWmFile(event)">
+<input type="file" id="wmInput" multiple class="hidden-file-input" accept="image/*" onchange="handleWmFile(event)">
 <input type="file" id="rawInputByMedia" multiple class="hidden-file-input" accept="image/*" onchange="handleBulkFiles(event)">
 <input type="file" id="rawInputByFiles" multiple class="hidden-file-input" onchange="handleBulkFiles(event)">
 <input type="file" id="rawInputByFolder" webkitdirectory directory multiple class="hidden-file-input" onchange="handleBulkFiles(event)">
@@ -2429,20 +2452,30 @@ body[data-theme="dark"] .auth-tab-btn.active {
 
     <!-- 导入区 -->
     <div class="import-grid">
-      <!-- 水印 —— 点击弹出选择来源 -->
+      <!-- 水印 —— 支持批量导入与多层叠加 -->
       <div class="dashed-box" onclick="openWmImportChoice()">
         <div id="wmEmptyBox" class="dashed-box-inner">
           <div class="dashed-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+              <polyline points="2 17 12 22 22 17"></polyline>
+              <polyline points="2 12 12 17 22 12"></polyline>
             </svg>
           </div>
-          <div class="dashed-label">导入浮雕/水印</div>
-          <div class="dashed-sub">本地导入 / 水印库选</div>
+          <div class="dashed-label">导入浮雕/多层水印</div>
+          <div class="dashed-sub">支持相册一次多选 / 水印库选</div>
         </div>
-        <div id="wmFilledBox" class="dashed-filled hidden">
-          <img id="wmLoadedPreview" class="checker" alt="watermark">
-          <span class="dashed-tag" id="wmLoadedTag">已载入水印膜</span>
+        <div id="wmFilledBox" class="dashed-filled hidden" style="padding:0; position:relative;">
+          <img id="wmLoadedPreview" class="checker" alt="watermark" style="width:100%; height:100%; object-fit:contain; border-radius:22px;">
+          <!-- 顶部状态胶囊（悬浮顶部，杜绝与底部按钮挤压重叠） -->
+          <div style="position:absolute; top:8px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.92); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border:1px solid var(--glass-border); padding:2px 10px; border-radius:20px; box-shadow:var(--glass-shine); z-index:4; white-space:nowrap;">
+            <span id="wmLoadedTag" style="font-size:9.5px; font-weight:800; color:var(--text-main);">已载入 1 层水印</span>
+          </div>
+          <!-- 底部独立操作按钮组 -->
+          <div style="position:absolute; bottom:8px; left:0; right:0; display:flex; justify-content:center; gap:6px; z-index:4;" onclick="event.stopPropagation()">
+            <button type="button" class="mini-btn" style="padding:3px 10px; font-size:10px; font-weight:700;" onclick="openWmImportChoice()">+ 加层</button>
+            <button type="button" class="mini-btn ghost" style="padding:3px 10px; font-size:10px; color:#ef4444; font-weight:700;" onclick="resetAllWatermarkLayers()">清空</button>
+          </div>
         </div>
       </div>
 
@@ -2548,9 +2581,35 @@ body[data-theme="dark"] .auth-tab-btn.active {
         <input type="range" id="opacityInput" min="5" max="100" value="15">
       </div>
 
-      <!-- 水印位置、缩放与旋转控制（支持负数，批量原图完全一致） -->
+      <!-- 原底图高斯模糊调节（真实物理模糊，导出持久生效） -->
+      <div class="slider-row" style="margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 10px;">
+        <div class="slider-label">
+          <span class="k" style="display:flex; align-items:center; gap:5px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+            <span>原底图模糊度 (真实固化)</span>
+          </span>
+          <div style="display:flex; align-items:center; gap:5px;">
+            <input type="number" id="baseBlurDirectNum" class="num-direct-input" min="0" max="50" value="0" onchange="syncBaseBlurFromInput(this.value)">
+            <span class="v" style="font-size:12px;">px</span>
+            <button type="button" class="mini-btn ghost" style="padding:1px 6px; font-size:9.5px; margin-left:4px;" onclick="resetBaseBlur()">清除</button>
+          </div>
+        </div>
+        <input type="range" id="baseBlurInput" min="0" max="50" value="0" oninput="syncBaseBlurFromSlider(this.value)">
+      </div>
+
+      <!-- 水印位置、缩放与旋转控制（支持多图层独立调整） -->
       <div style="margin-top:12px; border-top:1px solid var(--line); padding-top:10px;">
         <div style="font-size:11.5px; font-weight:800; color:var(--text-main); margin-bottom:8px;">水印精细调整 (支持负数，所有原图同步对应)</div>
+        
+        <!-- 水印图层选择与操作条 -->
+        <div class="layer-select-pill-bar" id="wmLayerSelectBar" style="margin-bottom:10px;">
+          <span style="font-size:11px; font-weight:800; color:var(--text-muted); white-space:nowrap;">当前调整水印：</span>
+          <select id="wmActiveLayerDropdown" onchange="handleSelectWmLayer(this.value)">
+            <option value="0">图层 1 (主水印)</option>
+          </select>
+          <button type="button" class="mini-btn ghost" style="padding:3px 8px; font-size:10px;" onclick="openWmImportChoice()">+ 加层</button>
+          <button type="button" class="mini-btn ghost" style="padding:3px 8px; font-size:10px; color:#ef4444;" onclick="removeActiveWmLayer()">删层</button>
+        </div>
         
         <div class="slider-row" style="margin-top:0;">
           <div class="slider-label">
@@ -3021,7 +3080,7 @@ body[data-theme="dark"] .auth-tab-btn.active {
 
 <!-- 全局导出保存选择弹窗（PNG 批量导出 / ZIP 导出） -->
 <div id="saveChoiceModal" class="modal-mask hidden">
-  <div class="modal-card" style="max-width:340px;">
+  <div class="modal-card" style="max-width:350px;">
     <div class="modal-head">
       <div>
         <h3>选择导出保存方式</h3>
@@ -3032,19 +3091,15 @@ body[data-theme="dark"] .auth-tab-btn.active {
       </button>
     </div>
 
-    <div style="display:flex; flex-direction:column; gap:10px; margin-top:4px;">
-      <button class="channel-btn" onclick="handleDirectExportAllPng()">
-        <div class="channel-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-          </svg>
-        </div>
-        <div>
-          <div class="channel-title">PNG 批量导出 <span class="tag-mini">直接存相册</span></div>
-          <div class="channel-sub">单张无损 PNG 连续保存至本地相册/下载</div>
-        </div>
-      </button>
+    <!-- iOS 专属不丢图建议提示条 -->
+    <div style="background: rgba(100, 116, 139, 0.1); border: 1px solid var(--glass-border); border-radius: 14px; padding: 8px 12px; display: flex; align-items: flex-start; gap: 8px;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <div style="font-size: 10px; line-height: 1.5; color: var(--text-muted); font-weight: 600;">
+        <span style="color:var(--text-main); font-weight:800;">温馨提示：</span>iOS（Safari/微信）连续自动保存多张 PNG 极易被系统拦截丢单。建议优先选用<span style="color:var(--accent); font-weight:800;">「ZIP 打包导出」</span>保存至系统“文件”，解压后一键存入相册，100% 不漏图且原画质无损。
+      </div>
+    </div>
 
+    <div style="display:flex; flex-direction:column; gap:10px; margin-top:2px;">
       <button class="channel-btn" onclick="handleChoiceExportZip()">
         <div class="channel-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -3053,8 +3108,20 @@ body[data-theme="dark"] .auth-tab-btn.active {
           </svg>
         </div>
         <div>
-          <div class="channel-title">ZIP 打包导出</div>
-          <div class="channel-sub">自动打包全部图片并下载压缩包</div>
+          <div class="channel-title"><span>ZIP 打包导出</span><span class="tag-mini">强烈推荐</span></div>
+          <div class="channel-sub">自动打包全部图集，防丢图，解压直接存相册</div>
+        </div>
+      </button>
+
+      <button class="channel-btn" onclick="handleDirectExportAllPng()">
+        <div class="channel-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+          </svg>
+        </div>
+        <div>
+          <div class="channel-title">PNG 逐张导出</div>
+          <div class="channel-sub">单张无损 PNG 连续保存至本地相册/下载</div>
         </div>
       </button>
     </div>
@@ -3776,16 +3843,13 @@ body[data-theme="dark"] .auth-tab-btn.active {
         <button type="button" class="preset-btn active" id="btnRatio11" onclick="setPreviewRatio('1-1')">1:1 头像</button>
         <button type="button" class="preset-btn" id="btnRatio34" onclick="setPreviewRatio('3-4')">3:4 比例</button>
         <button type="button" class="preset-btn" id="btnRatio916" onclick="setPreviewRatio('9-16')">9:16 壁纸</button>
-        <button type="button" class="preset-btn" id="btnRatioCustom" onclick="setPreviewRatio('custom')">自定义</button>
+        <button type="button" class="preset-btn" id="btnRatioCustom" onclick="setPreviewRatio('custom')">自适应原图长宽</button>
       </div>
 
-      <!-- 自定义比例输入行 -->
-      <div id="pvCustomRatioRow" class="hidden" style="margin-top:10px; display:flex; align-items:center; gap:8px;">
-        <span style="font-size:11px; font-weight:700; color:var(--text-muted);">宽高比：</span>
-        <input type="number" id="pvCustomW" class="num-direct-input" style="width:60px;" value="1080" placeholder="宽" onchange="applyCustomRatio()">
-        <span style="font-size:12px; font-weight:700;">:</span>
-        <input type="number" id="pvCustomH" class="num-direct-input" style="width:60px;" value="1080" placeholder="高" onchange="applyCustomRatio()">
-        <button class="mini-btn" onclick="applyCustomRatio()">应用比例</button>
+      <!-- 自适应原图当前比例指示提示 -->
+      <div id="pvCustomRatioRow" class="hidden" style="margin-top:8px; padding:6px 10px; background:var(--glass-subtle); border-radius:12px; border:1px solid var(--glass-border); display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-size:11px; font-weight:700; color:var(--text-muted);">当前匹配原图长宽尺寸：</span>
+        <span id="pvAutoMatchedRatioTag" style="font-size:11px; font-weight:800; color:var(--accent);">自动根据底图匹配</span>
       </div>
 
       <!-- 多预览框图层层级排序与独立变换管理 -->
@@ -4149,7 +4213,7 @@ body[data-theme="dark"] .auth-tab-btn.active {
     </button>
     <div class="app-title">更新公告与历史</div>
     <div class="app-header-right">
-      <span class="mini-badge ready"><span class="bdot"></span><span>v1.2.8 最新版</span></span>
+      <span class="mini-badge ready"><span class="bdot"></span><span>v1.4.2 最新版</span></span>
     </div>
   </div>
 
@@ -4174,7 +4238,7 @@ body[data-theme="dark"] .auth-tab-btn.active {
           <div style="font-size:14px; font-weight:800; color:var(--text-main);">版本更新公告</div>
           <div class="ver-badge">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            <span>v1.2.8 正式上线</span>
+            <span>v1.4.2 正式上线</span>
           </div>
         </div>
       </div>
@@ -4185,85 +4249,80 @@ body[data-theme="dark"] .auth-tab-btn.active {
 
     <!-- 更新内容正文列表 -->
     <div class="update-scroll-body">
-      <!-- 一、全局壁纸与美化优化 -->
+      <!-- 一、账密系统优化 -->
       <div class="log-section-card">
         <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/></svg>
-          <span>一、全局壁纸与美化优化</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>一、账密系统优化</span>
         </div>
-        <div class="log-item-text">1. 全面适配全局壁纸效果，不仅主桌面显示壁纸，所有功能页面背景统一生效。</div>
-        <div class="log-item-text">2. 导入自定义壁纸后，自动移除页面默认圆点装饰元素，界面更加干净统一。</div>
-        <div class="log-item-text">3. 新增绿色系主题配色方案，优化整体视觉搭配效果。</div>
+        <div class="log-item-text">优化登录状态持久化逻辑，在同一浏览器登录后，关闭浏览器重新打开可保持登录状态，无需重复登录；更换设备后需要重新验证登录。</div>
       </div>
 
-      <!-- 二、贴膜机、预览机功能优化 -->
-      <div class="log-section-card">
-        <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-          <span>二、贴膜机、预览机功能优化</span>
-        </div>
-        <div class="log-item-text">1. 贴膜机新增水印实时预览功能，输入水印参数后，可实时查看水印不透明度、尺寸效果。</div>
-        <div class="log-item-text">2. 重构画布适配逻辑，画布尺寸自动匹配原图真实长宽，取消固定画布限制，完全自适应原图比例，杜绝图片拉伸、挤压问题。</div>
-        <div class="log-item-text">3. 修复预览机多宫格预览图片被挤压的bug，保证所有预览画面比例正常。</div>
-        <div class="log-item-text">4. 升级贴膜机图片浏览功能，首张原图置顶展示，新增左右切换箭头，可滑动查看全部图片的水印展示效果。</div>
-      </div>
-
-      <!-- 三、水印导入bug修复 -->
-      <div class="log-section-card">
-        <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-          <span>三、水印导入bug修复</span>
-        </div>
-        <div class="log-item-text">修复部分用户导入水印时，出现“未检测到水印格式”、水印导入失败的异常问题，提升水印导入稳定性。</div>
-      </div>
-
-      <!-- 四、页面卡片宽度固定 -->
-      <div class="log-section-card">
-        <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
-          <span>四、页面卡片宽度固定</span>
-        </div>
-        <div class="log-item-text">优化长图适配问题，固定页面卡片展示宽度，解决长图自动外扩、页面无法滑动的问题，统一页面展示样式。</div>
-      </div>
-
-      <!-- 五、图片裂图问题修复 -->
+      <!-- 二、图裂问题修复（无损画质，原图、水印均不压缩） -->
       <div class="log-section-card">
         <div class="log-sec-title">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          <span>五、图片裂图问题修复</span>
+          <span>二、图裂问题修复（无损画质，原图、水印均不压缩）</span>
         </div>
-        <div class="log-item-text">针对性修复用户反馈的图片随机裂图、加载异常的bug，提升图片加载稳定性。</div>
+        <div class="log-item-text">针对用户反馈的图裂问题进行底层存储逻辑重构，全程保留原始画质：</div>
+        <div class="log-item-text">1. 原图存储统一使用原生Blob存入IndexedDB，废弃base64存储大图方案，避免数据损坏、内存占用过高；</div>
+        <div class="log-item-text">2. 图片预览渲染逻辑调整，URL.createObjectURL 生成的临时资源地址使用完成后，配套执行资源释放，防止内存溢出；</div>
+        <div class="log-item-text">3. 图库、多宫格预览增加懒加载机制，仅渲染视口范围内的图片；</div>
+        <div class="log-item-text">4. 图片渲染增加加载失败兜底捕获，控制台输出错误日志，方便定位损坏资源；</div>
+        <div class="log-item-text">5. 限制高频读写，拖拽、循环操作中不会重复请求IndexedDB；</div>
+        <div class="log-item-text">6. 规范渲染流程：原图仅做存储与读取，原图数据不经过Canvas重绘，保障原图画质无损失；Canvas仅用于水印叠加、图片合成环节，水印合成同样保留原始画质，不会压缩水印。</div>
       </div>
 
-      <!-- 六、非一比一比例原图水印适配优化 -->
+      <!-- 三、贴膜机、预览机水印相关bug修复与新增功能 -->
       <div class="log-section-card">
         <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-          <span>六、非一比一比例原图水印适配优化</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9 15 6-6M9 9h.01M15 15h.01"/></svg>
+          <span>三、贴膜机、预览机水印相关bug修复与新增功能</span>
         </div>
-        <div class="log-item-text">1. 解决非1:1比例原图水印拉伸、挤压、变形的问题。新增水印平铺适配逻辑，非正方形原图将水印自动居中对齐，根据原图尺寸自动平铺重复水印，对标专业绘图软件平铺效果。</div>
-        <div class="log-item-text">2. 新增适配加载提示，处理非一比一原图时，显示水印适配加载状态，提升用户体验。</div>
+        <div class="log-item-text">1. 修复水印尺寸异常bug：解决上传水印后尺寸随机放大缩小、无法贴合原图的问题；</div>
+        <div class="log-item-text">2. 修复水印合成模糊异常bug：解决贴膜后水印发糊、颜色异常加深的问题；</div>
+        <div class="log-item-text">3. 贴膜机新增底图模糊调节功能：支持对原底图设置模糊参数，为非挥发性模糊效果；</div>
+        <div class="log-item-text">4. 贴膜机支持多层水印导入：可一次性导入多张贴膜水印，提供图层选择功能，单独调整选中图层水印的位置、参数。</div>
       </div>
 
-      <!-- 七、贴膜机水印精细化调节升级 -->
+      <!-- 四、预览机尺寸适配调整 -->
       <div class="log-section-card">
         <div class="log-sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          <span>七、贴膜机水印精细化调节升级</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
+          <span>四、预览机尺寸适配调整</span>
         </div>
-        <div class="log-item-text">1. 新增水印XY轴位置调节、旋转、放大缩小功能，参数支持正负数值调节。</div>
-        <div class="log-item-text">2. 调节参数实时同步原图展示位置，精准匹配预览与导出效果。</div>
+        <div class="log-item-text">1. 支持导入任意长宽比例的原图，禁止挤压、拉伸原图，保持原图原始宽高比例；</div>
+        <div class="log-item-text">2. 自定义尺寸逻辑调整：自定义项跟随原图尺寸识别，不再支持手动输入宽高；</div>
+        <div class="log-item-text">3. 实时预览框自适应原图尺寸，预览框大小和原图比例保持一致。</div>
       </div>
 
-      <!-- 八、设备自适应分栏布局 -->
+      <!-- 五、图片保存相关优化 -->
+      <div class="log-section-card">
+        <div class="log-sec-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>五、图片保存相关优化</span>
+        </div>
+        <div class="log-item-text">1. 修复批量生成后图片数量不一致、保存至相册数量缺失的bug；</div>
+        <div class="log-item-text">2. 增加保存提示：iOS设备不建议单独保存PNG格式图片，推荐打包为ZIP保存至文件。</div>
+      </div>
+
+      <!-- 六、布局分段优化 -->
       <div class="log-section-card">
         <div class="log-sec-title">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="12" y1="3" x2="12" y2="17"/></svg>
-          <span>八、设备自适应分栏布局</span>
+          <span>六、布局分段优化</span>
         </div>
-        <div class="log-item-text">1. 全面适配多设备布局：手机设备保持无分栏全屏展示，平板、电脑设备自动启用分栏布局。</div>
-        <div class="log-item-text">2. 平板设备全局左右双分栏展示。</div>
-        <div class="log-item-text">3. 电脑端主页面双分栏，功能页面自动切换为三分栏布局，适配大屏观看与操作体验，兼顾不同设备的使用场景。</div>
+        <div class="log-item-text">更新大屏设备自适应布局规则：平板、电脑端布局统一，实时预览大图单独占用一个分栏，其余功能控件在侧边分栏展示；开启桌面版网站时同样适配该布局。</div>
+      </div>
+
+      <!-- 七、贴膜机批量生成功能修复与提示优化 -->
+      <div class="log-section-card">
+        <div class="log-sec-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          <span>七、贴膜机批量生成功能修复与提示优化</span>
+        </div>
+        <div class="log-item-text">1. 修复贴膜机点击批量生成无响应、进度条不变化的bug；</div>
+        <div class="log-item-text">2. 批量生成进度增加状态文字提示：处理底图模糊时显示「正在处理原底模糊」，调整水印阶段显示「正在处理水印位置」。</div>
       </div>
 
       <div style="font-size:10px; color:var(--text-light); text-align:center; padding: 4px 0;">
@@ -4619,20 +4678,58 @@ async function handleAuthSubmit() {
   }
 }
 
-// 检查免登录态（兼容网页版与安装到手机的 PWA 桌面独立版）
+// 检查免登录态：固定已授权浏览器，退出重开秒进不弹窗，除非换机
 async function checkAuthSession() {
-  const cachedQQ = localStorage.getItem('drizzle_login_qq') || getCookieAuth('drizzle_login_qq');
-  const cachedToken = localStorage.getItem('drizzle_login_token') || getCookieAuth('drizzle_login_token');
   const overlay = document.getElementById('authModalOverlay');
   const deviceId = getOrCreateDeviceId();
+  const cachedQQ = localStorage.getItem('drizzle_login_qq') || getCookieAuth('drizzle_login_qq');
+  const cachedToken = localStorage.getItem('drizzle_login_token') || getCookieAuth('drizzle_login_token');
+  const localAuthorizedDev = localStorage.getItem('drizzle_authorized_device') || getCookieAuth('drizzle_authorized_device');
 
-  if (!cachedQQ || !cachedToken || !supabaseClient) {
+  // 如果本地从未登录过任何账号，弹出登录层
+  if (!cachedQQ || !cachedToken) {
     if (overlay) overlay.classList.remove('hidden');
     return;
   }
 
+  // 核心优化：若此浏览器此前已成功登录并绑定过当前 deviceId，直接信任放行，绝不阻拦进入
+  if (localAuthorizedDev === deviceId) {
+    if (overlay) overlay.classList.add('hidden');
+    // 在后台静默异步校验云端状态，不卡前台使用
+    (async () => {
+      try {
+        const client = await ensureSupabaseReady();
+        if (!client) return;
+        const { data: user } = await client
+          .from('app_users')
+          .select('password, bound_device_id')
+          .eq('qq', cachedQQ)
+          .maybeSingle();
+
+        if (user && user.password === cachedToken) {
+          let devList = parseBoundDevices(user.bound_device_id);
+          if (!devList.includes(deviceId) && devList.length < 4) {
+            devList.push(deviceId);
+            await client.from('app_users').update({ bound_device_id: JSON.stringify(devList) }).eq('qq', cachedQQ);
+          }
+        }
+      } catch (e) {
+        console.warn('后台免登状态静默校验完成');
+      }
+    })();
+    return;
+  }
+
+  // 若为初次识别的独立设备环境，连接云端校验
   try {
-    const { data: user } = await supabaseClient
+    const client = await ensureSupabaseReady();
+    if (!client) {
+      // 网络慢时优先放行已记录凭证的用户
+      if (overlay) overlay.classList.add('hidden');
+      return;
+    }
+
+    const { data: user } = await client
       .from('app_users')
       .select('password, bound_device_id')
       .eq('qq', cachedQQ)
@@ -4640,22 +4737,19 @@ async function checkAuthSession() {
 
     if (user && user.password === cachedToken) {
       let devList = parseBoundDevices(user.bound_device_id);
-      if (devList.includes(deviceId)) {
-        if (overlay) overlay.classList.add('hidden');
-        return;
-      } else if (devList.length < 4) {
-        // PWA 或新浏览器静默补全设备列表，无需重新让用户输账密
-        devList.push(deviceId);
-        await supabaseClient
-          .from('app_users')
-          .update({ bound_device_id: JSON.stringify(devList) })
-          .eq('qq', cachedQQ);
+      if (devList.includes(deviceId) || devList.length < 4) {
+        if (!devList.includes(deviceId)) {
+          devList.push(deviceId);
+          await client.from('app_users').update({ bound_device_id: JSON.stringify(devList) }).eq('qq', cachedQQ);
+        }
+        localStorage.setItem('drizzle_authorized_device', deviceId);
+        setCookieAuth('drizzle_authorized_device', deviceId);
         if (overlay) overlay.classList.add('hidden');
         return;
       }
     }
 
-    // 凭证失效或达到设备上限
+    // 确实超出设备上限或密码已改，才弹出登录
     if (overlay) overlay.classList.remove('hidden');
   } catch (e) {
     if (overlay) overlay.classList.add('hidden');
@@ -4755,6 +4849,8 @@ async function confirmSubmitNewPassword() {
 let faceModel = null;
 let watermarkImg = null;
 let watermarkSourceName = '';   /* 用于展示当前载入水印的名字 */
+let watermarkLayers = [];       /* 核心：多层贴膜水印数组 [{ id, img, name, src, scale, rotate, offsetX, offsetY }] */
+let activeWmLayerIndex = 0;     /* 当前正在微调的水印图层索引 */
 let selectedRawImages = [];
 let currentProcessedBatch = [];
 
@@ -5091,6 +5187,53 @@ function getImageMimeType(file, fileName) {
   if (name.endsWith('.png')) return 'image/png';
   if (name.endsWith('.webp')) return 'image/webp';
   return 'image/jpeg';
+}
+
+/* 建立全局 ObjectURL 内存管理池：确保无泄漏，防止内存爆掉导致裂图 */
+const BlobURLManager = {
+  activeUrls: new Set(),
+  create(blob) {
+    if (!blob) return '';
+    try {
+      const url = URL.createObjectURL(blob);
+      this.activeUrls.add(url);
+      return url;
+    } catch (e) {
+      console.error('Blob URL 生成失败:', e);
+      return '';
+    }
+  },
+  revoke(url) {
+    if (url && typeof url === 'string' && url.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(url);
+        this.activeUrls.delete(url);
+      } catch (e) {}
+    }
+  },
+  clearAll() {
+    this.activeUrls.forEach(url => {
+      try { URL.revokeObjectURL(url); } catch (e) {}
+    });
+    this.activeUrls.clear();
+  }
+};
+
+/* 图片加载失败自动兜底修复（解决 Blob 临时 URL 失效破裂的 Bug） */
+function handleImageLoadError(imgEl, fallbackBlobGetter) {
+  console.warn('检测到图片加载失败，正在尝试从原始数据自动修复…', imgEl.src);
+  if (imgEl._hasRetried) return;
+  imgEl._hasRetried = true;
+  if (typeof fallbackBlobGetter === 'function') {
+    const rawBlob = fallbackBlobGetter();
+    if (rawBlob instanceof Blob || rawBlob instanceof File) {
+      const newUrl = BlobURLManager.create(rawBlob);
+      imgEl.src = newUrl;
+      console.log('图片已自愈恢复成功。');
+      return;
+    }
+  }
+  imgEl.style.opacity = '0.4';
 }
 
 /* 文件大小格式化辅助函数（右下角展示MB/KB） */
@@ -6271,19 +6414,85 @@ function closeWmPickerModal() {
   document.getElementById('wmPickerModal').classList.add('hidden');
 }
 
-/* 贴膜机专属水印微调状态 (支持负数，批量处理时后方所有原图严格应用此参数) */
-let wmAdjustScale = 1.0;
-let wmAdjustRotate = 0;
-let wmAdjustOffsetX = 0;
-let wmAdjustOffsetY = 0;
+/* 贴膜机多图层管理与专属微调控制中心 */
+function getActiveWmLayer() {
+  if (watermarkLayers.length === 0) return null;
+  if (activeWmLayerIndex >= watermarkLayers.length) activeWmLayerIndex = 0;
+  return watermarkLayers[activeWmLayerIndex];
+}
+
+function updateWmLayerUI() {
+  const emptyBox = document.getElementById('wmEmptyBox');
+  const filledBox = document.getElementById('wmFilledBox');
+  const previewImg = document.getElementById('wmLoadedPreview');
+  const tag = document.getElementById('wmLoadedTag');
+  const dropdown = document.getElementById('wmActiveLayerDropdown');
+
+  if (watermarkLayers.length === 0) {
+    watermarkImg = null;
+    watermarkSourceName = '';
+    if (emptyBox) emptyBox.classList.remove('hidden');
+    if (filledBox) filledBox.classList.add('hidden');
+    if (dropdown) dropdown.innerHTML = '<option value="0">暂无水印图层</option>';
+    return;
+  }
+
+  if (emptyBox) emptyBox.classList.add('hidden');
+  if (filledBox) filledBox.classList.remove('hidden');
+
+  const curLayer = getActiveWmLayer();
+  if (previewImg && curLayer) previewImg.src = curLayer.src;
+  if (tag) tag.innerText = `已载入 ${watermarkLayers.length} 层水印膜`;
+
+  if (dropdown) {
+    dropdown.innerHTML = '';
+    watermarkLayers.forEach((layer, idx) => {
+      const opt = document.createElement('option');
+      opt.value = idx;
+      opt.innerText = `图层 ${idx + 1} · ${layer.name}`;
+      if (idx === activeWmLayerIndex) opt.selected = true;
+      dropdown.appendChild(opt);
+    });
+  }
+
+  syncWmControlsFromActiveLayer();
+}
+
+function handleSelectWmLayer(val) {
+  activeWmLayerIndex = parseInt(val, 10) || 0;
+  const cur = getActiveWmLayer();
+  if (cur && document.getElementById('wmLoadedPreview')) {
+    document.getElementById('wmLoadedPreview').src = cur.src;
+  }
+  syncWmControlsFromActiveLayer();
+  renderWmRealtimePreview();
+}
+
+function syncWmControlsFromActiveLayer() {
+  const cur = getActiveWmLayer();
+  if (!cur) return;
+  const scalePct = Math.round((cur.scale || 1.0) * 100);
+  const rot = cur.rotate || 0;
+  const ox = cur.offsetX || 0;
+  const oy = cur.offsetY || 0;
+
+  if (document.getElementById('wmScaleInput')) document.getElementById('wmScaleInput').value = scalePct;
+  if (document.getElementById('wmScaleDirectNum')) document.getElementById('wmScaleDirectNum').value = scalePct;
+  if (document.getElementById('wmRotateInput')) document.getElementById('wmRotateInput').value = rot;
+  if (document.getElementById('wmRotateDirectNum')) document.getElementById('wmRotateDirectNum').value = rot;
+  if (document.getElementById('wmOffsetXInput')) document.getElementById('wmOffsetXInput').value = ox;
+  if (document.getElementById('wmOffsetYInput')) document.getElementById('wmOffsetYInput').value = oy;
+}
 
 function syncWmAdjustFromSlider(type, val) {
+  const cur = getActiveWmLayer();
+  if (!cur) return;
   if (type === 'scale') {
-    wmAdjustScale = parseFloat(val) / 100;
+    cur.scale = parseFloat(val) / 100;
     const num = document.getElementById('wmScaleDirectNum');
     if (num) num.value = val;
   } else if (type === 'rotate') {
-    wmAdjustRotate = parseInt(val, 10) || 0;
+    cur.rotate = parseInt(val, 10) || 0;
     const num = document.getElementById('wmRotateDirectNum');
     if (num) num.value = val;
   }
@@ -6291,17 +6500,19 @@ function syncWmAdjustFromSlider(type, val) {
 }
 
 function syncWmAdjustFromDirect(type, val) {
+  const cur = getActiveWmLayer();
+  if (!cur) return;
   let v = parseInt(val, 10);
   if (type === 'scale') {
     if (isNaN(v)) v = 100;
     v = Math.max(10, Math.min(300, v));
-    wmAdjustScale = v / 100;
+    cur.scale = v / 100;
     document.getElementById('wmScaleInput').value = v;
     document.getElementById('wmScaleDirectNum').value = v;
   } else if (type === 'rotate') {
     if (isNaN(v)) v = 0;
     v = Math.max(-180, Math.min(180, v));
-    wmAdjustRotate = v;
+    cur.rotate = v;
     document.getElementById('wmRotateInput').value = v;
     document.getElementById('wmRotateDirectNum').value = v;
   }
@@ -6309,85 +6520,132 @@ function syncWmAdjustFromDirect(type, val) {
 }
 
 function syncWmAdjustOffsets() {
-  wmAdjustOffsetX = parseInt(document.getElementById('wmOffsetXInput')?.value, 10) || 0;
-  wmAdjustOffsetY = parseInt(document.getElementById('wmOffsetYInput')?.value, 10) || 0;
+  const cur = getActiveWmLayer();
+  if (!cur) return;
+  cur.offsetX = parseInt(document.getElementById('wmOffsetXInput')?.value, 10) || 0;
+  cur.offsetY = parseInt(document.getElementById('wmOffsetYInput')?.value, 10) || 0;
   renderWmRealtimePreview();
 }
 
 function resetWmAdjustOffsets() {
-  wmAdjustOffsetX = 0;
-  wmAdjustOffsetY = 0;
-  wmAdjustScale = 1.0;
-  wmAdjustRotate = 0;
-  if (document.getElementById('wmOffsetXInput')) document.getElementById('wmOffsetXInput').value = 0;
-  if (document.getElementById('wmOffsetYInput')) document.getElementById('wmOffsetYInput').value = 0;
-  if (document.getElementById('wmScaleInput')) document.getElementById('wmScaleInput').value = 100;
-  if (document.getElementById('wmScaleDirectNum')) document.getElementById('wmScaleDirectNum').value = 100;
-  if (document.getElementById('wmRotateInput')) document.getElementById('wmRotateInput').value = 0;
-  if (document.getElementById('wmRotateDirectNum')) document.getElementById('wmRotateDirectNum').value = 0;
+  const cur = getActiveWmLayer();
+  if (!cur) return;
+  cur.offsetX = 0;
+  cur.offsetY = 0;
+  cur.scale = 1.0;
+  cur.rotate = 0;
+  syncWmControlsFromActiveLayer();
   renderWmRealtimePreview();
 }
 
 function nudgeWmOffset(dx, dy) {
-  wmAdjustOffsetX += dx;
-  wmAdjustOffsetY += dy;
-  if (document.getElementById('wmOffsetXInput')) document.getElementById('wmOffsetXInput').value = wmAdjustOffsetX;
-  if (document.getElementById('wmOffsetYInput')) document.getElementById('wmOffsetYInput').value = wmAdjustOffsetY;
+  const cur = getActiveWmLayer();
+  if (!cur) return;
+  cur.offsetX = (cur.offsetX || 0) + dx;
+  cur.offsetY = (cur.offsetY || 0) + dy;
+  if (document.getElementById('wmOffsetXInput')) document.getElementById('wmOffsetXInput').value = cur.offsetX;
+  if (document.getElementById('wmOffsetYInput')) document.getElementById('wmOffsetYInput').value = cur.offsetY;
   renderWmRealtimePreview();
 }
 
-/* 统一应用水印并驱动实时预览 */
-function applyWatermarkFromSrc(src, name) {
-  watermarkImg = new Image();
-  watermarkImg.onload = () => {
-    document.getElementById('wmEmptyBox').classList.add('hidden');
-    document.getElementById('wmFilledBox').classList.remove('hidden');
-    document.getElementById('wmLoadedPreview').src = src;
-    watermarkSourceName = name || '';
-    const tag = document.getElementById('wmLoadedTag');
-    if (tag) {
-      tag.innerText = name ? `已载入：${name.length > 10 ? name.slice(0, 9) + '…' : name}` : '已载入水印膜';
-    }
-    renderWmRealtimePreview();
-  };
-  watermarkImg.src = src;
+function removeActiveWmLayer() {
+  if (watermarkLayers.length === 0) return;
+  const removed = watermarkLayers.splice(activeWmLayerIndex, 1)[0];
+  if (removed && removed.src && removed.src.startsWith('blob:')) {
+    try { URL.revokeObjectURL(removed.src); } catch(e) {}
+  }
+  if (activeWmLayerIndex >= watermarkLayers.length) {
+    activeWmLayerIndex = Math.max(0, watermarkLayers.length - 1);
+  }
+  updateWmLayerUI();
+  renderWmRealtimePreview();
 }
 
-/* 核心方案：非 1:1 原图防止挤压变窄 —— 水印等比居中并在四周进行平铺重复 (爱笔思画重复平铺模式) */
+function resetAllWatermarkLayers() {
+  watermarkLayers.forEach(l => {
+    if (l.src && l.src.startsWith('blob:')) {
+      try { URL.revokeObjectURL(l.src); } catch(e) {}
+    }
+  });
+  watermarkLayers = [];
+  activeWmLayerIndex = 0;
+  updateWmLayerUI();
+  renderWmRealtimePreview();
+}
+
+/* 统一添加水印图层：支持单张或连续多张注入 */
+function applyWatermarkFromSrc(src, name) {
+  const img = new Image();
+  img.onload = () => {
+    watermarkLayers.push({
+      id: `wmlayer_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      img: img,
+      src: src,
+      name: name || `水印_${watermarkLayers.length + 1}`,
+      scale: 1.0,
+      rotate: 0,
+      offsetX: 0,
+      offsetY: 0
+    });
+    watermarkImg = watermarkLayers[0].img;
+    watermarkSourceName = watermarkLayers[0].name;
+    activeWmLayerIndex = watermarkLayers.length - 1;
+    updateWmLayerUI();
+    renderWmRealtimePreview();
+  };
+  img.src = src;
+}
+
+/* 核心修复：100% 原画质点对点高保真绘制，杜绝二次重绘导致的模糊与加深，杜绝尺寸跳变 */
 function drawRepeatedWatermarkLayer(ctx, wmImg, targetW, targetH, scale = 1.0, rotateDeg = 0, offX = 0, offY = 0) {
-  const wmAspect = (wmImg.naturalWidth || wmImg.width) / (wmImg.naturalHeight || wmImg.height);
-  const targetAspect = targetW / targetH;
-
-  // 1. 基准水印尺寸：两边宽度完全对齐且保持原水印比例，绝不拉伸压扁
-  let baseUnitW = targetW * scale;
-  let baseUnitH = (baseUnitW / wmAspect);
-
-  // 2. 如果原图比例与水印不一致，使用离屏 Canvas 作为 Pattern 进行周围重复平铺
-  const tileCanvas = document.createElement('canvas');
-  tileCanvas.width = Math.max(16, Math.round(baseUnitW));
-  tileCanvas.height = Math.max(16, Math.round(baseUnitH));
-  const tCtx = tileCanvas.getContext('2d');
-  tCtx.imageSmoothingEnabled = true;
-  tCtx.imageSmoothingQuality = 'high';
-  tCtx.drawImage(wmImg, 0, 0, tileCanvas.width, tileCanvas.height);
+  const wmNW = wmImg.naturalWidth || wmImg.width;
+  const wmNH = wmImg.naturalHeight || wmImg.height;
+  if (!wmNW || !wmNH) return;
+  const wmAspect = wmNW / wmNH;
 
   ctx.save();
-  // 平移到目标中心并施加 XY 位移与旋转
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  // 基准尺度：以原图较小的一边为基准，确保横图、竖图、长图下水印视觉大小 100% 统一稳定，不随长宽比乱变
+  const baseDim = Math.min(targetW, targetH);
+  const drawW = baseDim * (scale || 1.0);
+  const drawH = drawW / wmAspect;
+
+  // 变换原点移至画布几何中心
   ctx.translate(targetW / 2 + offX, targetH / 2 + offY);
   if (rotateDeg !== 0) {
     ctx.rotate((rotateDeg * Math.PI) / 180);
   }
 
-  const pattern = ctx.createPattern(tileCanvas, 'repeat');
-  ctx.fillStyle = pattern;
+  const isSquareTarget = Math.abs(targetW - targetH) <= 4;
+  const isSquareWm = Math.abs(wmNW - wmNH) <= 4;
 
-  // 充足覆盖旋转与偏移时的外围区域
-  const diag = Math.hypot(targetW, targetH) * 2;
-  ctx.translate(-diag / 2, -diag / 2);
-  ctx.fillRect(0, 0, diag, diag);
+  if (isSquareTarget && isSquareWm && Math.abs((scale || 1.0) - 1.0) < 0.01 && rotateDeg === 0 && offX === 0 && offY === 0) {
+    // 1:1 标准贴合：直接点对点高质量原画质映射，绝不过 Pattern 降低画质
+    ctx.drawImage(wmImg, -targetW / 2, -targetH / 2, targetW, targetH);
+  } else {
+    // 非 1:1 或有微调：使用高清原生平铺算法，直接以原始图片作为 Pattern，拒绝中间 Canvas 压缩降采样
+    const pattern = ctx.createPattern(wmImg, 'repeat');
+    if (pattern && typeof DOMMatrix !== 'undefined') {
+      const matrix = new DOMMatrix();
+      // 计算直接缩放比，保持原始无损锐利度
+      const sX = drawW / wmNW;
+      const sY = drawH / wmNH;
+      matrix.translateSelf(-drawW / 2, -drawH / 2);
+      matrix.scaleSelf(sX, sY);
+      pattern.setTransform(matrix);
+      ctx.fillStyle = pattern;
+
+      const coverSize = Math.max(targetW, targetH) * 2.5;
+      ctx.fillRect(-coverSize / 2, -coverSize / 2, coverSize, coverSize);
+    } else {
+      // 兼容兜底：平铺单张或中心直接绘制
+      ctx.drawImage(wmImg, -drawW / 2, -drawH / 2, drawW, drawH);
+    }
+  }
+
   ctx.restore();
-
-  tileCanvas.width = 0; tileCanvas.height = 0;
 }
 
 /* 贴膜机当前实时预览的原图索引 */
@@ -6463,9 +6721,19 @@ async function renderWmRealtimePreview() {
   canvas.height = targetH;
   ctx.clearRect(0, 0, targetW, targetH);
 
-  // 1. 绘制当前原图底图
+  // 1. 绘制当前原图底图（支持实体高斯模糊，防边缘发白）
   if (basePreviewImg) {
-    ctx.drawImage(basePreviewImg, 0, 0, targetW, targetH);
+    ctx.save();
+    if (baseBlurRadius > 0) {
+      ctx.filter = `blur(${baseBlurRadius}px)`;
+      // 高斯模糊时边缘微扩 2% 出血，杜绝模糊引起的四周边角发虚透白
+      const bleed = Math.round(Math.max(targetW, targetH) * 0.02);
+      ctx.drawImage(basePreviewImg, -bleed, -bleed, targetW + bleed * 2, targetH + bleed * 2);
+    } else {
+      ctx.filter = 'none';
+      ctx.drawImage(basePreviewImg, 0, 0, targetW, targetH);
+    }
+    ctx.restore();
   } else {
     // 尚未导入原图时，显示透明棋盘格
     ctx.fillStyle = '#FFFFFF';
@@ -6479,34 +6747,37 @@ async function renderWmRealtimePreview() {
     }
   }
 
-  // 2. 绘制实时水印层（自动根据当前原图的长宽比进行居中平铺并施加当前透明度）
-  if (watermarkImg) {
+  // 2. 绘制多层贴膜水印（遍历所有水印图层，按各自独立的缩放、旋转与位移精准叠放）
+  if (watermarkLayers.length > 0) {
     const opacity = parseFloat(document.getElementById('opacityInput')?.value || 15) / 100;
     const blendMode = document.getElementById('blendModeSelect')?.value || 'overlay';
 
-    const wmLayer = document.createElement('canvas');
-    wmLayer.width = targetW;
-    wmLayer.height = targetH;
-    const wmCtx = wmLayer.getContext('2d');
+    watermarkLayers.forEach((layer) => {
+      if (!layer.img) return;
+      const wmLayer = document.createElement('canvas');
+      wmLayer.width = targetW;
+      wmLayer.height = targetH;
+      const wmCtx = wmLayer.getContext('2d');
 
-    drawRepeatedWatermarkLayer(
-      wmCtx,
-      watermarkImg,
-      targetW,
-      targetH,
-      wmAdjustScale,
-      wmAdjustRotate,
-      wmAdjustOffsetX * (targetW / 320),
-      wmAdjustOffsetY * (targetH / 320)
-    );
+      drawRepeatedWatermarkLayer(
+        wmCtx,
+        layer.img,
+        targetW,
+        targetH,
+        layer.scale || 1.0,
+        layer.rotate || 0,
+        (layer.offsetX || 0) * (targetW / 320),
+        (layer.offsetY || 0) * (targetH / 320)
+      );
 
-    ctx.save();
-    ctx.globalAlpha = opacity;
-    ctx.globalCompositeOperation = blendMode;
-    ctx.drawImage(wmLayer, 0, 0);
-    ctx.restore();
+      ctx.save();
+      ctx.globalAlpha = opacity;
+      ctx.globalCompositeOperation = blendMode;
+      ctx.drawImage(wmLayer, 0, 0);
+      ctx.restore();
 
-    wmLayer.width = 0; wmLayer.height = 0;
+      wmLayer.width = 0; wmLayer.height = 0;
+    });
   }
 
   // 渲染完成，平滑淡出并隐藏加载动画
@@ -6524,28 +6795,31 @@ function isImageFileCandidate(file) {
   return /\.(png|jpe?g|webp|gif|bmp|avif|heic|heif|svg)$/i.test(name) || file.size > 0;
 }
 
-/* 本地文件导入水印（多重通道容灾，杜绝未检测到格式报错） */
+/* 本地文件导入水印：支持一次性勾选多张，自动按顺序创建多个独立图层 */
 function handleWmFile(e) {
-  const file = e.target.files[0];
-  if (!file) return;
+  const files = Array.from(e.target.files || []);
+  if (files.length === 0) return;
 
-  if (!isImageFileCandidate(file)) {
+  const validFiles = files.filter(f => isImageFileCandidate(f));
+  if (validFiles.length === 0) {
     alert('提示：请选择有效的图片或透明PNG水印文件！');
     e.target.value = '';
     return;
   }
 
-  // 优先直接用 createObjectURL 读取，避免部分机型 FileReader.readAsDataURL 内存被截断
-  try {
-    const objectUrl = URL.createObjectURL(file);
-    applyWatermarkFromSrc(objectUrl, file.name);
-  } catch (err) {
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      applyWatermarkFromSrc(ev.target.result, file.name);
-    };
-    reader.readAsDataURL(file);
-  }
+  validFiles.forEach(file => {
+    try {
+      const objectUrl = URL.createObjectURL(file);
+      applyWatermarkFromSrc(objectUrl, file.name.replace(/\.[^.]+$/, ''));
+    } catch (err) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        applyWatermarkFromSrc(ev.target.result, file.name.replace(/\.[^.]+$/, ''));
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
   e.target.value = '';
 }
 
@@ -6946,6 +7220,37 @@ opacityInput.addEventListener('input', (e) => {
   renderWmRealtimePreview();
 });
 
+/* 原底图实体高斯模糊状态与数值同步 */
+let baseBlurRadius = 0;
+
+function syncBaseBlurFromSlider(val) {
+  baseBlurRadius = parseInt(val, 10) || 0;
+  const numInput = document.getElementById('baseBlurDirectNum');
+  if (numInput) numInput.value = baseBlurRadius;
+  renderWmRealtimePreview();
+}
+
+function syncBaseBlurFromInput(val) {
+  let v = parseInt(val, 10);
+  if (isNaN(v)) v = 0;
+  v = Math.max(0, Math.min(50, v));
+  baseBlurRadius = v;
+  const slider = document.getElementById('baseBlurInput');
+  const numInput = document.getElementById('baseBlurDirectNum');
+  if (slider) slider.value = v;
+  if (numInput) numInput.value = v;
+  renderWmRealtimePreview();
+}
+
+function resetBaseBlur() {
+  baseBlurRadius = 0;
+  const slider = document.getElementById('baseBlurInput');
+  const numInput = document.getElementById('baseBlurDirectNum');
+  if (slider) slider.value = 0;
+  if (numInput) numInput.value = 0;
+  renderWmRealtimePreview();
+}
+
 /* 贴膜机：单张逐张保存到相册 */
 async function downloadCurrentBatchIndividually() {
   if (!currentProcessedBatch || currentProcessedBatch.length === 0) return;
@@ -6960,12 +7265,13 @@ async function downloadCurrentBatchIndividually() {
    开始贴膜
 ================================================================ */
 function handleStartProcessClick() {
-  if (!watermarkImg) {
-    alert('宝宝，还没有导入水印膜哦！\n可以本地导入，也可以从水印库选一张~');
+  const hasWatermarks = (typeof watermarkLayers !== 'undefined' && watermarkLayers.length > 0) || watermarkImg;
+  if (!hasWatermarks) {
+    alert('宝宝，还没有导入水印膜哦！\n支持一次性导入单张或多层水印~');
     openWmImportChoice();
     return;
   }
-  if (selectedRawImages.length === 0) {
+  if (!selectedRawImages || selectedRawImages.length === 0) {
     alert('宝宝，还没有选择待贴膜的原图哦！\n已为你打开导入通道~');
     openImportChannelModal();
     return;
@@ -6973,12 +7279,22 @@ function handleStartProcessClick() {
   executeBatchWatermark();
 }
 
+// 解决 blob/本地图片 crossOrigin 拦截导致的加载卡死
 function loadImage(src) {
   return new Promise((res, rej) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    if (typeof src === 'string' && src.startsWith('http') && !src.startsWith('blob:')) {
+      img.crossOrigin = 'anonymous';
+    }
     img.onload = () => res(img);
-    img.onerror = rej;
+    img.onerror = (e) => {
+      console.warn('图片初次加载重试中:', src);
+      // 备用降级重试通道
+      const backup = new Image();
+      backup.onload = () => res(backup);
+      backup.onerror = rej;
+      backup.src = src;
+    };
     img.src = src;
   });
 }
@@ -6992,8 +7308,11 @@ async function executeBatchWatermark() {
   const resultsWrapper = document.getElementById('resultsWrapper');
 
   btn.disabled = true;
-  progressBox.classList.remove('hidden');
-  resultsWrapper.classList.add('hidden');
+  if (progressBox) progressBox.classList.remove('hidden');
+  if (resultsWrapper) resultsWrapper.classList.add('hidden');
+  if (progressBar) progressBar.style.width = '0%';
+  if (progressPct) progressPct.innerText = '0%';
+  if (progressText) progressText.innerText = '准备开始处理原图…';
 
   // 释放上一轮贴膜遗留的 URL 内存
   if (currentProcessedBatch && currentProcessedBatch.length > 0) {
@@ -7005,137 +7324,176 @@ async function executeBatchWatermark() {
   }
   currentProcessedBatch = [];
 
-  const opacity = parseFloat(opacityInput.value) / 100;
-  const blendMode = blendModeSelect.value || 'overlay';
-  const enableFace = document.getElementById('faceDetectCheck').checked;
+  const opacity = parseFloat(document.getElementById('opacityInput')?.value || 15) / 100;
+  const blendMode = document.getElementById('blendModeSelect')?.value || 'overlay';
+  const enableFace = document.getElementById('faceDetectCheck')?.checked;
 
-  if (enableFace && !faceModel && !modelReady) {
-    progressText.innerText = '正在启动擦脸引擎…';
-    await loadFaceModel();
-  }
-
-  for (let i = 0; i < selectedRawImages.length; i++) {
-    const item = selectedRawImages[i];
-
-    // 1. 加载单张原图，画布尺寸严格识别原图真实宽度、长度，绝不强制缩放改变原图比例
-    let baseImg = await loadImage(item.src);
-    const naturalW = baseImg.naturalWidth || baseImg.width;
-    const naturalH = baseImg.naturalHeight || baseImg.height;
-    const isSquare = Math.abs(naturalW - naturalH) <= 2;
-
-    if (!isSquare) {
-      progressText.innerText = `水印正在对应原图长宽度 (${i+1}/${selectedRawImages.length})：${item.name}`;
-    } else {
-      progressText.innerText = `正在处理 (${i+1}/${selectedRawImages.length})：${item.name}`;
+  try {
+    // 擦脸引擎安全预热（带 2.5 秒超时熔断，网络不通时不阻塞正常贴膜）
+    if (enableFace && !faceModel && !modelReady) {
+      if (progressText) progressText.innerText = '正在启动擦脸引擎…';
+      try {
+        await Promise.race([
+          loadFaceModel(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('AI 加载超时')), 2500))
+        ]);
+      } catch (err) {
+        console.warn('擦脸模型未及时载入，已自动切换至极速贴膜模式:', err);
+      }
     }
 
-    // 2. 贴膜绘制（采用等比居中 + 周围重复平铺，并同步应用用户设置的XY轴、旋转与缩放）
-    let wmCanvas = document.createElement('canvas');
-    wmCanvas.width = naturalW;
-    wmCanvas.height = naturalH;
-    let wmCtx = wmCanvas.getContext('2d');
-    wmCtx.imageSmoothingEnabled = true;
-    wmCtx.imageSmoothingQuality = 'high';
+    const total = selectedRawImages.length;
 
-    drawRepeatedWatermarkLayer(
-      wmCtx,
-      watermarkImg,
-      naturalW,
-      naturalH,
-      wmAdjustScale,
-      wmAdjustRotate,
-      wmAdjustOffsetX * (naturalW / 320),
-      wmAdjustOffsetY * (naturalH / 320)
-    );
+    for (let i = 0; i < total; i++) {
+      const item = selectedRawImages[i];
 
-    /* 人脸识别擦除（接入双重扫描高精识别） */
-    let detectedFaces = [];
-    if (enableFace && faceModel) {
-      detectedFaces = await detectFacesRobust(baseImg, naturalW, naturalH);
-    }
+      // 阶段 1：读取底图
+      let baseImg = await loadImage(item.src);
+      const naturalW = baseImg.naturalWidth || baseImg.width;
+      const naturalH = baseImg.naturalHeight || baseImg.height;
 
-    if (detectedFaces.length > 0) {
-      progressText.innerText = `已精确识别并羽化擦除 ${detectedFaces.length} 处脸部 (${i+1}/${selectedRawImages.length})`;
-      wmCtx.save();
-      wmCtx.globalCompositeOperation = 'destination-out';
-      detectedFaces.forEach(face => {
-        const fw = face.endX - face.startX;
-        const fh = face.endY - face.startY;
-        const cx = face.startX + fw / 2;
-        const cy = face.startY + fh / 2;
-        // 适度扩大柔和羽化半径，确保下巴与额头边缘过渡自然无生硬水印残留
-        const r = (Math.max(fw, fh) / 2) * 1.55;
-        const g = wmCtx.createRadialGradient(cx, cy, r * 0.2, cx, cy, r);
-        g.addColorStop(0, 'rgba(0,0,0,1)');
-        g.addColorStop(0.8, 'rgba(0,0,0,0.85)');
-        g.addColorStop(1, 'rgba(0,0,0,0)');
-        wmCtx.fillStyle = g;
-        wmCtx.beginPath();
-        wmCtx.arc(cx, cy, r, 0, Math.PI * 2);
-        wmCtx.fill();
+      // 阶段 2：底图模糊提示文案
+      if (baseBlurRadius > 0) {
+        if (progressText) progressText.innerText = `(${i + 1}/${total}) 正在处理原底模糊 (${baseBlurRadius}px)…`;
+        await new Promise(r => setTimeout(r, 25));
+      }
+
+      // 阶段 3：水印位置调整提示文案
+      if (progressText) progressText.innerText = `(${i + 1}/${total}) 正在处理水印位置…`;
+      await new Promise(r => setTimeout(r, 25));
+
+      let wmCanvas = document.createElement('canvas');
+      wmCanvas.width = naturalW;
+      wmCanvas.height = naturalH;
+      let wmCtx = wmCanvas.getContext('2d');
+      wmCtx.imageSmoothingEnabled = true;
+      wmCtx.imageSmoothingQuality = 'high';
+
+      // 多图层/单图层自适应装载
+      const activeLayers = (typeof watermarkLayers !== 'undefined' && watermarkLayers.length > 0)
+        ? watermarkLayers
+        : (watermarkImg ? [{ img: watermarkImg, scale: wmAdjustScale || 1.0, rotate: wmAdjustRotate || 0, offsetX: wmAdjustOffsetX || 0, offsetY: wmAdjustOffsetY || 0 }] : []);
+
+      activeLayers.forEach(layer => {
+        if (layer.img) {
+          drawRepeatedWatermarkLayer(
+            wmCtx,
+            layer.img,
+            naturalW,
+            naturalH,
+            layer.scale || 1.0,
+            layer.rotate || 0,
+            (layer.offsetX || 0) * (naturalW / 320),
+            (layer.offsetY || 0) * (naturalH / 320)
+          );
+        }
       });
-      wmCtx.restore();
+
+      // 阶段 4：擦脸检测
+      if (enableFace && faceModel) {
+        if (progressText) progressText.innerText = `(${i + 1}/${total}) 正在检测脸部并擦除水印…`;
+        let detectedFaces = [];
+        try {
+          detectedFaces = await detectFacesRobust(baseImg, naturalW, naturalH);
+        } catch (fErr) {
+          console.warn('人脸扫描跳过:', fErr);
+        }
+
+        if (detectedFaces.length > 0) {
+          wmCtx.save();
+          wmCtx.globalCompositeOperation = 'destination-out';
+          detectedFaces.forEach(face => {
+            const fw = face.endX - face.startX;
+            const fh = face.endY - face.startY;
+            const cx = face.startX + fw / 2;
+            const cy = face.startY + fh / 2;
+            const r = (Math.max(fw, fh) / 2) * 1.55;
+            const g = wmCtx.createRadialGradient(cx, cy, r * 0.2, cx, cy, r);
+            g.addColorStop(0, 'rgba(0,0,0,1)');
+            g.addColorStop(0.8, 'rgba(0,0,0,0.85)');
+            g.addColorStop(1, 'rgba(0,0,0,0)');
+            wmCtx.fillStyle = g;
+            wmCtx.beginPath();
+            wmCtx.arc(cx, cy, r, 0, Math.PI * 2);
+            wmCtx.fill();
+          });
+          wmCtx.restore();
+        }
+      }
+
+      // 阶段 5：合成无损物理底图
+      let finalCanvas = document.createElement('canvas');
+      finalCanvas.width = naturalW;
+      finalCanvas.height = naturalH;
+      let fCtx = finalCanvas.getContext('2d');
+      fCtx.imageSmoothingEnabled = true;
+      fCtx.imageSmoothingQuality = 'high';
+
+      fCtx.save();
+      if (baseBlurRadius > 0) {
+        const scaleFactor = Math.min(naturalW, naturalH) / 1080;
+        const actualBlurPx = Math.max(1, Math.round(baseBlurRadius * Math.max(1.0, scaleFactor)));
+        fCtx.filter = `blur(${actualBlurPx}px)`;
+        const bleed = Math.round(actualBlurPx * 1.5);
+        fCtx.drawImage(baseImg, -bleed, -bleed, naturalW + bleed * 2, naturalH + bleed * 2);
+      } else {
+        fCtx.filter = 'none';
+        fCtx.drawImage(baseImg, 0, 0, naturalW, naturalH);
+      }
+      fCtx.restore();
+
+      fCtx.globalCompositeOperation = blendMode;
+      fCtx.globalAlpha = opacity;
+      fCtx.drawImage(wmCanvas, 0, 0);
+      fCtx.globalCompositeOperation = 'source-over';
+      fCtx.globalAlpha = 1.0;
+
+      const mimeType = getImageMimeType(item.file, item.name);
+      const blob = await new Promise(res => finalCanvas.toBlob(res, mimeType, 1.0));
+      const url = URL.createObjectURL(blob);
+
+      const wmBlob = await new Promise(res => wmCanvas.toBlob(res, 'image/png'));
+      const baseBlob = item.file || item.blob || (await (await fetch(item.src)).blob());
+
+      currentProcessedBatch.push({
+        id: i,
+        name: `watermarked_${item.name}`,
+        file: item.file,
+        baseBlob: baseBlob,
+        wmBlob: wmBlob,
+        blendMode: blendMode,
+        mimeType: mimeType,
+        resultBlob: blob,
+        resultUrl: url
+      });
+
+      // 释放临时画布显存
+      wmCanvas.width = 0; wmCanvas.height = 0; wmCanvas = null;
+      finalCanvas.width = 0; finalCanvas.height = 0; finalCanvas = null;
+      baseImg.src = ''; baseImg = null;
+
+      const pct = Math.round(((i + 1) / total) * 100);
+      if (progressBar) progressBar.style.width = `${pct}%`;
+      if (progressPct) progressPct.innerText = `${pct}%`;
+
+      await new Promise(r => setTimeout(r, 35));
     }
 
-    /* 最终无损合成 */
-    let finalCanvas = document.createElement('canvas');
-    finalCanvas.width = naturalW;
-    finalCanvas.height = naturalH;
-    let fCtx = finalCanvas.getContext('2d');
-    fCtx.imageSmoothingEnabled = true;
-    fCtx.imageSmoothingQuality = 'high';
-    fCtx.drawImage(baseImg, 0, 0);
-    fCtx.globalCompositeOperation = blendMode;
-    fCtx.globalAlpha = opacity;
-    fCtx.drawImage(wmCanvas, 0, 0);
-    fCtx.globalCompositeOperation = 'source-over';
-    fCtx.globalAlpha = 1.0;
+    if (progressBox) progressBox.classList.add('hidden');
+    if (resultsWrapper) resultsWrapper.classList.remove('hidden');
+    document.getElementById('currentBatchCount').innerText = currentProcessedBatch.length;
+    renderCurrentBatchResults();
+    setTimeout(() => {
+      resultsWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
 
-    const mimeType = getImageMimeType(item.file, item.name);
-    // 100% 原始最高画质导出 Blob
-    const blob = await new Promise(res => finalCanvas.toBlob(res, mimeType, 1.0));
-    const url = URL.createObjectURL(blob);
-
-    // 将水印膜当前图层导出为无损 PNG Blob，用于永久存储与按需精修
-    const wmBlob = await new Promise(res => wmCanvas.toBlob(res, 'image/png'));
-    const baseBlob = item.file || item.blob || (await (await fetch(item.src)).blob());
-
-    // 【防闪退核心】：绝不在全局数组常驻 baseImg 和 wmCanvas 显存对象！只存无损 Blob
-    currentProcessedBatch.push({
-      id: i,
-      name: `watermarked_${item.name}`,
-      file: item.file,
-      baseBlob: baseBlob,     // 100% 原图文件，磁盘永久存储
-      wmBlob: wmBlob,         // 水印层文件，磁盘永久存储
-      blendMode: blendMode,
-      mimeType: mimeType,
-      resultBlob: blob,       // 100% 无损结果，磁盘永久存储
-      resultUrl: url
-    });
-
-    // 【防闪退核心】：手动断开并销毁当前张的 Canvas 与 Image 内存
-    wmCanvas.width = 0;
-    wmCanvas.height = 0;
-    wmCanvas = null;
-    finalCanvas.width = 0;
-    finalCanvas.height = 0;
-    finalCanvas = null;
-    baseImg.src = '';
-    baseImg = null;
-
-    const pct = Math.round(((i + 1) / selectedRawImages.length) * 100);
-    progressBar.style.width = `${pct}%`;
-    progressPct.innerText = `${pct}%`;
-
-    // 【防闪退核心】：每张处理完让出 40 毫秒，促使浏览器触发 GC 垃圾回收显存
-    await new Promise(r => setTimeout(r, 40));
+  } catch (err) {
+    console.error('贴膜处理异常中断捕获:', err);
+    alert('贴膜遇到问题：' + (err.message || '图片读取错误，请确认图片正常后重试'));
+    if (progressBox) progressBox.classList.add('hidden');
+  } finally {
+    btn.disabled = false;
   }
-
-  progressBox.classList.add('hidden');
-  resultsWrapper.classList.remove('hidden');
-  document.getElementById('currentBatchCount').innerText = currentProcessedBatch.length;
-  renderCurrentBatchResults();
-  btn.disabled = false;
 }
 
 /* ================================================================
@@ -7590,7 +7948,7 @@ function renderRepoView() {
       <div class="select-check-badge">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
-      <img src="${imgItem.src}" loading="lazy" decoding="async">
+      <img src="${imgItem.src}" loading="lazy" decoding="async" onerror="handleImageLoadError(this, () => imgItem.blob || imgItem.file)">
       ${sizeStr ? `<span class="img-size-tag">${sizeStr}</span>` : ''}`;
 
     iCard.onclick = () => {
@@ -7906,8 +8264,20 @@ function renderPaint() {
   paintCtx.imageSmoothingEnabled = true;
   paintCtx.imageSmoothingQuality = 'high';
   paintCtx.clearRect(0, 0, paintCanvas.width, paintCanvas.height);
-  paintCtx.drawImage(paintItem.baseImg, 0, 0);
 
+  // 底图绘制：同步继承设定的原底图模糊效果
+  paintCtx.save();
+  if (baseBlurRadius > 0) {
+    paintCtx.filter = `blur(${baseBlurRadius}px)`;
+    const bleed = Math.round(Math.max(paintCanvas.width, paintCanvas.height) * 0.02);
+    paintCtx.drawImage(paintItem.baseImg, -bleed, -bleed, paintCanvas.width + bleed * 2, paintCanvas.height + bleed * 2);
+  } else {
+    paintCtx.filter = 'none';
+    paintCtx.drawImage(paintItem.baseImg, 0, 0, paintCanvas.width, paintCanvas.height);
+  }
+  paintCtx.restore();
+
+  // 水印膜绘制
   paintCtx.globalCompositeOperation = blendMode;
   paintCtx.globalAlpha = opacity;
   paintCtx.drawImage(tempEditWmCanvas, 0, 0);
@@ -8868,30 +9238,47 @@ async function triggerReliableDownload(blob, filename) {
 
 async function handleDirectExportAllPng() {
   closeSaveChoiceModal();
-  if (activeSaveCaller === 'watermarker') {
-    if (!currentProcessedBatch || currentProcessedBatch.length === 0) return;
-    const total = currentProcessedBatch.length;
-    showDownloadToast(`正在导出第 1/${total} 张无损 PNG 到相册…`, 'loading');
 
-    for (let i = 0; i < total; i++) {
-      const item = currentProcessedBatch[i];
-      const safeName = (item.name || `image_${i+1}`).replace(/\.[^.]+$/, '') + '.png';
-      showDownloadToast(`正在保存第 (${i+1}/${total}) 张无损 PNG…`, 'loading');
-      await triggerReliableDownload(item.resultBlob, safeName);
-    }
-    showDownloadToast(`全部 ${total} 张图片已成功保存！请在相册或下载文件夹中查看。`, 'success');
-  } else if (activeSaveCaller === 'previewer') {
-    if (!pvProcessedBatch || pvProcessedBatch.length === 0) return;
-    const total = pvProcessedBatch.length;
-    showDownloadToast(`正在导出第 1/${total} 张预览图到相册…`, 'loading');
+  const isWatermarker = (activeSaveCaller === 'watermarker');
+  const batchList = isWatermarker ? currentProcessedBatch : pvProcessedBatch;
 
-    for (let i = 0; i < total; i++) {
-      const item = pvProcessedBatch[i];
-      const safeName = (item.name || `preview_${i+1}`).replace(/\.[^.]+$/, '') + '.png';
-      showDownloadToast(`正在保存第 (${i+1}/${total}) 张预览图…`, 'loading');
-      await triggerReliableDownload(item.blob, safeName);
+  if (!batchList || batchList.length === 0) {
+    alert('暂无可导出的图片列表！');
+    return;
+  }
+
+  const total = batchList.length;
+  showDownloadToast(`正在启动批量导出 (共 ${total} 张)…`, 'loading');
+
+  let successCount = 0;
+  for (let i = 0; i < total; i++) {
+    const item = batchList[i];
+    const blobToSave = isWatermarker ? item.resultBlob : item.blob;
+    const safeName = (item.name || `drizzle_${i+1}`).replace(/\.[^.]+$/, '') + '.png';
+
+    showDownloadToast(`正在保存相册 (${i + 1}/${total})：${safeName}`, 'loading');
+
+    try {
+      await triggerReliableDownload(blobToSave, safeName);
+      successCount++;
+    } catch (e) {
+      console.warn(`第 ${i + 1} 张保存重试:`, e);
+      saveAs(blobToSave, safeName);
+      successCount++;
     }
-    showDownloadToast(`全部 ${total} 张预览图已成功保存！`, 'success');
+
+    // 关键：手机端连续调用下载必须间隔 550ms 以上，否则移动端 Safari 会强行拦截丢包
+    await new Promise(r => setTimeout(r, 600));
+  }
+
+  showDownloadToast(`全部 ${successCount} 张原画质图片已全部成功导出！`, 'success');
+
+  // 若张数较多且处于 iOS 环境，弹窗提醒核对
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if (isIOS && total > 4) {
+    setTimeout(() => {
+      alert(`【导出完成提示】\n已为您成功触发全部 ${total} 张图片的保存！\n因苹果 iOS 系统限制，如相册中发现张数不全，建议下次选用「ZIP 打包导出」，在系统“文件”中解压即可 100% 批量存入相册。`);
+    }, 800);
   }
 }
 
@@ -9427,20 +9814,45 @@ function setPreviewRatio(ratio) {
   const customRow = document.getElementById('pvCustomRatioRow');
   if (customRow) customRow.classList.toggle('hidden', ratio !== 'custom');
 
-  // 当用户点击“自定义”时，自动智能抓取当前预览框图层的原始宽高并自适应填充输入框
-  if (ratio === 'custom') {
-    if (pvFrameLayers.length > 0 && pvFrameLayers[activePvFrameLayerIndex]?.img) {
-      const activeImg = pvFrameLayers[activePvFrameLayerIndex].img;
-      const nw = activeImg.naturalWidth || 1080;
-      const nh = activeImg.naturalHeight || 1080;
-      document.getElementById('pvCustomW').value = nw;
-      document.getElementById('pvCustomH').value = nh;
-    }
-    applyCustomRatio();
+  // 模式切换时自适应调整舞台
+  const stageBox = document.getElementById('pvStageBox');
+  if (ratio === '1-1') {
+    if (stageBox) { stageBox.style.aspectRatio = '1 / 1'; }
+  } else if (ratio === '3-4') {
+    if (stageBox) { stageBox.style.aspectRatio = '3 / 4'; }
+  } else if (ratio === '9-16') {
+    if (stageBox) { stageBox.style.aspectRatio = '9 / 16'; }
+  } else if (ratio === 'custom') {
+    // 自适应原图长宽度模式：直接自动获取底图实际尺寸
+    updatePvCustomRatioFromBaseImage();
+  }
+  renderPreviewStage();
+}
+
+/* 自动从当前底图提取真实尺寸，实时应用到预览舞台视窗 */
+function updatePvCustomRatioFromBaseImage() {
+  const stageBox = document.getElementById('pvStageBox');
+  const tag = document.getElementById('pvAutoMatchedRatioTag');
+
+  if (pvBaseImages.length > 0 && pvFirstBaseImgObj) {
+    const nw = pvFirstBaseImgObj.naturalWidth || 1080;
+    const nh = pvFirstBaseImgObj.naturalHeight || 1080;
+    pvCustomRatioVal = { w: nw, h: nh };
+    if (stageBox) stageBox.style.aspectRatio = `${nw} / ${nh}`;
+    if (tag) tag.innerText = `${nw} × ${nh} px (100% 原生等比)`;
+  } else if (pvBaseImages.length > 0) {
+    const tmp = new Image();
+    tmp.onload = () => {
+      pvCustomRatioVal = { w: tmp.naturalWidth, h: tmp.naturalHeight };
+      if (stageBox) stageBox.style.aspectRatio = `${tmp.naturalWidth} / ${tmp.naturalHeight}`;
+      if (tag) tag.innerText = `${tmp.naturalWidth} × ${tmp.naturalHeight} px (100% 原生等比)`;
+      renderPreviewStage();
+    };
+    tmp.src = pvBaseImages[0].src;
   } else {
-    const stageBox = document.getElementById('pvStageBox');
-    if (stageBox) stageBox.style.aspectRatio = '';
-    renderPreviewStage();
+    pvCustomRatioVal = { w: 1080, h: 1080 };
+    if (stageBox) stageBox.style.aspectRatio = '1 / 1';
+    if (tag) tag.innerText = '等待导入底图自动匹配';
   }
 }
 
@@ -9688,33 +10100,33 @@ function detectTransparentHoleFromFrame() {
 
 let pvFirstBaseImgObj = null;
 
-/* 核心修复：彻底解决多宫格预览原图挤压变形问题，等比裁切（Cover）且绝不破坏原图长宽比 */
+/* 彻底杜绝原图挤压拉伸：任意尺寸长宽图原生等比 Cover 映射 */
 async function drawImageCoverIntoHole(ctx, imgObj, hole, W, H, scale, offX, offY) {
   const baseHw = hole.width * W;
   const baseHh = hole.height * H;
-  
-  // 出血量：外扩 5% 垫入透明边框背后，杜绝边缘露白
-  const bleed = Math.max(20, Math.min(baseHw, baseHh) * 0.05);
-  
+
+  // 严密贴合出血量：外扩 3%~5% 垫入框底，杜绝边缘漏缝白边
+  const bleed = Math.max(12, Math.min(baseHw, baseHh) * 0.035);
+
   const hx = hole.x * W - bleed;
   const hy = hole.y * H - bleed;
   const hw = baseHw + bleed * 2;
   const hh = baseHh + bleed * 2;
 
-  const naturalW = imgObj.naturalWidth || imgObj.width;
-  const naturalH = imgObj.naturalHeight || imgObj.height;
-  
-  // 严格按原图宽高比与宫格宽高比做等比 Cover 适配，绝不直接将宽和高分别赋值为 hw / hh
+  const naturalW = imgObj.naturalWidth || imgObj.width || 1;
+  const naturalH = imgObj.naturalHeight || imgObj.height || 1;
+
+  // 锁死原生纵横比，绝不直接拉伸赋值
   const imgRatio = naturalW / naturalH;
   const boxRatio = hw / hh;
 
   let drawW, drawH;
   if (imgRatio > boxRatio) {
-    // 原图偏宽：高度填满，宽度等比放大并居中裁剪，不挤压
+    // 原图偏宽：按高充满，宽向两边自然溢出等比裁剪，不压扁
     drawH = hh * (scale || 1.0);
     drawW = drawH * imgRatio;
   } else {
-    // 原图偏长：宽度填满，高度等比放大并居中裁剪，不挤压
+    // 原图偏高/偏长：按宽充满，高向上下自然溢出等比裁剪，不挤窄
     drawW = hw * (scale || 1.0);
     drawH = drawW / imgRatio;
   }
@@ -9799,13 +10211,39 @@ async function renderPreviewStage() {
   const canvas = document.getElementById('pvStageCanvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
+  const stageBox = document.getElementById('pvStageBox');
+
+  // 若存在底图但尚未预载，优先加载首张底图，确保准确取得真实长宽
+  if (pvBaseImages.length > 0 && !pvFirstBaseImgObj) {
+    try {
+      pvFirstBaseImgObj = await loadImage(pvBaseImages[0].src);
+    } catch(e) {}
+  }
 
   let W = 1080, H = 1080;
-  if (pvRatio === '3-4') { W = 1080; H = 1440; }
-  else if (pvRatio === '9-16') { W = 1080; H = 1920; }
-  else if (pvRatio === 'custom') {
-    W = pvCustomRatioVal.w || 1080;
-    H = pvCustomRatioVal.h || 1080;
+  if (pvRatio === '3-4') {
+    W = 1080; H = 1440;
+    if (stageBox) stageBox.style.aspectRatio = '3 / 4';
+  } else if (pvRatio === '9-16') {
+    W = 1080; H = 1920;
+    if (stageBox) stageBox.style.aspectRatio = '9 / 16';
+  } else if (pvRatio === '1-1') {
+    W = 1080; H = 1080;
+    if (stageBox) stageBox.style.aspectRatio = '1 / 1';
+  } else if (pvRatio === 'custom') {
+    // 自适应原图长宽模式：直接提取底图真实宽度与高度
+    if (pvFirstBaseImgObj) {
+      W = pvFirstBaseImgObj.naturalWidth || 1080;
+      H = pvFirstBaseImgObj.naturalHeight || 1080;
+    } else if (pvCustomRatioVal && pvCustomRatioVal.w) {
+      W = pvCustomRatioVal.w;
+      H = pvCustomRatioVal.h;
+    }
+    if (stageBox && W > 0 && H > 0) {
+      stageBox.style.aspectRatio = `${W} / ${H}`;
+    }
+    const tag = document.getElementById('pvAutoMatchedRatioTag');
+    if (tag && W > 0 && H > 0) tag.innerText = `${W} × ${H} px (100% 原图等比)`;
   }
 
   canvas.width = W;
@@ -10597,12 +11035,73 @@ async function triggerPwaInstall() {
 /* ================================================================
    更新公告版本管理与历史更新归档
 ================================================================ */
-const CURRENT_APP_VERSION = 'v1.2.8';
+const CURRENT_APP_VERSION = 'v1.4.2';
 
 const APP_UPDATE_HISTORY = [
   {
-    version: 'v1.2.8',
+    version: 'v1.4.2',
     tag: '最新版本',
+    date: '2026/10/15',
+    sections: [
+      {
+        title: '一、账密系统优化',
+        items: [
+          '优化登录状态持久化逻辑，在同一浏览器登录后，关闭浏览器重新打开可保持登录状态，无需重复登录；更换设备后需要重新验证登录。'
+        ]
+      },
+      {
+        title: '二、图裂问题修复（无损画质，原图、水印均不压缩）',
+        items: [
+          '原图存储统一使用原生Blob存入IndexedDB，废弃base64存储大图方案，避免数据损坏、内存占用过高。',
+          '图片预览渲染逻辑调整，URL.createObjectURL 生成的临时资源地址使用完成后，配套执行资源释放，防止内存溢出。',
+          '图库、多宫格预览增加懒加载机制，仅渲染视口范围内的图片。',
+          '图片渲染增加加载失败兜底捕获，控制台输出错误日志，方便定位损坏资源。',
+          '限制高频读写，拖拽、循环操作中不会重复请求IndexedDB。',
+          '规范渲染流程：原图仅做存储与读取，原图数据不经过Canvas重绘，保障原图画质无损失；Canvas仅用于水印叠加、图片合成环节，水印合成同样保留原始画质，不会压缩水印。'
+        ]
+      },
+      {
+        title: '三、贴膜机、预览机水印相关bug修复与新增功能',
+        items: [
+          '修复水印尺寸异常bug：解决上传水印后尺寸随机放大缩小、无法贴合原图的问题。',
+          '修复水印合成模糊异常bug：解决贴膜后水印发糊、颜色异常加深的问题。',
+          '贴膜机新增底图模糊调节功能：支持对原底图设置模糊参数，为非挥发性模糊效果。',
+          '贴膜机支持多层水印导入：可一次性导入多张贴膜水印，提供图层选择功能，单独调整选中图层水印的位置、参数。'
+        ]
+      },
+      {
+        title: '四、预览机尺寸适配调整',
+        items: [
+          '支持导入任意长宽比例的原图，禁止挤压、拉伸原图，保持原图原始宽高比例。',
+          '自定义尺寸逻辑调整：自定义项跟随原图尺寸识别，不再支持手动输入宽高。',
+          '实时预览框自适应原图尺寸，预览框大小和原图比例保持一致。'
+        ]
+      },
+      {
+        title: '五、图片保存相关优化',
+        items: [
+          '修复批量生成后图片数量不一致、保存至相册数量缺失的bug。',
+          '增加保存提示：iOS设备不建议单独保存PNG格式图片，推荐打包为ZIP保存至文件。'
+        ]
+      },
+      {
+        title: '六、布局分段优化',
+        items: [
+          '更新大屏设备自适应布局规则：平板、电脑端布局统一，实时预览大图单独占用一个分栏，其余功能控件在侧边分栏展示；开启桌面版网站时同样适配该布局。'
+        ]
+      },
+      {
+        title: '七、贴膜机批量生成功能修复与提示优化',
+        items: [
+          '修复贴膜机点击批量生成无响应、进度条不变化的bug。',
+          '批量生成进度增加状态文字提示：处理底图模糊时显示「正在处理原底模糊」，调整水印阶段显示「正在处理水印位置」。'
+        ]
+      }
+    ]
+  },
+  {
+    version: 'v1.2.8',
+    tag: '历史版本',
     date: '2026/10/14',
     sections: [
       {
