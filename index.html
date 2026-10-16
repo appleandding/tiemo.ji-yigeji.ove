@@ -19,6 +19,13 @@
 <script src="https://unpkg.com/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+<!-- 引入 ag-psd 专业 PSD 二进制解析与图层提取引擎 -->
+<script src="https://cdn.jsdelivr.net/npm/ag-psd/dist/bundle.js"></script>
+<script>
+  if (!window.agPsd && !window.readPsd) {
+    document.write('<script src="https://unpkg.com/ag-psd/dist/bundle.js"><\/script>');
+  }
+</script>
 <!-- 引入 Supabase 数据库接口支持库（双通道容灾，国内移动/电信/联通100%畅通） -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -239,9 +246,9 @@ body.has-custom-wallpaper .app-view::after {
   justify-content: center;
   gap: 12px;
 }
+/* 修复：移除锁死高度限制，使用纯比例适配与自适应长宽，彻底根除图片被挤压压扁 */
 .pv-stage-box {
-  width: min(84vw, 320px);
-  max-height: 420px;
+  width: min(84vw, 340px);
   position: relative;
   background: #E2E8F0;
   border-radius: 20px;
@@ -252,18 +259,170 @@ body.has-custom-wallpaper .app-view::after {
   align-items: center;
   justify-content: center;
   touch-action: none;
+  aspect-ratio: 1 / 1;
 }
-.pv-stage-box.ratio-1-1 { aspect-ratio: 1 / 1; }
-.pv-stage-box.ratio-3-4 { aspect-ratio: 3 / 4; }
-.pv-stage-box.ratio-9-16 { aspect-ratio: 9 / 16; height: 380px; }
-.pv-stage-box.ratio-auto { min-height: 260px; }
+.pv-stage-box.ratio-1-1 { aspect-ratio: 1 / 1 !important; }
+.pv-stage-box.ratio-3-4 { aspect-ratio: 3 / 4 !important; }
+.pv-stage-box.ratio-9-16 { aspect-ratio: 9 / 16 !important; }
 
 .pv-canvas-layer {
-  position: absolute;
-  inset: 0;
   width: 100%;
   height: 100%;
+  object-fit: contain;
   display: block;
+}
+
+/* ============ PSD 出图机专属拟态样式 ============ */
+.psd-stage-box {
+  width: min(88vw, 340px);
+  position: relative;
+  border-radius: 20px;
+  border: 1.5px solid var(--glass-border);
+  box-shadow: 0 8px 24px rgba(51,65,85,0.12), var(--glass-shine);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-size: 14px 14px;
+  background-position: 0 0, 0 7px, 7px -7px, -7px 0px;
+  transition: background-color .2s ease;
+}
+.psd-stage-canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* 背景显色调节调色盘条 */
+.psd-bg-tint-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--glass-subtle);
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.psd-bg-tint-row::-webkit-scrollbar { display: none; }
+.psd-color-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform .15s ease;
+}
+.psd-color-dot:active { transform: scale(0.9); }
+.psd-color-dot.active { outline: 2px solid var(--accent); }
+
+/* 文字图层编辑单卡片 */
+.text-layer-edit-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--glass-shine);
+}
+.text-layer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.text-layer-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+.text-layer-meta {
+  font-size: 9.5px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.text-layer-input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--glass-subtle);
+  border: 1px solid var(--glass-border);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  outline: none;
+  font-family: inherit;
+}
+.text-layer-input:focus {
+  background: #FFFFFF;
+  border-color: var(--accent);
+}
+
+/* 署名一键填入快捷流 */
+.sig-quick-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 4px 0;
+}
+.sig-quick-chips::-webkit-scrollbar { display: none; }
+.sig-chip-btn {
+  padding: 5px 11px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--glass-border);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-main);
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: var(--glass-shine);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.sig-chip-btn:active { transform: scale(0.95); }
+
+/* 箱子三栏标签切换 */
+.chest-tab-bar {
+  display: flex;
+  background: var(--glass-subtle);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 3px;
+}
+.chest-tab-btn {
+  flex: 1;
+  padding: 7px 0;
+  border: none;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 11px;
+  transition: all .16s ease;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.chest-tab-btn.active {
+  background: #FFFFFF;
+  color: var(--text-main);
+  box-shadow: 0 1px 4px rgba(100, 116, 139, 0.18);
 }
 
 /* 预览机微调面板 */
@@ -2340,7 +2499,18 @@ body[data-theme="dark"] .auth-tab-btn.active {
         </div>
         <span class="app-name">预览图库</span>
       </div>
-      <div class="app-item"><div class="app-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><span class="app-name">先空置</span></div>
+      <div class="app-item" onclick="openApp('psd_maker')">
+        <div class="app-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+        </div>
+        <span class="app-name">psd出图机</span>
+      </div>
       <div class="app-item"><div class="app-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><span class="app-name">先空置</span></div>
       <div class="app-item"><div class="app-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><span class="app-name">先空置</span></div>
       <div class="app-item"><div class="app-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><span class="app-name">先空置</span></div>
@@ -3626,6 +3796,249 @@ body[data-theme="dark"] .auth-tab-btn.active {
     <div class="modal-actions" style="margin-top:8px;">
       <button class="btn-ghost" onclick="closeAddGroupModal()">取消</button>
       <button class="btn-solid" onclick="confirmAddNewGroup()">确认添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 应用视图 9：PSD 出图机（独立 APP） -->
+<!-- ============================================================ -->
+<section class="app-view" id="app-psd_maker">
+  <!-- psd出图机专属锁定提示弹窗 -->
+  <div id="psdLockModal" class="modal-mask hidden">
+    <div class="modal-card" style="max-width: 300px; text-align: center; align-items: center; padding: 26px 20px 20px;">
+      <div style="width: 58px; height: 58px; border-radius: 20px; background: var(--glass-subtle); border: 1.5px solid var(--glass-border); display: flex; align-items: center; justify-content: center; color: var(--accent); box-shadow: var(--glass-shine); margin-bottom: 8px;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
+      <div style="font-size: 15px; font-weight: 800; color: var(--text-main); margin-top: 4px;">psd出图机功能还未完善</div>
+      <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-top: 4px;">尽请期待</div>
+      <div style="width: 100%; margin-top: 18px;">
+        <button type="button" class="primary-btn" onclick="closePsdLockModal()" style="padding: 11px; font-size: 12.5px; border-radius: 14px;">我知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-header">
+    <button class="back-btn" onclick="closeApp('psd_maker')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="app-title">psd出图机</div>
+    <div class="app-header-right">
+      <!-- 右上角小箱子图标：全屏打开 PSD 素材箱与署名记录 -->
+      <button class="round-add-btn" onclick="openPsdChestView()" title="全屏打开素材箱与署名记录" style="width:34px; height:34px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="21 8 21 21 3 21 3 8"></polyline>
+          <rect x="1" y="3" width="22" height="5"></rect>
+          <line x1="10" y1="12" x2="14" y2="12"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <!-- 第一行按键：系统文件导入 PSD、系统文件导入字体 -->
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+      <button class="action-btn" onclick="document.getElementById('psdTemplateFileInput').click()" title="呼出手机系统文件管理器">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          <line x1="12" y1="11" x2="12" y2="17"></line>
+          <line x1="9" y1="14" x2="15" y2="14"></line>
+        </svg>
+        <span id="psdLoadBtnText">系统文件导入 PSD</span>
+      </button>
+
+      <button class="action-btn" onclick="document.getElementById('psdFontFileInput').click()" title="呼出手机系统文件管理器">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="4 7 4 4 20 4 20 7"></polyline>
+          <line x1="9" y1="20" x2="15" y2="20"></line>
+          <line x1="12" y1="4" x2="12" y2="20"></line>
+        </svg>
+        <span>导入字体文件</span>
+      </button>
+    </div>
+
+    <!-- 实时预览舞台（不限宽高比，自适应 PSD 画布真实尺寸） -->
+    <div class="card" style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+      <div class="card-title-row" style="width:100%;">
+        <div class="card-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <span id="psdStageInfoTitle">实时效果预览视窗 (自适应PSD原长宽)</span>
+        </div>
+        <button class="mini-btn ghost" id="psdViewAllLayersBtn" onclick="openPsdAllLayersModal()" style="display:none;">查看图层(0)</button>
+      </div>
+
+      <!-- 调预览框背景颜色条（仅方便在透明底看清文字，导出仍为原生透明底） -->
+      <div class="psd-bg-tint-row">
+        <span style="font-size:10px; font-weight:800; color:var(--text-muted); white-space:nowrap;">预览显色：</span>
+        <div class="psd-color-dot active checker" onclick="setPsdPreviewBg('checker')" title="透明棋盘底"></div>
+        <div class="psd-color-dot" style="background:#0F172A;" onclick="setPsdPreviewBg('#0F172A')" title="暗黑底"></div>
+        <div class="psd-color-dot" style="background:#FFFFFF;" onclick="setPsdPreviewBg('#FFFFFF')" title="纯白底"></div>
+        <div class="psd-color-dot" style="background:#FCE7F3;" onclick="setPsdPreviewBg('#FCE7F3')" title="柔粉底"></div>
+        <div class="psd-color-dot" style="background:#E0F2FE;" onclick="setPsdPreviewBg('#E0F2FE')" title="浅蓝底"></div>
+        <div class="psd-color-dot" style="background:#DCFCE7;" onclick="setPsdPreviewBg('#DCFCE7')" title="浅绿底"></div>
+        <span style="font-size:9px; color:var(--text-light); margin-left:auto; white-space:nowrap;">导出保持透明</span>
+      </div>
+
+      <div id="psdStageBox" class="psd-stage-box checker">
+        <canvas id="psdStageCanvas" class="psd-stage-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- 快捷署名快速点选填入条 -->
+    <div class="card" id="psdQuickSigBar" style="padding:10px 12px; display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+        <span style="font-size:11px; font-weight:800; color:var(--text-muted);">快捷载入已存署名：</span>
+        <button class="mini-btn ghost" onclick="openAddSigModal()" style="padding:1px 6px; font-size:9.5px;">+ 新建署名</button>
+      </div>
+      <div class="sig-quick-chips" id="psdQuickSigChips"></div>
+    </div>
+
+    <!-- 自动识别拆分出的可修改文字图层列表 -->
+    <div class="card" id="psdTextLayersCard" style="display:none;">
+      <div class="card-title-row" style="margin-bottom:8px;">
+        <div class="card-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span>识别可修改文字图层 (<span id="psdEditableCount">0</span>)</span>
+        </div>
+      </div>
+      <div id="psdTextLayersList" style="display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+
+    <!-- 一键出图按钮 -->
+    <button id="psdExportBtn" class="primary-btn" onclick="exportPsdPng()" style="display:none;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+      <span>点击导出透明底 PNG</span>
+    </button>
+  </div>
+</section>
+
+<!-- 隐藏文件输入：PSD 模板统一强制调起手机系统“文件”管理器（杜绝相册拦截，直通 iOS文件 / 安卓文件管理） -->
+<input type="file" id="psdTemplateFileInput" class="hidden-file-input" accept=".psd,application/x-photoshop,image/vnd.adobe.photoshop,application/octet-stream" onchange="handlePsdTemplateFile(event)">
+<input type="file" id="psdFontFileInput" class="hidden-file-input" accept=".ttf,.otf,.woff,.woff2,font/*" multiple onchange="handlePsdFontFile(event)">
+
+<!-- ============================================================ -->
+<!-- 应用视图 9.5：PSD 素材箱与署名记录（全新全屏模式 APP，带大图预览） -->
+<!-- ============================================================ -->
+<section class="app-view" id="app-psd_chest">
+  <div class="app-header">
+    <button class="back-btn" onclick="closePsdChestView()">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="app-title">PSD素材箱与署名记录</div>
+    <div class="app-header-right">
+      <span class="mini-badge ready"><span class="bdot"></span><span>全屏浏览</span></span>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <!-- 三栏标签切换（全屏胶囊条） -->
+    <div class="chest-tab-bar" style="margin-bottom:6px;">
+      <button type="button" class="chest-tab-btn active" id="chestTabPsd" onclick="switchChestTab('psd')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+        <span>存储 PSD 原件</span>
+      </button>
+      <button type="button" class="chest-tab-btn" id="chestTabFonts" onclick="switchChestTab('fonts')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        <span>导入字体</span>
+      </button>
+      <button type="button" class="chest-tab-btn" id="chestTabSigs" onclick="switchChestTab('sigs')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>署名记录</span>
+      </button>
+    </div>
+
+    <!-- 分区 1：PSD 原件（大图网格/卡片列表，直观呈现设计排版） -->
+    <div id="chestPsdSection" style="display:flex; flex-direction:column; gap:10px;">
+      <div class="sec-head">
+        <h3>已保存 PSD 模板出图布局</h3>
+        <span class="sub" id="chestPsdCountLabel" style="font-size:11px;">0 个模板</span>
+      </div>
+      <div id="chestPsdListContainer" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </div>
+
+    <!-- 分区 2：字体管理 -->
+    <div id="chestFontsSection" style="display:none; flex-direction:column; gap:10px;">
+      <div class="sec-head">
+        <div>
+          <h3>已导入字体库</h3>
+          <div class="sub">出图机可自由选择或一键切换指定图层字体</div>
+        </div>
+        <button class="mini-btn" onclick="document.getElementById('psdFontFileInput').click()">+ 添加字体</button>
+      </div>
+      <div id="chestFontsListContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+
+    <!-- 分区 3：署名记录 -->
+    <div id="chestSigsSection" style="display:none; flex-direction:column; gap:10px;">
+      <div class="sec-head">
+        <div>
+          <h3>常用署名记录</h3>
+          <div class="sub">单字、双字、英文与 QQ 号一键填入</div>
+        </div>
+        <button class="mini-btn" onclick="openAddSigModal()">+ 添加署名</button>
+      </div>
+      <div id="chestSigsListContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 图层清单查看弹窗（默认折叠，点击展开） ============ -->
+<div id="psdAllLayersModal" class="modal-mask hidden">
+  <div class="modal-card" style="max-height:80vh; max-width:380px;">
+    <div class="modal-head">
+      <div>
+        <h3 style="font-size:13px; font-weight:800;">PSD 图层清单</h3>
+        <p>1:1 识别全部图层层级、类型与样式</p>
+      </div>
+      <button class="x-btn" onclick="closePsdAllLayersModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-scroll" id="psdAllLayersList" style="display:flex; flex-direction:column; gap:6px;"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closePsdAllLayersModal()">我知道了</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 添加署名记录弹窗 ============ -->
+<div id="addSigModal" class="modal-mask hidden">
+  <div class="modal-card" style="max-width:330px;">
+    <div class="modal-head">
+      <div>
+        <h3 style="font-size:13px; font-weight:800;">添加常用署名记录</h3>
+        <p>方便在出图机一键填入署名与QQ号</p>
+      </div>
+      <button class="x-btn" onclick="closeAddSigModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="field" style="margin-top:4px;">
+      <label>单字署名（选填）</label>
+      <input type="text" id="sigSingleInput" placeholder="如：呆">
+    </div>
+    <div class="field">
+      <label>双字署名 / 常用署名</label>
+      <input type="text" id="sigDoubleInput" placeholder="如：兔耳">
+    </div>
+    <div class="field">
+      <label>英文署名（选填）</label>
+      <input type="text" id="sigEnInput" placeholder="如：drizzle">
+    </div>
+    <div class="field">
+      <label>QQ 号码</label>
+      <input type="number" id="sigQQInput" placeholder="如：10001">
+    </div>
+    <div class="modal-actions" style="margin-top:6px;">
+      <button class="btn-ghost" onclick="closeAddSigModal()">取消</button>
+      <button class="btn-solid" onclick="confirmSaveSigRecord()">保存署名</button>
     </div>
   </div>
 </div>
@@ -4932,7 +5345,7 @@ async function confirmFolderRename() {
 ================================================================ */
 const DrizzleDB = {
   dbName: 'drizzle_permanent_store',
-  dbVersion: 6,
+  dbVersion: 7, // 升级至版本 7：加入 PSD 模板原件、本地字体库与署名记录永久存储
   db: null,
   async init() {
     return new Promise((resolve, reject) => {
@@ -4948,9 +5361,97 @@ const DrizzleDB = {
         if (!db.objectStoreNames.contains('threshold_records')) db.createObjectStore('threshold_records', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('contact_groups')) db.createObjectStore('contact_groups', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('contacts_store')) db.createObjectStore('contacts_store', { keyPath: 'id' });
+        // 新增三个专属表
+        if (!db.objectStoreNames.contains('psd_templates')) db.createObjectStore('psd_templates', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('psd_fonts')) db.createObjectStore('psd_fonts', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('psd_signatures')) db.createObjectStore('psd_signatures', { keyPath: 'id' });
       };
       req.onsuccess = (e) => { this.db = e.target.result; resolve(this.db); };
       req.onerror = (e) => reject(e);
+    });
+  },
+  // PSD 原件持久化
+  async savePsdTemplate(tpl) {
+    if (!this.db) await this.init();
+    return new Promise((res, rej) => {
+      const tx = this.db.transaction('psd_templates', 'readwrite');
+      tx.objectStore('psd_templates').put(tpl);
+      tx.oncomplete = () => res();
+      tx.onerror = (e) => rej(e);
+    });
+  },
+  async getAllPsdTemplates() {
+    if (!this.db) await this.init();
+    return new Promise((res, rej) => {
+      const tx = this.db.transaction('psd_templates', 'readonly');
+      const req = tx.objectStore('psd_templates').getAll();
+      req.onsuccess = () => res(req.result || []);
+      req.onerror = (e) => rej(e);
+    });
+  },
+  async deletePsdTemplate(id) {
+    if (!this.db) await this.init();
+    return new Promise((res, rej) => {
+      const tx = this.db.transaction('psd_templates', 'readwrite');
+      tx.objectStore('psd_templates').delete(id);
+      tx.oncomplete = () => res();
+      tx.onerror = (e) => rej(e);
+    });
+  },
+  // 字体持久化
+  async savePsdFont(font) {
+    if (!this.db) await this.init();
+    return new Promise((res, rej) => {
+      const tx = this.db.transaction('psd_fonts', 'readwrite');
+      tx.objectStore('psd_fonts').put(font);
+      tx.oncomplete = () => res();
+      tx.onerror = (e) => rej(e);
+    });
+  },
+  async getAllPsdFonts() {
+    if (!this.db) await this.init();
+    return new Promise((res, rej) => {
+      const tx = this.db.transaction('psd_fonts', 'readonly');
+      const req = tx.objectStore('psd_fonts').getAll();
+      req.onsuccess = () => res(req.result || []);
+      req.onerror = (e) => rej(e);
+    });
+  },
+  async deletePsdFont(id) {
+    if (!this.db) await this.init();
+    return new Promise((res, rej) => {
+      const tx = this.db.transaction('psd_fonts', 'readwrite');
+      tx.objectStore('psd_fonts').delete(id);
+      tx.oncomplete = () => res();
+      tx.onerror = (e) => rej(e);
+    });
+  },
+  // 署名记录持久化
+  async savePsdSignature(sig) {
+    if (!this.db) await this.init();
+    return new Promise((res, rej) => {
+      const tx = this.db.transaction('psd_signatures', 'readwrite');
+      tx.objectStore('psd_signatures').put(sig);
+      tx.oncomplete = () => res();
+      tx.onerror = (e) => rej(e);
+    });
+  },
+  async getAllPsdSignatures() {
+    if (!this.db) await this.init();
+    return new Promise((res, rej) => {
+      const tx = this.db.transaction('psd_signatures', 'readonly');
+      const req = tx.objectStore('psd_signatures').getAll();
+      req.onsuccess = () => res(req.result || []);
+      req.onerror = (e) => rej(e);
+    });
+  },
+  async deletePsdSignature(id) {
+    if (!this.db) await this.init();
+    return new Promise((res, rej) => {
+      const tx = this.db.transaction('psd_signatures', 'readwrite');
+      tx.objectStore('psd_signatures').delete(id);
+      tx.oncomplete = () => res();
+      tx.onerror = (e) => rej(e);
     });
   },
   async saveContactGroups(groups) {
@@ -5544,6 +6045,18 @@ function openApp(name) {
   if (name === 'contacts') renderContactsView();
   if (name === 'previewer') renderPreviewStage();
   if (name === 'preview_gallery') { backToPvGalleryList(); renderPvGallery(); }
+  if (name === 'psd_maker') {
+    loadPsdLocalAssets();
+    const lockModal = document.getElementById('psdLockModal');
+    if (lockModal) lockModal.classList.remove('hidden');
+  }
+}
+
+// 关闭锁定弹窗并自动返回主页
+function closePsdLockModal() {
+  const lockModal = document.getElementById('psdLockModal');
+  if (lockModal) lockModal.classList.add('hidden');
+  closeApp('psd_maker');
 }
 
 /* ================================================================
@@ -9814,41 +10327,40 @@ function setPreviewRatio(ratio) {
   const customRow = document.getElementById('pvCustomRatioRow');
   if (customRow) customRow.classList.toggle('hidden', ratio !== 'custom');
 
-  // 模式切换时自适应调整舞台
+  // 核心修复：彻底清空残余的 CSS 强制 aspect-ratio class，完全由内联宽高比精准驱动
   const stageBox = document.getElementById('pvStageBox');
-  if (ratio === '1-1') {
-    if (stageBox) { stageBox.style.aspectRatio = '1 / 1'; }
-  } else if (ratio === '3-4') {
-    if (stageBox) { stageBox.style.aspectRatio = '3 / 4'; }
-  } else if (ratio === '9-16') {
-    if (stageBox) { stageBox.style.aspectRatio = '9 / 16'; }
-  } else if (ratio === 'custom') {
-    // 自适应原图长宽度模式：直接自动获取底图实际尺寸
-    updatePvCustomRatioFromBaseImage();
+  if (stageBox) {
+    stageBox.classList.remove('ratio-1-1', 'ratio-3-4', 'ratio-9-16', 'ratio-auto');
+    if (ratio === '1-1') {
+      stageBox.style.aspectRatio = '1 / 1';
+    } else if (ratio === '3-4') {
+      stageBox.style.aspectRatio = '3 / 4';
+    } else if (ratio === '9-16') {
+      stageBox.style.aspectRatio = '9 / 16';
+    } else if (ratio === 'custom') {
+      updatePvCustomRatioFromBaseImage();
+    }
   }
   renderPreviewStage();
 }
 
-/* 自动从当前底图提取真实尺寸，实时应用到预览舞台视窗 */
+/* 核心修复：自动从当前底图提取真实尺寸，实时驱动视口与画布，绝不挤压变形 */
 function updatePvCustomRatioFromBaseImage() {
   const stageBox = document.getElementById('pvStageBox');
   const tag = document.getElementById('pvAutoMatchedRatioTag');
 
-  if (pvBaseImages.length > 0 && pvFirstBaseImgObj) {
-    const nw = pvFirstBaseImgObj.naturalWidth || 1080;
-    const nh = pvFirstBaseImgObj.naturalHeight || 1080;
-    pvCustomRatioVal = { w: nw, h: nh };
-    if (stageBox) stageBox.style.aspectRatio = `${nw} / ${nh}`;
-    if (tag) tag.innerText = `${nw} × ${nh} px (100% 原生等比)`;
-  } else if (pvBaseImages.length > 0) {
+  if (pvBaseImages.length > 0) {
+    const currentSrc = pvBaseImages[0].src;
     const tmp = new Image();
     tmp.onload = () => {
-      pvCustomRatioVal = { w: tmp.naturalWidth, h: tmp.naturalHeight };
-      if (stageBox) stageBox.style.aspectRatio = `${tmp.naturalWidth} / ${tmp.naturalHeight}`;
-      if (tag) tag.innerText = `${tmp.naturalWidth} × ${tmp.naturalHeight} px (100% 原生等比)`;
+      const nw = tmp.naturalWidth || 1080;
+      const nh = tmp.naturalHeight || 1080;
+      pvCustomRatioVal = { w: nw, h: nh };
+      if (stageBox) stageBox.style.aspectRatio = `${nw} / ${nh}`;
+      if (tag) tag.innerText = `${nw} × ${nh} px (100% 原图等比)`;
       renderPreviewStage();
     };
-    tmp.src = pvBaseImages[0].src;
+    tmp.src = currentSrc;
   } else {
     pvCustomRatioVal = { w: 1080, h: 1080 };
     if (stageBox) stageBox.style.aspectRatio = '1 / 1';
@@ -10279,14 +10791,15 @@ async function renderPreviewStage() {
           const by = (H - bh) / 2 + pvBaseOffsetY * (H / 320);
           ctx.drawImage(pvFirstBaseImgObj, bx, by, bw, bh);
 
-          // 常规单图贴膜
+          // 核心修复：采用与贴膜机相同的 drawRepeatedWatermarkLayer 技术，长图/横图绝不被压扁或拉伸
           const activeWm = pvWatermarkImg || watermarkImg;
           if (pvIsWmOverlayEnabled && activeWm) {
             const wmOp = parseFloat(document.getElementById('pvWmOpacityInput')?.value || 15) / 100;
             ctx.save();
             ctx.globalAlpha = wmOp;
             ctx.globalCompositeOperation = 'overlay';
-            ctx.drawImage(activeWm, bx, by, bw, bh);
+            // 点对点等比高保真平铺映射，保持与贴膜机 100% 相同视觉尺寸
+            drawRepeatedWatermarkLayer(ctx, activeWm, W, H, pvBaseScale, 0, pvBaseOffsetX * (W / 320), pvBaseOffsetY * (H / 320));
             ctx.restore();
           }
         }
@@ -10901,7 +11414,746 @@ async function downloadPvBatchZip() {
   const zipBlob = await zip.generateAsync({ type: 'blob' });
   saveAs(zipBlob, `预览图集合_${Date.now()}.zip`);
 }
+/* ================================================================
+   PSD 出图机全套核心处理引擎（1:1 还原文字排版、滤镜样式、透明底无损渲染）
+================================================================ */
+let currentPsdObject = null;
+let currentPsdLayersFlattened = [];
+let psdEditableTextLayers = []; // 自动提取的可修改文字图层
+let psdLoadedFonts = [];        // 已载入字体列表 [{ id, name, family, blob }]
+let psdSavedSignatures = [];    // 署名列表 [{ id, single, double, en, qq }]
+let currentPsdPreviewBg = 'checker'; // 'checker' | '#0F172A' | '#FFFFFF' 等
 
+// 打开出图机主入口
+function openPsdMaker() {
+  openApp('psd_maker');
+  loadPsdLocalAssets();
+}
+
+// 载入持久化资产
+async function loadPsdLocalAssets() {
+  try {
+    psdLoadedFonts = await DrizzleDB.getAllPsdFonts();
+    for (const f of psdLoadedFonts) {
+      registerFontFace(f.name, f.blob);
+    }
+    psdSavedSignatures = await DrizzleDB.getAllPsdSignatures();
+    renderQuickSigChips();
+  } catch (e) {
+    console.warn('PSD 资源载入提示:', e);
+  }
+}
+
+// 注册 FontFace 字体到页面运行环境
+function registerFontFace(fontName, blob) {
+  try {
+    const fontUrl = URL.createObjectURL(blob);
+    const font = new FontFace(fontName, `url(${fontUrl})`);
+    font.load().then(loaded => {
+      document.fonts.add(loaded);
+      if (currentPsdObject) renderPsdCanvas();
+    }).catch(err => console.warn('字体装载提示:', err));
+  } catch (err) {}
+}
+
+// ==================== PSD 出图机 1:1 复合渲染与全屏素材箱引擎 ====================
+let currentPsdCompositeCanvas = null; // 缓存 Photoshop 导出的原生完整复合大图（包含雪花、日文等全部底图元素）
+
+// 打开与关闭全屏素材箱
+function openPsdChestView() {
+  openApp('psd_chest');
+  renderChestPsdList();
+  renderChestFontsList();
+  renderChestSigsList();
+}
+function closePsdChestView() {
+  closeApp('psd_chest');
+}
+
+// 导入 PSD 模板文件（来自系统文件管理器，自动截取高清出图布局预览图）
+async function handlePsdTemplateFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (!file.name.toLowerCase().endsWith('.psd') && file.type && !file.type.includes('photoshop')) {
+    alert('提示：请从手机系统“文件”中选择后缀为 .psd 的工程模板！');
+    e.target.value = '';
+    return;
+  }
+
+  const btnText = document.getElementById('psdLoadBtnText');
+  if (btnText) btnText.innerText = '正在解析 PSD…';
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const readFn = (window.agPsd && window.agPsd.readPsd) || window.readPsd;
+    if (!readFn) {
+      alert('PSD 解析引擎尚未就绪，请检查网络加载后重试。');
+      return;
+    }
+
+    const psd = readFn(arrayBuffer);
+    currentPsdObject = psd;
+
+    // 提取 Photoshop 自带的原生 100% 完整排版复合大图（这就是 P1 效果的真实来源）
+    let previewDataUrl = '';
+    if (psd.canvas) {
+      currentPsdCompositeCanvas = psd.canvas;
+      try {
+        // 生成轻量高质量出图布局预览图，供素材箱全屏展示
+        const thumbCanvas = document.createElement('canvas');
+        const maxDim = 480;
+        const scale = Math.min(1.0, maxDim / Math.max(psd.width, psd.height));
+        thumbCanvas.width = Math.round(psd.width * scale);
+        thumbCanvas.height = Math.round(psd.height * scale);
+        const tctx = thumbCanvas.getContext('2d');
+        tctx.drawImage(psd.canvas, 0, 0, thumbCanvas.width, thumbCanvas.height);
+        previewDataUrl = thumbCanvas.toDataURL('image/jpeg', 0.88);
+      } catch (e) {}
+    }
+
+    // 持久化保存到数据库（附带真实的布局缩略图）
+    const tplData = {
+      id: `psd_${Date.now()}`,
+      name: file.name.replace(/\.[^.]+$/, ''),
+      size: file.size,
+      width: psd.width,
+      height: psd.height,
+      previewUrl: previewDataUrl,
+      blob: file,
+      timestamp: Date.now()
+    };
+    await DrizzleDB.savePsdTemplate(tplData);
+
+    loadPsdModelIntoStage(psd, tplData.name);
+  } catch (err) {
+    console.error('PSD 读取解析异常:', err);
+    alert('PSD 解析遇到问题：' + (err.message || '文件损坏或非标准PSD'));
+  } finally {
+    if (btnText) btnText.innerText = '系统文件导入 PSD';
+    e.target.value = '';
+  }
+}
+
+// 递归遍历所有图层（绑定父级图层组，用于向下继承滤镜样式）
+function extractPsdLayersRecursive(node, list = [], parentGroup = null) {
+  if (!node) return list;
+  if (node.children && Array.isArray(node.children)) {
+    for (let i = 0; i < node.children.length; i++) {
+      extractPsdLayersRecursive(node.children[i], list, node);
+    }
+  } else {
+    node.parentGroup = parentGroup; // 记录父文件夹，方便提取文件夹上的滤镜描边与投影
+    list.push(node);
+  }
+  return list;
+}
+
+// 提取文字坐标与对齐方式
+function extractTextLayerPosition(layer, docW, docH) {
+  let left = layer.left || 0;
+  let top = layer.top || 0;
+  let right = layer.right || docW;
+  let bottom = layer.bottom || docH;
+
+  // 如果包含文字专属矩阵变换参数，以矩阵位移为准
+  if (layer.text && layer.text.transform && layer.text.transform.length >= 6) {
+    left = layer.text.transform[4] || left;
+    top = layer.text.transform[5] || top;
+  }
+  return { left, top, right, bottom, width: Math.max(20, right - left), height: Math.max(20, bottom - top) };
+}
+
+// 提取原图层字体大小
+function extractLayerFontSize(layer) {
+  if (layer.text && layer.text.style && layer.text.style.fontSize) {
+    return Math.round(layer.text.style.fontSize);
+  }
+  return 36;
+}
+
+// 提取原图层颜色
+function extractLayerFontColor(layer) {
+  if (layer.text && layer.text.style && layer.text.style.fillColor) {
+    const c = layer.text.style.fillColor;
+    if (c.r !== undefined) return `rgb(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)})`;
+  }
+  return '#1E293B';
+}
+
+// 装载 PSD 到主工作视口（1:1 提取多行排版、精确图层坐标）
+function loadPsdModelIntoStage(psd, docName) {
+  // ag-psd 提取图层（顺序为从上到下）
+  currentPsdLayersFlattened = extractPsdLayersRecursive(psd, []);
+
+  // 1. 画布舞台按 PSD 真实比例自适应
+  const stageBox = document.getElementById('psdStageBox');
+  if (stageBox) {
+    stageBox.style.aspectRatio = `${psd.width} / ${psd.height}`;
+  }
+
+  const infoTitle = document.getElementById('psdStageInfoTitle');
+  if (infoTitle) infoTitle.innerText = `${docName} (${psd.width}×${psd.height}px)`;
+
+  // 2. 智能识别可修改文字图层
+  psdEditableTextLayers = [];
+  currentPsdLayersFlattened.forEach((layer, idx) => {
+    // 包含文字数据或美化圈常见署名/QQ命名
+    if (layer.text || (layer.name && /(署名|名字|qq|群号|水印|id|寺泷|雪|2190)/i.test(layer.name))) {
+      let rawText = '';
+      if (layer.text && layer.text.text) {
+        rawText = layer.text.text.replace(/\r/g, '\n').trim();
+      } else {
+        rawText = layer.name.trim();
+      }
+
+      // 提取图层位置
+      const left = layer.left !== undefined ? layer.left : 0;
+      const top = layer.top !== undefined ? layer.top : 0;
+      const right = layer.right !== undefined ? layer.right : (left + 200);
+      const bottom = layer.bottom !== undefined ? layer.bottom : (top + 100);
+
+      const isMultiline = rawText.includes('\n') || (rawText.length === 4 && (bottom - top) > (right - left) * 0.7);
+
+      psdEditableTextLayers.push({
+        layerIndex: idx,
+        layerRef: layer,
+        name: layer.name || `文字图层_${idx}`,
+        originalText: rawText,
+        currentText: rawText,
+        fontSize: extractLayerFontSize(layer),
+        fontColor: extractLayerFontColor(layer),
+        fontFamily: (layer.text && layer.text.font && layer.text.font.name) || 'sans-serif',
+        overrideFont: '',
+        isMultiline: isMultiline,
+        box: { left, top, right, bottom, width: right - left, height: bottom - top }
+      });
+    }
+  });
+
+  // 更新面板可见性
+  const textCard = document.getElementById('psdTextLayersCard');
+  const countSpan = document.getElementById('psdEditableCount');
+  const exportBtn = document.getElementById('psdExportBtn');
+  const viewAllBtn = document.getElementById('psdViewAllLayersBtn');
+  const sigBar = document.getElementById('psdQuickSigBar');
+
+  if (textCard) textCard.style.display = psdEditableTextLayers.length > 0 ? 'block' : 'none';
+  if (countSpan) countSpan.innerText = psdEditableTextLayers.length;
+  if (exportBtn) exportBtn.style.display = 'flex';
+  if (viewAllBtn) {
+    viewAllBtn.style.display = 'inline-block';
+    viewAllBtn.innerText = `查看图层(${currentPsdLayersFlattened.length})`;
+  }
+  if (sigBar) sigBar.style.display = 'block';
+
+  renderPsdTextLayersEditList();
+  renderPsdCanvas();
+}
+
+// 通用解析 PSD 滤镜颜色为 rgba 格式
+function parsePsdColorToRgba(c, defaultAlpha = 1, fallback = '#1E293B') {
+  if (!c) return fallback;
+  if (typeof c === 'string') return c;
+  if (c.r !== undefined && c.g !== undefined && c.b !== undefined) {
+    const a = c.a !== undefined ? c.a : defaultAlpha;
+    return `rgba(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)}, ${a})`;
+  }
+  if (c.k !== undefined) {
+    const v = Math.round((1 - c.k / 255) * 255);
+    return `rgba(${v}, ${v}, ${v}, ${defaultAlpha})`;
+  }
+  return fallback;
+}
+
+// 核心重构：彻底解决白屏，以原生复合底图为基底，精准吸色无痕抹除旧字并完整还原滤镜样式
+function renderPsdCanvas(exportTargetCanvas = null) {
+  if (!currentPsdObject) return;
+  const canvas = exportTargetCanvas || document.getElementById('psdStageCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  canvas.width = currentPsdObject.width;
+  canvas.height = currentPsdObject.height;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  // 1. 始终以 Photoshop 原生 100% 复合大图为基底（雪花、线条、日文质感、背景永远不丢，绝不白屏）
+  const baseImg = currentPsdCompositeCanvas || currentPsdObject.canvas;
+  if (!baseImg) return;
+  ctx.drawImage(baseImg, 0, 0, canvas.width, canvas.height);
+
+  // 临时取色画布：用于智能探测旧字背后的真实底色（透明还是灰底）
+  const probeCanvas = document.createElement('canvas');
+  probeCanvas.width = canvas.width;
+  probeCanvas.height = canvas.height;
+  const probeCtx = probeCanvas.getContext('2d');
+  probeCtx.drawImage(baseImg, 0, 0);
+
+  // 2. 遍历被修改的文字图层，执行“无痕去旧字 + 滤镜样式 1:1 覆写”
+  psdEditableTextLayers.forEach(edited => {
+    if (edited.currentText === edited.originalText) return; // 没改过的文字 100% 原样保留
+
+    const layer = edited.layerRef;
+    const box = edited.box;
+
+    // 计算旧字的外扩抹除区域
+    const pad = Math.max(8, Math.round(edited.fontSize * 0.15));
+    const cleanX = Math.max(0, box.left - pad);
+    const cleanY = Math.max(0, box.top - pad);
+    const cleanW = Math.min(canvas.width - cleanX, box.width + pad * 2);
+    const cleanH = Math.min(canvas.height - cleanY, box.height + pad * 2);
+
+    // 智能采样文字外围 4 个角的像素，判断背景是纯透明还是有底色
+    const sampleX = Math.max(0, cleanX - 4);
+    const sampleY = Math.max(0, cleanY - 4);
+    const pData = probeCtx.getImageData(sampleX, sampleY, 1, 1).data;
+    const isBgTransparent = pData[3] < 15; // Alpha 极低说明背景是透明底
+
+    if (isBgTransparent) {
+      // 透明底模板：用 clearRect 清空旧文字为透明底，背景保持透明
+      ctx.clearRect(cleanX, cleanY, cleanW, cleanH);
+    } else {
+      // 带底色模板（如灰底雪花模板）：用采样到的背景底色填补旧字，无缝融合无破洞
+      ctx.fillStyle = `rgba(${pData[0]}, ${pData[1]}, ${pData[2]}, ${pData[3] / 255})`;
+      ctx.fillRect(cleanX, cleanY, cleanW, cleanH);
+    }
+
+    // 3. 【完整提取图层与父文件夹的滤镜样式】：描边、投影、外发光
+    const effects = (layer.effects && !layer.effects.disabled) ? layer.effects :
+                    (layer.parentGroup && layer.parentGroup.effects && !layer.parentGroup.effects.disabled) ? layer.parentGroup.effects : {};
+
+    ctx.save();
+
+    // 字体匹配策略：优先用户导入的字体，其次智能衬线/无衬线回退
+    const fontSize = edited.fontSize || 36;
+    let fontFamily = edited.overrideFont || '';
+    if (!fontFamily) {
+      const origFont = (edited.fontFamily || layer.name || '').toLowerCase();
+      if (origFont.includes('宋') || origFont.includes('serif') || origFont.includes('明朝')) {
+        fontFamily = '"Songti SC", "SimSun", "STSong", "Source Han Serif SC", serif';
+      } else {
+        fontFamily = '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif';
+      }
+    }
+
+    ctx.font = `bold ${fontSize}px ${fontFamily}`;
+    ctx.fillStyle = edited.fontColor || '#1E293B';
+
+    // 排版换行计算（4个字双行署名智能 2x2 排列）
+    let textToDraw = edited.currentText;
+    if (edited.isMultiline && !textToDraw.includes('\n') && textToDraw.length === 4) {
+      textToDraw = textToDraw.slice(0, 2) + '\n' + textToDraw.slice(2);
+    }
+
+    const lines = textToDraw.split('\n');
+    const lineHeight = fontSize * 1.15;
+    const totalH = lines.length * lineHeight;
+    const centerX = box.left + box.width / 2;
+    const centerY = box.top + box.height / 2;
+    const startY = centerY - totalH / 2 + fontSize * 0.82;
+
+    ctx.textAlign = 'center';
+
+    // 滤镜 1：投影（Drop Shadow）
+    if (effects.dropShadow && effects.dropShadow.length > 0) {
+      const sh = effects.dropShadow[0];
+      if (sh.enabled !== false) {
+        ctx.shadowColor = parsePsdColorToRgba(sh.color, sh.opacity || 0.6, 'rgba(0,0,0,0.5)');
+        ctx.shadowBlur = sh.size !== undefined ? sh.size : 8;
+        const angle = (sh.angle !== undefined ? sh.angle : 120) * Math.PI / 180;
+        const dist = sh.distance !== undefined ? sh.distance : 4;
+        ctx.shadowOffsetX = Math.cos(angle) * dist;
+        ctx.shadowOffsetY = Math.sin(angle) * dist;
+      }
+    }
+
+    // 滤镜 2：描边（Stroke）
+    const hasStroke = effects.stroke && effects.stroke.length > 0 && effects.stroke[0].enabled !== false;
+    let strokeColor = '#FFFFFF';
+    let strokeWidth = 2;
+    if (hasStroke) {
+      const str = effects.stroke[0];
+      strokeColor = parsePsdColorToRgba(str.color, str.opacity || 1.0, '#FFFFFF');
+      strokeWidth = Math.max(1, (str.size || 2) * 2);
+    }
+
+    // 绘制多行文本并叠加描边
+    lines.forEach((lineStr, lineIdx) => {
+      const curY = startY + lineIdx * lineHeight;
+      if (hasStroke) {
+        ctx.save();
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = strokeWidth;
+        ctx.lineJoin = 'round';
+        ctx.miterLimit = 2;
+        ctx.strokeText(lineStr, centerX, curY);
+        ctx.restore();
+      }
+      ctx.fillText(lineStr, centerX, curY);
+    });
+
+    ctx.restore();
+  });
+
+  probeCanvas.width = 0; probeCanvas.height = 0;
+}
+
+// 导出纯净透明底 PNG
+async function exportPsdPng() {
+  if (!currentPsdObject) return;
+  const offscreen = document.createElement('canvas');
+  renderPsdCanvas(offscreen);
+
+  // 命名规则：使用当前替换后的署名内容组合
+  const sigParts = psdEditableTextLayers.map(t => t.currentText.trim()).filter(Boolean);
+  const nameBase = sigParts.length > 0 ? sigParts.join('_') : 'psd_export';
+  const fileName = `[${nameBase}].png`;
+
+  const blob = await new Promise(res => offscreen.toBlob(res, 'image/png'));
+  saveAs(blob, fileName);
+  offscreen.width = 0; offscreen.height = 0;
+
+  alert(`已成功导出无损【透明底 PNG】！\n文件名为：${fileName}`);
+}
+
+// 渲染可改文字图层列表（支持双行/多行排版与智能署名识别）
+function renderPsdTextLayersEditList() {
+  const container = document.getElementById('psdTextLayersList');
+  if (!container) return;
+  container.innerHTML = '';
+
+  psdEditableTextLayers.forEach((item, index) => {
+    const card = document.createElement('div');
+    card.className = 'text-layer-edit-card';
+
+    let fontOptions = `<option value="">自动匹配系统/已导入字体</option>`;
+    psdLoadedFonts.forEach(f => {
+      fontOptions += `<option value="${f.name}" ${item.overrideFont === f.name ? 'selected' : ''}>${f.name}</option>`;
+    });
+
+    const isMultiline = item.isMultiline || item.currentText.includes('\n');
+
+    card.innerHTML = `
+      <div class="text-layer-header">
+        <div class="text-layer-title">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="4 7 4 4 20 4 20 7"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+          <span>${item.name}</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button type="button" class="mini-btn ghost" style="padding:1px 6px; font-size:9px;" onclick="resetSingleTextLayer(${index})">还原原字</button>
+          <div class="text-layer-meta">原字号: ${item.fontSize}px</div>
+        </div>
+      </div>
+      ${isMultiline ? `
+        <textarea class="text-layer-input" style="height:56px; resize:none; line-height:1.4;" oninput="handlePsdTextChange(${index}, this.value)" placeholder="输入替换文案（可换行）…">${item.currentText}</textarea>
+      ` : `
+        <input type="text" class="text-layer-input" value="${item.currentText}" oninput="handlePsdTextChange(${index}, this.value)" placeholder="输入替换文案…">
+      `}
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-top:2px;">
+        <span style="font-size:10px; font-weight:700; color:var(--text-muted);">字体选择：</span>
+        <select style="background:transparent; border:1px solid var(--glass-border); border-radius:10px; padding:3px 8px; font-size:10.5px; font-weight:700; color:var(--text-main); outline:none;" onchange="handlePsdFontChange(${index}, this.value)">
+          ${fontOptions}
+        </select>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function resetSingleTextLayer(idx) {
+  if (psdEditableTextLayers[idx]) {
+    psdEditableTextLayers[idx].currentText = psdEditableTextLayers[idx].originalText;
+    renderPsdTextLayersEditList();
+    renderPsdCanvas();
+  }
+}
+
+function handlePsdTextChange(idx, val) {
+  if (psdEditableTextLayers[idx]) {
+    psdEditableTextLayers[idx].currentText = val;
+    renderPsdCanvas();
+  }
+}
+
+function handlePsdFontChange(idx, fontName) {
+  if (psdEditableTextLayers[idx]) {
+    psdEditableTextLayers[idx].overrideFont = fontName;
+    renderPsdCanvas();
+  }
+}
+
+// 预览背景显色切换（仅辅助在透明底辨认文字，导出永保透明）
+function setPsdPreviewBg(color) {
+  currentPsdPreviewBg = color;
+  const box = document.getElementById('psdStageBox');
+  document.querySelectorAll('.psd-color-dot').forEach(d => d.classList.remove('active'));
+
+  if (color === 'checker') {
+    box.classList.add('checker');
+    box.style.backgroundColor = '';
+  } else {
+    box.classList.remove('checker');
+    box.style.backgroundColor = color;
+  }
+}
+
+// 署名快捷填入
+function renderQuickSigChips() {
+  const container = document.getElementById('psdQuickSigChips');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (psdSavedSignatures.length === 0) {
+    container.innerHTML = `<span style="font-size:10px; color:var(--text-light);">暂无保存的常用署名</span>`;
+    return;
+  }
+
+  psdSavedSignatures.forEach(sig => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'sig-chip-btn';
+    chip.innerHTML = `
+      <span>${sig.double || sig.single || '署名'}</span>
+      <span style="font-size:9.5px; color:var(--text-muted);">${sig.qq ? `(${sig.qq})` : ''}</span>
+    `;
+    chip.onclick = () => applySignatureToPsd(sig);
+    container.appendChild(chip);
+  });
+}
+
+function applySignatureToPsd(sig) {
+  if (psdEditableTextLayers.length === 0) return;
+
+  psdEditableTextLayers.forEach(layer => {
+    const name = layer.name.toLowerCase();
+    if (/(qq|群号|账号|2190)/i.test(name) && sig.qq) {
+      layer.currentText = String(sig.qq);
+    } else if (/(en|英文)/i.test(name) && sig.en) {
+      layer.currentText = sig.en;
+    } else if (/(单字)/i.test(name) && sig.single) {
+      layer.currentText = sig.single;
+    } else {
+      layer.currentText = sig.double || sig.single || sig.en || layer.currentText;
+    }
+  });
+
+  renderPsdTextLayersEditList();
+  renderPsdCanvas();
+}
+
+// ==================== 全屏素材箱渲染（带大图出图布局预览） ====================
+function switchChestTab(tab) {
+  ['Psd', 'Fonts', 'Sigs'].forEach(t => {
+    const btn = document.getElementById(`chestTab${t}`);
+    if (btn) btn.classList.toggle('active', t.toLowerCase() === tab);
+  });
+  document.getElementById('chestPsdSection').style.display = tab === 'psd' ? 'flex' : 'none';
+  document.getElementById('chestFontsSection').style.display = tab === 'fonts' ? 'flex' : 'none';
+  document.getElementById('chestSigsSection').style.display = tab === 'sigs' ? 'flex' : 'none';
+}
+
+// 渲染 PSD 原件列表（展示大图布局预览）
+async function renderChestPsdList() {
+  const container = document.getElementById('chestPsdListContainer');
+  if (!container) return;
+  container.innerHTML = '';
+  const templates = await DrizzleDB.getAllPsdTemplates();
+
+  const countLabel = document.getElementById('chestPsdCountLabel');
+  if (countLabel) countLabel.innerText = `${templates.length} 个模板`;
+
+  if (templates.length === 0) {
+    container.innerHTML = `<div class="empty-hint">暂无保存的 PSD 模板<br>请在出图机点击「系统文件导入 PSD」添加</div>`;
+    return;
+  }
+
+  templates.forEach(tpl => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.cssText = 'padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px;';
+
+    // 如果存有预览大图，则直接展示原出图布局
+    const thumbHtml = tpl.previewUrl
+      ? `<img src="${tpl.previewUrl}" style="width:58px; height:58px; border-radius:12px; object-fit:contain; background:#f1f5f9; border:1px solid var(--glass-border); flex-shrink:0;">`
+      : `<div class="channel-icon" style="width:58px; height:58px; border-radius:12px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>`;
+
+    card.innerHTML = `
+      <div style="display:flex; align-items:center; gap:12px; min-width:0; flex:1;">
+        ${thumbHtml}
+        <div style="min-width:0;">
+          <div style="font-size:12.5px; font-weight:800; color:var(--text-main); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${tpl.name}</div>
+          <div style="font-size:10px; color:var(--text-muted); margin-top:3px; font-weight:600;">${tpl.width}×${tpl.height}px · ${(tpl.size / (1024*1024)).toFixed(1)}MB</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:6px; flex-shrink:0;">
+        <button class="mini-btn" onclick="reloadPsdFromChest('${tpl.id}')">载入</button>
+        <button class="mini-btn ghost" style="color:#ef4444;" onclick="deletePsdFromChest('${tpl.id}')">删除</button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+async function reloadPsdFromChest(id) {
+  const templates = await DrizzleDB.getAllPsdTemplates();
+  const tpl = templates.find(t => t.id === id);
+  if (!tpl) return;
+  const readFn = (window.agPsd && window.agPsd.readPsd) || window.readPsd;
+  const arrayBuffer = await tpl.blob.arrayBuffer();
+  const psd = readFn(arrayBuffer);
+  currentPsdObject = psd;
+  if (psd.canvas) currentPsdCompositeCanvas = psd.canvas;
+  loadPsdModelIntoStage(psd, tpl.name);
+  closePsdChestView();
+}
+
+async function deletePsdFromChest(id) {
+  if (!confirm('确定要从素材箱中删除此 PSD 模板吗？')) return;
+  await DrizzleDB.deletePsdTemplate(id);
+  renderChestPsdList();
+}
+
+// 字体与署名列表渲染
+async function renderChestFontsList() {
+  const container = document.getElementById('chestFontsListContainer');
+  if (!container) return;
+  container.innerHTML = '';
+  const fonts = await DrizzleDB.getAllPsdFonts();
+
+  if (fonts.length === 0) {
+    container.innerHTML = `<div class="empty-hint">暂未导入字体<br>点击上方「+ 添加字体」导入 .ttf / .otf</div>`;
+    return;
+  }
+
+  fonts.forEach(f => {
+    const card = document.createElement('div');
+    card.className = 'channel-btn';
+    card.style.justifyContent = 'space-between';
+    card.innerHTML = `
+      <div style="min-width:0;">
+        <div class="channel-title" style="font-family:'${f.name}', sans-serif;">${f.name}</div>
+        <div class="channel-sub" style="font-family:'${f.name}', sans-serif; font-size:12px; margin-top:3px; color:var(--text-main);">预览：drizzle 细雨小助手 123</div>
+      </div>
+      <button class="mini-btn ghost" style="color:#ef4444;" onclick="deleteFontFromChest('${f.id}')">删除</button>
+    `;
+    container.appendChild(card);
+  });
+}
+
+async function deleteFontFromChest(id) {
+  if (!confirm('确定删除此字体吗？')) return;
+  await DrizzleDB.deletePsdFont(id);
+  psdLoadedFonts = await DrizzleDB.getAllPsdFonts();
+  renderChestFontsList();
+  renderPsdTextLayersEditList();
+}
+
+async function renderChestSigsList() {
+  const container = document.getElementById('chestSigsListContainer');
+  if (!container) return;
+  container.innerHTML = '';
+  psdSavedSignatures = await DrizzleDB.getAllPsdSignatures();
+
+  if (psdSavedSignatures.length === 0) {
+    container.innerHTML = `<div class="empty-hint">暂无署名记录<br>点击上方「+ 添加署名」即可录入</div>`;
+    return;
+  }
+
+  psdSavedSignatures.forEach(sig => {
+    const card = document.createElement('div');
+    card.className = 'channel-btn';
+    card.style.justifyContent = 'space-between';
+    card.innerHTML = `
+      <div style="min-width:0;">
+        <div class="channel-title">${sig.double || sig.single} ${sig.en ? `· ${sig.en}` : ''}</div>
+        <div class="channel-sub">QQ: ${sig.qq || '未填'} · 单字: ${sig.single || '无'}</div>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button class="mini-btn" onclick="applySignatureToPsd(${JSON.stringify(sig).replace(/"/g, '&quot;')}); closePsdChestView();">填入</button>
+        <button class="mini-btn ghost" style="color:#ef4444;" onclick="deleteSigFromChest('${sig.id}')">删除</button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+async function deleteSigFromChest(id) {
+  if (!confirm('确定删除此署名记录吗？')) return;
+  await DrizzleDB.deletePsdSignature(id);
+  renderChestSigsList();
+  renderQuickSigChips();
+}
+
+// 署名录入弹窗
+function openAddSigModal() {
+  document.getElementById('sigSingleInput').value = '';
+  document.getElementById('sigDoubleInput').value = '';
+  document.getElementById('sigEnInput').value = '';
+  document.getElementById('sigQQInput').value = '';
+  document.getElementById('addSigModal').classList.remove('hidden');
+}
+
+function closeAddSigModal() {
+  document.getElementById('addSigModal').classList.add('hidden');
+}
+
+async function confirmSaveSigRecord() {
+  const single = document.getElementById('sigSingleInput').value.trim();
+  const double = document.getElementById('sigDoubleInput').value.trim();
+  const en = document.getElementById('sigEnInput').value.trim();
+  const qq = document.getElementById('sigQQInput').value.trim();
+
+  if (!double && !single && !en) {
+    alert('请至少填写一个署名名字！');
+    return;
+  }
+
+  const sig = {
+    id: `sig_${Date.now()}`,
+    single,
+    double,
+    en,
+    qq,
+    timestamp: Date.now()
+  };
+
+  await DrizzleDB.savePsdSignature(sig);
+  closeAddSigModal();
+  renderChestSigsList();
+  renderQuickSigChips();
+}
+
+// 查看图层弹窗
+function openPsdAllLayersModal() {
+  const container = document.getElementById('psdAllLayersList');
+  if (!container) return;
+  container.innerHTML = '';
+
+  currentPsdLayersFlattened.forEach((layer, idx) => {
+    const isText = !!layer.text;
+    const card = document.createElement('div');
+    card.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:8px 10px; background:var(--glass-subtle); border-radius:12px; border:1px solid var(--glass-border);';
+    card.innerHTML = `
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:10px; font-weight:800; color:var(--text-muted);">${idx + 1}</span>
+        <div>
+          <div style="font-size:11.5px; font-weight:700; color:var(--text-main);">${layer.name || '未命名图层'}</div>
+          <div style="font-size:9.5px; color:var(--text-muted);">${isText ? `文字图层 · 字号 ${extractLayerFontSize(layer)}px` : '图像/遮罩图层'}</div>
+        </div>
+      </div>
+      <span class="mini-badge ${isText ? 'ready' : ''}" style="padding:2px 7px;">${isText ? '可替换' : '图像'}</span>
+    `;
+    container.appendChild(card);
+  });
+
+  document.getElementById('psdAllLayersModal').classList.remove('hidden');
+}
+
+function closePsdAllLayersModal() {
+  document.getElementById('psdAllLayersModal').classList.add('hidden');
+}
 /* ================================================================
    全能多宫格拼图系统（支持 2x2, 2x3, 3x3, 3x4, 4x4 自由排版无损导出）
 ================================================================ */
