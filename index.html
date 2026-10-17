@@ -4771,14 +4771,16 @@ function getSupabaseClient() {
 }
 supabaseClient = getSupabaseClient();
 
-// 自动补救函数：如果手机网络慢没下完组件，点击时自动拉取备用通道
+// 自动补救函数：增强多节点备用加载，防止国内手机网络漏载
 async function ensureSupabaseReady() {
   let client = getSupabaseClient();
   if (client) return client;
 
   const fallbackUrls = [
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
     'https://unpkg.com/@supabase/supabase-js@2',
-    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
+    'https://npm.elemecdn.com/@supabase/supabase-js@2',
+    'https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.39.8/supabase.min.js'
   ];
   for (const url of fallbackUrls) {
     try {
@@ -4794,6 +4796,26 @@ async function ensureSupabaseReady() {
     } catch(e) {}
   }
   return null;
+}
+
+// 核心网络容灾重试封装：自动应对手机端 5G/4G 瞬时抖动导致的 Load failed
+async function runWithRetry(asyncFunc, retries = 3, delay = 600) {
+  let lastErr = null;
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await asyncFunc();
+    } catch (err) {
+      lastErr = err;
+      const errMsg = String(err?.message || err || '');
+      // 如果属于手机端常见的断网抖动，等待后自动重发请求
+      if (errMsg.includes('Load failed') || errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError')) {
+        await new Promise(r => setTimeout(r, delay * (i + 1)));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastErr;
 }
 
 let currentAuthMode = 'login'; // 'login' | 'register' | 'forgot'
@@ -4880,7 +4902,7 @@ async function handleAuthSubmit() {
   const client = await ensureSupabaseReady();
   if (!client) {
     tip.style.color = '#ef4444';
-    tip.innerText = '错误：手机网络连接云端超时，请切换网络或稍候重试！';
+    tip.innerText = '错误：网络组件连接云端超时，请切换Wi-Fi/移动数据后重试！';
     btn.disabled = false;
     return;
   }
@@ -4899,7 +4921,7 @@ async function handleAuthSubmit() {
 
   btn.disabled = true;
   tip.style.color = 'var(--text-muted)';
-  tip.innerText = '正在验证中，请稍候…';
+  tip.innerText = '正在验证连接中，请稍候…';
 
   const deviceId = getOrCreateDeviceId();
 
@@ -4907,17 +4929,17 @@ async function handleAuthSubmit() {
   const formatDbError = (err) => {
     const msg = String(err?.message || err?.error_description || err || '');
     if (msg.includes('paused') || msg.includes('503')) {
-      return '云端数据库已休眠暂停！请联系管理员登录Supabase点击唤醒(Restore)。';
+      return '云端数据库已休眠暂停！请联系管理员登录Supabase唤醒。';
     }
-    if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-      return '网络请求被拦截或失败，请检查网络/关闭代理后重试！';
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Load failed')) {
+      return '网络请求被运营商拦截或超时，请开启或关闭代理、切换网络后再试！';
     }
-    return '云端接口返回错误：' + (msg || '请求被拒绝');
+    return '云端接口返回：' + (msg || '请求被拒绝');
   };
 
   try {
     if (currentAuthMode === 'register') {
-      // ===== 注册逻辑 =====
+      // ===== 注册逻辑（彻底修复激活码被锁死+网络异常容灾） =====
       if (!code) {
         tip.style.color = '#ef4444';
         tip.innerText = '注册必须填写激活码！';
@@ -4925,12 +4947,14 @@ async function handleAuthSubmit() {
         return;
       }
 
-      // 1. 验证激活码（严格区分接口报错与数据不存在）
-      const { data: codeData, error: codeErr } = await supabaseClient
-        .from('activation_codes')
-        .select('*')
-        .eq('code', code)
-        .maybeSingle();
+      // 1. 查询激活码（带网络重试）
+      const { data: codeData, error: codeErr } = await runWithRetry(async () => {
+        return await supabaseClient
+          .from('activation_codes')
+          .select('*')
+          .eq('code', code)
+          .maybeSingle();
+      });
 
       if (codeErr) {
         tip.style.color = '#ef4444';
@@ -4944,19 +4968,15 @@ async function handleAuthSubmit() {
         btn.disabled = false;
         return;
       }
-      if (codeData.is_used) {
-        tip.style.color = '#ef4444';
-        tip.innerText = '该激活码已被注册绑定过！';
-        btn.disabled = false;
-        return;
-      }
 
-      // 2. 验证 QQ 是否被注册
-      const { data: existUser, error: checkUserErr } = await supabaseClient
-        .from('app_users')
-        .select('qq')
-        .eq('qq', qq)
-        .maybeSingle();
+      // 2. 检查 QQ 用户表中是否已存在该 QQ
+      const { data: existUser, error: checkUserErr } = await runWithRetry(async () => {
+        return await supabaseClient
+          .from('app_users')
+          .select('*')
+          .eq('qq', qq)
+          .maybeSingle();
+      });
 
       if (checkUserErr) {
         tip.style.color = '#ef4444';
@@ -4964,39 +4984,66 @@ async function handleAuthSubmit() {
         btn.disabled = false;
         return;
       }
-      if (existUser) {
+
+      // 关键容灾分支：如果激活码已被使用，但使用者就是当前这个 QQ（属于之前网络中断导致未完结的注册）
+      const isMyPreviousFailedReg = codeData.is_used && String(codeData.used_by_qq).trim() === qq;
+
+      if (codeData.is_used && !isMyPreviousFailedReg) {
         tip.style.color = '#ef4444';
-        tip.innerText = '该 QQ 号已被注册，请直接点击“登录账号”或“忘记密码”！';
+        tip.innerText = '该激活码已被他人注册绑定过！';
         btn.disabled = false;
         return;
       }
 
-      // 3. 标记激活码为已使用
-      const { error: updateCodeErr } = await supabaseClient
-        .from('activation_codes')
-        .update({
-          is_used: true,
-          used_by_qq: qq,
-          device_id: deviceId
-        })
-        .eq('code', code);
+      if (existUser && !isMyPreviousFailedReg) {
+        tip.style.color = '#ef4444';
+        tip.innerText = '该 QQ 号已被注册，请直接点击“登录账号”！';
+        btn.disabled = false;
+        return;
+      }
 
-      if (updateCodeErr) throw updateCodeErr;
-
-      // 4. 写入新用户（初始化当前设备数组为第 1 个设备）
+      // 3. 核心颠覆式重构：先安全写入/补全用户表（若网络失败绝对不作废激活码）
       const initialDevices = [deviceId];
-      const { error: insertErr } = await supabaseClient
-        .from('app_users')
-        .insert([{
-          qq: qq,
-          password: pwd,
-          bound_device_id: JSON.stringify(initialDevices),
-          activation_code: code
-        }]);
+      if (existUser) {
+        // 若之前由于网络问题已建用户，同步更新密码与设备
+        const { error: updateExistErr } = await runWithRetry(async () => {
+          return await supabaseClient
+            .from('app_users')
+            .update({
+              password: pwd,
+              bound_device_id: JSON.stringify(initialDevices),
+              activation_code: code
+            })
+            .eq('qq', qq);
+        });
+        if (updateExistErr) throw updateExistErr;
+      } else {
+        const { error: insertErr } = await runWithRetry(async () => {
+          return await supabaseClient
+            .from('app_users')
+            .insert([{
+              qq: qq,
+              password: pwd,
+              bound_device_id: JSON.stringify(initialDevices),
+              activation_code: code
+            }]);
+        });
+        if (insertErr) throw insertErr;
+      }
 
-      if (insertErr) throw insertErr;
+      // 4. 用户表成功落库后，才核销标记激活码为已使用
+      await runWithRetry(async () => {
+        return await supabaseClient
+          .from('activation_codes')
+          .update({
+            is_used: true,
+            used_by_qq: qq,
+            device_id: deviceId
+          })
+          .eq('code', code);
+      });
 
-      // 保存本地凭证并保存设备白名单
+      // 保存本地免登凭证
       localStorage.setItem('drizzle_login_qq', qq);
       localStorage.setItem('drizzle_login_token', pwd);
       localStorage.setItem('drizzle_authorized_device', deviceId);
@@ -5017,12 +5064,13 @@ async function handleAuthSubmit() {
         return;
       }
 
-      // 验证激活码与 QQ 是否匹配
-      const { data: user, error: userErr } = await supabaseClient
-        .from('app_users')
-        .select('*')
-        .eq('qq', qq)
-        .maybeSingle();
+      const { data: user, error: userErr } = await runWithRetry(async () => {
+        return await supabaseClient
+          .from('app_users')
+          .select('*')
+          .eq('qq', qq)
+          .maybeSingle();
+      });
 
       if (userErr) {
         tip.style.color = '#ef4444';
@@ -5045,10 +5093,12 @@ async function handleAuthSubmit() {
       }
 
       // 验证通过，重置密码
-      const { error: updateErr } = await supabaseClient
-        .from('app_users')
-        .update({ password: pwd })
-        .eq('qq', qq);
+      const { error: updateErr } = await runWithRetry(async () => {
+        return await supabaseClient
+          .from('app_users')
+          .update({ password: pwd })
+          .eq('qq', qq);
+      });
 
       if (updateErr) throw updateErr;
 
@@ -5064,15 +5114,16 @@ async function handleAuthSubmit() {
       setTimeout(() => { document.getElementById('authModalOverlay').classList.add('hidden'); }, 600);
 
     } else {
-      // ===== 登录逻辑（严格区分报错与未注册） =====
-      const { data: user, error: userErr } = await supabaseClient
-        .from('app_users')
-        .select('*')
-        .eq('qq', qq)
-        .maybeSingle();
+      // ===== 登录逻辑（带自动容灾重试） =====
+      const { data: user, error: userErr } = await runWithRetry(async () => {
+        return await supabaseClient
+          .from('app_users')
+          .select('*')
+          .eq('qq', qq)
+          .maybeSingle();
+      });
 
       if (userErr) {
-        // 如果云端接口出错，直接显示真实原因，绝不假报“账号未注册”
         tip.style.color = '#ef4444';
         tip.innerText = formatDbError(userErr);
         btn.disabled = false;
@@ -5098,10 +5149,12 @@ async function handleAuthSubmit() {
       if (!devList.includes(deviceId)) {
         if (devList.length < 4) {
           devList.push(deviceId);
-          await supabaseClient
-            .from('app_users')
-            .update({ bound_device_id: JSON.stringify(devList) })
-            .eq('qq', qq);
+          await runWithRetry(async () => {
+            return await supabaseClient
+              .from('app_users')
+              .update({ bound_device_id: JSON.stringify(devList) })
+              .eq('qq', qq);
+          });
         } else {
           tip.style.color = '#ef4444';
           tip.innerText = '登录失败：该账号已达到最多 4 个浏览器/设备使用上限！';
@@ -5125,8 +5178,12 @@ async function handleAuthSubmit() {
   } catch (err) {
     console.error('认证异常详细信息:', err);
     tip.style.color = '#ef4444';
-    const detailMsg = err?.message || err?.error_description || (typeof err === 'string' ? err : '未知错误');
-    tip.innerText = '校验异常: ' + detailMsg;
+    const detailMsg = err?.message || err?.error_description || (typeof err === 'string' ? err : '网络连接超时');
+    if (detailMsg.includes('Load failed') || detailMsg.includes('Failed to fetch')) {
+      tip.innerText = '网络连接不稳定，请关闭VPN代理或切换Wi-Fi后再试';
+    } else {
+      tip.innerText = '校验异常: ' + detailMsg;
+    }
   } finally {
     btn.disabled = false;
   }
