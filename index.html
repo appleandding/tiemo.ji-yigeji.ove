@@ -4877,20 +4877,22 @@ async function handleAuthSubmit() {
   const tip = document.getElementById('authTipMsg');
   const btn = document.getElementById('authSubmitBtn');
 
-  // 点击注册时，如果之前没连上，这里会自动重新连接备用通道
   const client = await ensureSupabaseReady();
   if (!client) {
     tip.style.color = '#ef4444';
-    tip.innerText = '错误：手机网络连接云端超时，请切换WiFi或稍候重试！';
+    tip.innerText = '错误：手机网络连接云端超时，请切换网络或稍候重试！';
     btn.disabled = false;
     return;
   }
   supabaseClient = client;
+
   if (!qq) {
+    tip.style.color = '#ef4444';
     tip.innerText = '请填写你的 QQ 号码！';
     return;
   }
   if (!pwd) {
+    tip.style.color = '#ef4444';
     tip.innerText = '密码不能为空！';
     return;
   }
@@ -4900,6 +4902,18 @@ async function handleAuthSubmit() {
   tip.innerText = '正在验证中，请稍候…';
 
   const deviceId = getOrCreateDeviceId();
+
+  // 格式化错误信息提示工具，捕获数据库休眠和网络故障
+  const formatDbError = (err) => {
+    const msg = String(err?.message || err?.error_description || err || '');
+    if (msg.includes('paused') || msg.includes('503')) {
+      return '云端数据库已休眠暂停！请联系管理员登录Supabase点击唤醒(Restore)。';
+    }
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+      return '网络请求被拦截或失败，请检查网络/关闭代理后重试！';
+    }
+    return '云端接口返回错误：' + (msg || '请求被拒绝');
+  };
 
   try {
     if (currentAuthMode === 'register') {
@@ -4911,14 +4925,20 @@ async function handleAuthSubmit() {
         return;
       }
 
-      // 1. 验证激活码
+      // 1. 验证激活码（严格区分接口报错与数据不存在）
       const { data: codeData, error: codeErr } = await supabaseClient
         .from('activation_codes')
         .select('*')
         .eq('code', code)
         .maybeSingle();
 
-      if (codeErr || !codeData) {
+      if (codeErr) {
+        tip.style.color = '#ef4444';
+        tip.innerText = formatDbError(codeErr);
+        btn.disabled = false;
+        return;
+      }
+      if (!codeData) {
         tip.style.color = '#ef4444';
         tip.innerText = '激活码不存在，请确认是否输入正确！';
         btn.disabled = false;
@@ -4932,21 +4952,27 @@ async function handleAuthSubmit() {
       }
 
       // 2. 验证 QQ 是否被注册
-      const { data: existUser } = await supabaseClient
+      const { data: existUser, error: checkUserErr } = await supabaseClient
         .from('app_users')
         .select('qq')
         .eq('qq', qq)
         .maybeSingle();
 
+      if (checkUserErr) {
+        tip.style.color = '#ef4444';
+        tip.innerText = formatDbError(checkUserErr);
+        btn.disabled = false;
+        return;
+      }
       if (existUser) {
         tip.style.color = '#ef4444';
-        tip.innerText = '该 QQ 号已被注册，请直接登录或找回密码！';
+        tip.innerText = '该 QQ 号已被注册，请直接点击“登录账号”或“忘记密码”！';
         btn.disabled = false;
         return;
       }
 
       // 3. 标记激活码为已使用
-      await supabaseClient
+      const { error: updateCodeErr } = await supabaseClient
         .from('activation_codes')
         .update({
           is_used: true,
@@ -4954,6 +4980,8 @@ async function handleAuthSubmit() {
           device_id: deviceId
         })
         .eq('code', code);
+
+      if (updateCodeErr) throw updateCodeErr;
 
       // 4. 写入新用户（初始化当前设备数组为第 1 个设备）
       const initialDevices = [deviceId];
@@ -4968,11 +4996,13 @@ async function handleAuthSubmit() {
 
       if (insertErr) throw insertErr;
 
-      // 保存本地凭证
+      // 保存本地凭证并保存设备白名单
       localStorage.setItem('drizzle_login_qq', qq);
       localStorage.setItem('drizzle_login_token', pwd);
+      localStorage.setItem('drizzle_authorized_device', deviceId);
       setCookieAuth('drizzle_login_qq', qq);
       setCookieAuth('drizzle_login_token', pwd);
+      setCookieAuth('drizzle_authorized_device', deviceId);
 
       tip.style.color = '#22c55e';
       tip.innerText = '注册成功！当前浏览器已加入信任设备 (1/4)';
@@ -4994,7 +5024,13 @@ async function handleAuthSubmit() {
         .eq('qq', qq)
         .maybeSingle();
 
-      if (userErr || !user) {
+      if (userErr) {
+        tip.style.color = '#ef4444';
+        tip.innerText = formatDbError(userErr);
+        btn.disabled = false;
+        return;
+      }
+      if (!user) {
         tip.style.color = '#ef4444';
         tip.innerText = '未找到该 QQ 绑定的账号！';
         btn.disabled = false;
@@ -5018,22 +5054,31 @@ async function handleAuthSubmit() {
 
       localStorage.setItem('drizzle_login_qq', qq);
       localStorage.setItem('drizzle_login_token', pwd);
+      localStorage.setItem('drizzle_authorized_device', deviceId);
       setCookieAuth('drizzle_login_qq', qq);
       setCookieAuth('drizzle_login_token', pwd);
+      setCookieAuth('drizzle_authorized_device', deviceId);
 
       tip.style.color = '#22c55e';
       tip.innerText = '密码重置成功，正在直接进入系统…';
       setTimeout(() => { document.getElementById('authModalOverlay').classList.add('hidden'); }, 600);
 
     } else {
-      // ===== 登录逻辑 =====
+      // ===== 登录逻辑（严格区分报错与未注册） =====
       const { data: user, error: userErr } = await supabaseClient
         .from('app_users')
         .select('*')
         .eq('qq', qq)
         .maybeSingle();
 
-      if (userErr || !user) {
+      if (userErr) {
+        // 如果云端接口出错，直接显示真实原因，绝不假报“账号未注册”
+        tip.style.color = '#ef4444';
+        tip.innerText = formatDbError(userErr);
+        btn.disabled = false;
+        return;
+      }
+      if (!user) {
         tip.style.color = '#ef4444';
         tip.innerText = '账号未注册，请先使用激活码注册！';
         btn.disabled = false;
@@ -5050,31 +5095,28 @@ async function handleAuthSubmit() {
       // 解析用户绑定的所有设备
       let devList = parseBoundDevices(user.bound_device_id);
 
-      if (devList.includes(deviceId)) {
-        // 当前设备已经授权过，直接放行
-      } else {
-        // 新浏览器/新设备/PWA首次运行检测
+      if (!devList.includes(deviceId)) {
         if (devList.length < 4) {
-          // 在 4 个浏览器范围内：自动纳为合法设备并同步保存至云端
           devList.push(deviceId);
           await supabaseClient
             .from('app_users')
             .update({ bound_device_id: JSON.stringify(devList) })
             .eq('qq', qq);
         } else {
-          // 超出 4 个设备（换到第 5 个浏览器），拒绝登录
           tip.style.color = '#ef4444';
-          tip.innerText = '登录失败：该账号已达到最多 4 个浏览器/设备使用上限！如需在第 5 个环境登录请重新获取激活码。';
+          tip.innerText = '登录失败：该账号已达到最多 4 个浏览器/设备使用上限！';
           btn.disabled = false;
           return;
         }
       }
 
-      // 登录成功
+      // 登录成功：保存凭证以及本地授权设备 ID
       localStorage.setItem('drizzle_login_qq', qq);
       localStorage.setItem('drizzle_login_token', pwd);
+      localStorage.setItem('drizzle_authorized_device', deviceId);
       setCookieAuth('drizzle_login_qq', qq);
       setCookieAuth('drizzle_login_token', pwd);
+      setCookieAuth('drizzle_authorized_device', deviceId);
 
       tip.style.color = '#22c55e';
       tip.innerText = `登录成功！已授权此浏览器 (${devList.length}/4)`;
@@ -5083,9 +5125,8 @@ async function handleAuthSubmit() {
   } catch (err) {
     console.error('认证异常详细信息:', err);
     tip.style.color = '#ef4444';
-    // 直接把 Supabase 底层真实报错显示在界面上，杜绝瞎猜
     const detailMsg = err?.message || err?.error_description || (typeof err === 'string' ? err : '未知错误');
-    tip.innerText = '注册/校验失败: ' + detailMsg;
+    tip.innerText = '校验异常: ' + detailMsg;
   } finally {
     btn.disabled = false;
   }
@@ -5105,48 +5146,31 @@ async function checkAuthSession() {
     return;
   }
 
-  // 核心优化：若此浏览器此前已成功登录并绑定过当前 deviceId，直接信任放行，绝不阻拦进入
-  if (localAuthorizedDev === deviceId) {
+  // 1. 若此浏览器此前已授权过，直接信任放行，不阻拦用户进入
+  if (localAuthorizedDev && localAuthorizedDev === deviceId) {
     if (overlay) overlay.classList.add('hidden');
-    // 在后台静默异步校验云端状态，不卡前台使用
-    (async () => {
-      try {
-        const client = await ensureSupabaseReady();
-        if (!client) return;
-        const { data: user } = await client
-          .from('app_users')
-          .select('password, bound_device_id')
-          .eq('qq', cachedQQ)
-          .maybeSingle();
-
-        if (user && user.password === cachedToken) {
-          let devList = parseBoundDevices(user.bound_device_id);
-          if (!devList.includes(deviceId) && devList.length < 4) {
-            devList.push(deviceId);
-            await client.from('app_users').update({ bound_device_id: JSON.stringify(devList) }).eq('qq', cachedQQ);
-          }
-        }
-      } catch (e) {
-        console.warn('后台免登状态静默校验完成');
-      }
-    })();
     return;
   }
 
-  // 若为初次识别的独立设备环境，连接云端校验
+  // 2. 若带有凭证但没有设备记录，尝试后台校验，网络或数据库异常时优先保持放行，不误弹窗
   try {
     const client = await ensureSupabaseReady();
     if (!client) {
-      // 网络慢时优先放行已记录凭证的用户
       if (overlay) overlay.classList.add('hidden');
       return;
     }
 
-    const { data: user } = await client
+    const { data: user, error: fetchErr } = await client
       .from('app_users')
       .select('password, bound_device_id')
       .eq('qq', cachedQQ)
       .maybeSingle();
+
+    if (fetchErr) {
+      // 如果云端请求失败（例如休眠或网络超时），放行本地已有登录缓存
+      if (overlay) overlay.classList.add('hidden');
+      return;
+    }
 
     if (user && user.password === cachedToken) {
       let devList = parseBoundDevices(user.bound_device_id);
@@ -5162,7 +5186,7 @@ async function checkAuthSession() {
       }
     }
 
-    // 确实超出设备上限或密码已改，才弹出登录
+    // 确实超出设备上限或密码不符才弹窗
     if (overlay) overlay.classList.remove('hidden');
   } catch (e) {
     if (overlay) overlay.classList.add('hidden');
